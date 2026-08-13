@@ -1,0 +1,39 @@
+name: Validate
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate addon manifest
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f '!Logistician.toc'
+          version=$(sed -n 's/^## Version: //p' '!Logistician.toc' | tr -d '\r')
+          [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]
+          test -n "$(sed -n 's/^## Interface: //p' '!Logistician.toc')"
+          echo "Validated Logistician $version"
+
+      - name: Validate XML files
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import xml.etree.ElementTree as ET
+
+          files = list(Path('.').rglob('*.xml'))
+          for path in files:
+              ET.parse(path)
+          print(f"Validated {len(files)} XML files")
+          PY

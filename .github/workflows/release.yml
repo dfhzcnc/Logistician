@@ -1,0 +1,62 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate tag and manifest version
+        id: version
+        shell: bash
+        run: |
+          set -euo pipefail
+          tag_version="${GITHUB_REF_NAME#v}"
+          toc_version=$(sed -n 's/^## Version: //p' '!Logistician.toc' | tr -d '\r')
+          [[ "$tag_version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]
+          test "$tag_version" = "$toc_version"
+          echo "version=$tag_version" >> "$GITHUB_OUTPUT"
+
+      - name: Validate XML files
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import xml.etree.ElementTree as ET
+
+          files = list(Path('.').rglob('*.xml'))
+          for path in files:
+              ET.parse(path)
+          print(f"Validated {len(files)} XML files")
+          PY
+
+      - name: Package addon
+        shell: bash
+        run: |
+          set -euo pipefail
+          package_root="$RUNNER_TEMP/package"
+          addon_root="$package_root/!Logistician"
+          mkdir -p "$addon_root"
+          rsync -a ./ "$addon_root/" \
+            --exclude='.git/' \
+            --exclude='.github/' \
+            --exclude='.gitignore' \
+            --exclude='.gitattributes' \
+            --exclude='CONTRIBUTING.md'
+          cd "$package_root"
+          zip -qr "$GITHUB_WORKSPACE/Logistician-${GITHUB_REF_NAME}.zip" '!Logistician'
+
+      - name: Publish GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: Logistician ${{ github.ref_name }}
+          generate_release_notes: true
+          files: Logistician-${{ github.ref_name }}.zip
