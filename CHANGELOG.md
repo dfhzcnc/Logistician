@@ -6,6 +6,15 @@ uses [Semantic Versioning](https://semver.org/) and the
 
 ## [Unreleased]
 
+## [2.0.1] - 2026-08-13
+
+### Fixed
+
+- Restored the stable Auction House interface and initialization path.
+- Preserved compatibility with existing shopping lists and scan history.
+- Removed item-level suffixes from the selected Selling item name.
+- Reduced the selected Selling item icon from 60 to 40 pixels.
+
 ## [1.1.77] - 2026-08-13
 
 ### Fixed

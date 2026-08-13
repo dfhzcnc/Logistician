@@ -421,14 +421,6 @@ function AuctionatorSaleItemMixin:SetItemName()
     local name = Auctionator.Utilities.GetNameFromLink(self.itemInfo.itemLink)
     local color = ITEM_QUALITY_COLORS[self.itemInfo.quality].color
     self.TitleArea.Text:SetText(color:WrapTextInColorCode(name))
-
-    if IsEquipment(self.itemInfo) then
-      local item = Item:CreateFromItemLink(self.itemInfo.itemLink)
-      item:ContinueOnItemLoad(function()
-        local itemLevel = GetDetailedItemLevelInfo(self.itemInfo.itemLink)
-        self.TitleArea.Text:SetText(color:WrapTextInColorCode(name .. " (" .. itemLevel .. ")"))
-      end)
-    end
   end
 end
 

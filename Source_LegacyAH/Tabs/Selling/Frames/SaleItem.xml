@@ -42,7 +42,7 @@
       </Frame>
 
       <Button parentKey="Icon" inherits="AuctionatorGroupsViewItemTemplate" mixin="AuctionatorBagItemSelectedMixin" registerForClicks="LeftButtonUp, RightButtonUp">
-        <Size x="60" y="60" />
+        <Size x="40" y="40" />
         <Anchors>
           <Anchor point="TOPLEFT" relativeKey="$parent.TitleArea" relativePoint="BOTTOMLEFT" y="-5" x="-20"/>
         </Anchors>
