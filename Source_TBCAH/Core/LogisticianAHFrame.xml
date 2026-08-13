@@ -1,0 +1,8 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/">
+  <Frame name="LogisticianAHFrameTemplate" mixin="LogisticianAHFrameMixin" virtual="true">
+    <Scripts>
+      <OnShow method="OnShow" />
+      <OnEvent method="OnEvent" />
+    </Scripts>
+  </Frame>
+</Ui>

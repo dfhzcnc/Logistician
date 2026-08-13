@@ -1,4 +1,4 @@
-Auctionator.Config.Options = {
+Logistician.Config.Options = {
   DEBUG = "debug",
   NO_PRICE_DATABASE = "no_price_database",
   MAILBOX_TOOLTIPS = "mailbox_tooltips",
@@ -60,12 +60,12 @@ Auctionator.Config.Options = {
   SHOPPING_LAST_CONTAINER_VIEW = "shopping_last_container_view",
 }
 
-Auctionator.Config.SalesTypes = {
+Logistician.Config.SalesTypes = {
   PERCENTAGE = "percentage",
   STATIC = "static"
 }
 
-Auctionator.Config.Shortcuts = {
+Logistician.Config.Shortcuts = {
   LEFT_CLICK = "left click",
   RIGHT_CLICK = "right click",
   ALT_LEFT_CLICK = "alt left click",
@@ -75,67 +75,67 @@ Auctionator.Config.Shortcuts = {
   NONE = "none",
 }
 
-Auctionator.Config.Defaults = {
-  [Auctionator.Config.Options.DEBUG] = false,
-  [Auctionator.Config.Options.NO_PRICE_DATABASE] = false,
-  [Auctionator.Config.Options.MAILBOX_TOOLTIPS] = true,
-  [Auctionator.Config.Options.VENDOR_TOOLTIPS] = true,
-  [Auctionator.Config.Options.AUCTION_TOOLTIPS] = true,
-  [Auctionator.Config.Options.AUCTION_AGE_TOOLTIPS] = false,
-  [Auctionator.Config.Options.AUCTION_MEAN_TOOLTIPS] = false,
-  [Auctionator.Config.Options.AUCTION_MEAN_DAYS_LIMIT] = 21,
-  [Auctionator.Config.Options.SHIFT_STACK_TOOLTIPS] = true,
-  [Auctionator.Config.Options.ENCHANT_TOOLTIPS] = false,
-  [Auctionator.Config.Options.REPLICATE_SCAN] = false,
-  [Auctionator.Config.Options.AUTO_LIST_SEARCH] = true,
-  [Auctionator.Config.Options.DEFAULT_LIST] = Auctionator.Constants.NO_LIST,
-  [Auctionator.Config.Options.AUCTION_CHAT_LOG] = true,
-  [Auctionator.Config.Options.SELLING_BAG_COLLAPSED] = false,
-  [Auctionator.Config.Options.SHOW_SELLING_BAG] = true,
-  [Auctionator.Config.Options.SELLING_BAG_SELECT_SHORTCUT] = Auctionator.Config.Shortcuts.ALT_LEFT_CLICK,
-  [Auctionator.Config.Options.SELLING_ICON_SIZE] = 42,
-  [Auctionator.Config.Options.SELLING_IGNORED_KEYS] = {},
-  [Auctionator.Config.Options.SELLING_FAVOURITE_KEYS] = {},
-  [Auctionator.Config.Options.SELLING_AUTO_SELECT_NEXT] = false,
-  [Auctionator.Config.Options.SELLING_MISSING_FAVOURITES] = true,
-  [Auctionator.Config.Options.SELLING_FAVOURITES_SORT_OWNED] = false,
-  [Auctionator.Config.Options.SELLING_POST_SHORTCUT] = "SPACE",
-  [Auctionator.Config.Options.SELLING_SKIP_SHORTCUT] = "SHIFT-SPACE",
-  [Auctionator.Config.Options.SELLING_PREV_SHORTCUT] = "BACKSPACE",
-  [Auctionator.Config.Options.SHOW_SELLING_BID_PRICE] = false,
-  [Auctionator.Config.Options.SELLING_CONFIRM_LOW_PRICE] = true,
-  [Auctionator.Config.Options.SAVE_LAST_DURATION_AS_DEFAULT] = false,
+Logistician.Config.Defaults = {
+  [Logistician.Config.Options.DEBUG] = false,
+  [Logistician.Config.Options.NO_PRICE_DATABASE] = false,
+  [Logistician.Config.Options.MAILBOX_TOOLTIPS] = true,
+  [Logistician.Config.Options.VENDOR_TOOLTIPS] = true,
+  [Logistician.Config.Options.AUCTION_TOOLTIPS] = true,
+  [Logistician.Config.Options.AUCTION_AGE_TOOLTIPS] = false,
+  [Logistician.Config.Options.AUCTION_MEAN_TOOLTIPS] = false,
+  [Logistician.Config.Options.AUCTION_MEAN_DAYS_LIMIT] = 21,
+  [Logistician.Config.Options.SHIFT_STACK_TOOLTIPS] = true,
+  [Logistician.Config.Options.ENCHANT_TOOLTIPS] = false,
+  [Logistician.Config.Options.REPLICATE_SCAN] = false,
+  [Logistician.Config.Options.AUTO_LIST_SEARCH] = true,
+  [Logistician.Config.Options.DEFAULT_LIST] = Logistician.Constants.NO_LIST,
+  [Logistician.Config.Options.AUCTION_CHAT_LOG] = true,
+  [Logistician.Config.Options.SELLING_BAG_COLLAPSED] = false,
+  [Logistician.Config.Options.SHOW_SELLING_BAG] = true,
+  [Logistician.Config.Options.SELLING_BAG_SELECT_SHORTCUT] = Logistician.Config.Shortcuts.ALT_LEFT_CLICK,
+  [Logistician.Config.Options.SELLING_ICON_SIZE] = 42,
+  [Logistician.Config.Options.SELLING_IGNORED_KEYS] = {},
+  [Logistician.Config.Options.SELLING_FAVOURITE_KEYS] = {},
+  [Logistician.Config.Options.SELLING_AUTO_SELECT_NEXT] = false,
+  [Logistician.Config.Options.SELLING_MISSING_FAVOURITES] = true,
+  [Logistician.Config.Options.SELLING_FAVOURITES_SORT_OWNED] = false,
+  [Logistician.Config.Options.SELLING_POST_SHORTCUT] = "SPACE",
+  [Logistician.Config.Options.SELLING_SKIP_SHORTCUT] = "SHIFT-SPACE",
+  [Logistician.Config.Options.SELLING_PREV_SHORTCUT] = "BACKSPACE",
+  [Logistician.Config.Options.SHOW_SELLING_BID_PRICE] = false,
+  [Logistician.Config.Options.SELLING_CONFIRM_LOW_PRICE] = true,
+  [Logistician.Config.Options.SAVE_LAST_DURATION_AS_DEFAULT] = false,
 
-  [Auctionator.Config.Options.GEAR_PRICE_MULTIPLIER] = 0,
+  [Logistician.Config.Options.GEAR_PRICE_MULTIPLIER] = 0,
 
-  [Auctionator.Config.Options.PRICE_HISTORY_DAYS] = 21,
-  [Auctionator.Config.Options.POSTING_HISTORY_LENGTH] = 10,
+  [Logistician.Config.Options.PRICE_HISTORY_DAYS] = 21,
+  [Logistician.Config.Options.POSTING_HISTORY_LENGTH] = 10,
 
-  [Auctionator.Config.Options.SPLASH_SCREEN_VERSION] = "anything",
-  [Auctionator.Config.Options.HIDE_SPLASH_SCREEN] = false,
+  [Logistician.Config.Options.SPLASH_SCREEN_VERSION] = "anything",
+  [Logistician.Config.Options.HIDE_SPLASH_SCREEN] = false,
 
-  [Auctionator.Config.Options.CANCEL_UNDERCUT_SHORTCUT] = "SPACE",
-  [Auctionator.Config.Options.UNDERCUT_ITEMS_AHEAD] = 0,
+  [Logistician.Config.Options.CANCEL_UNDERCUT_SHORTCUT] = "SPACE",
+  [Logistician.Config.Options.UNDERCUT_ITEMS_AHEAD] = 0,
 
-  [Auctionator.Config.Options.DEFAULT_TAB] = 0,
+  [Logistician.Config.Options.DEFAULT_TAB] = 0,
 
-  [Auctionator.Config.Options.COLUMNS_SHOPPING] = {},
-  [Auctionator.Config.Options.COLUMNS_SHOPPING_HISTORICAL_PRICES] = {},
-  [Auctionator.Config.Options.COLUMNS_CANCELLING] = {},
-  [Auctionator.Config.Options.COLUMNS_SELLING_SEARCH] = {},
-  [Auctionator.Config.Options.COLUMNS_HISTORICAL_PRICES] = {},
-  [Auctionator.Config.Options.COLUMNS_POSTING_HISTORY] = {},
+  [Logistician.Config.Options.COLUMNS_SHOPPING] = {},
+  [Logistician.Config.Options.COLUMNS_SHOPPING_HISTORICAL_PRICES] = {},
+  [Logistician.Config.Options.COLUMNS_CANCELLING] = {},
+  [Logistician.Config.Options.COLUMNS_SELLING_SEARCH] = {},
+  [Logistician.Config.Options.COLUMNS_HISTORICAL_PRICES] = {},
+  [Logistician.Config.Options.COLUMNS_POSTING_HISTORY] = {},
 
-  [Auctionator.Config.Options.CRAFTING_INFO_SHOW] = true,
-  [Auctionator.Config.Options.CRAFTING_INFO_SHOW_PROFIT] = true,
-  [Auctionator.Config.Options.CRAFTING_INFO_SHOW_COST] = true,
+  [Logistician.Config.Options.CRAFTING_INFO_SHOW] = true,
+  [Logistician.Config.Options.CRAFTING_INFO_SHOW_PROFIT] = true,
+  [Logistician.Config.Options.CRAFTING_INFO_SHOW_COST] = true,
 
-  [Auctionator.Config.Options.SHOPPING_LIST_MISSING_TERMS] = false,
-  [Auctionator.Config.Options.SHOPPING_LAST_CONTAINER_VIEW] = Auctionator.Constants.ShoppingListViews.Lists,
+  [Logistician.Config.Options.SHOPPING_LIST_MISSING_TERMS] = false,
+  [Logistician.Config.Options.SHOPPING_LAST_CONTAINER_VIEW] = Logistician.Constants.ShoppingListViews.Lists,
 }
 
-function Auctionator.Config.IsValidOption(name)
-  for _, option in pairs(Auctionator.Config.Options) do
+function Logistician.Config.IsValidOption(name)
+  for _, option in pairs(Logistician.Config.Options) do
     if option == name then
       return true
     end
@@ -143,86 +143,86 @@ function Auctionator.Config.IsValidOption(name)
   return false
 end
 
-function Auctionator.Config.Create(constant, name, defaultValue)
-  Auctionator.Config.Options[constant] = name
+function Logistician.Config.Create(constant, name, defaultValue)
+  Logistician.Config.Options[constant] = name
 
-  Auctionator.Config.Defaults[Auctionator.Config.Options[constant]] = defaultValue
+  Logistician.Config.Defaults[Logistician.Config.Options[constant]] = defaultValue
 
-  if AUCTIONATOR_CONFIG ~= nil and AUCTIONATOR_CONFIG[name] == nil then
-    AUCTIONATOR_CONFIG[name] = defaultValue
+  if LOGISTICIAN_CONFIG ~= nil and LOGISTICIAN_CONFIG[name] == nil then
+    LOGISTICIAN_CONFIG[name] = defaultValue
   end
-  if AUCTIONATOR_CHARACTER_CONFIG ~= nil and AUCTIONATOR_CHARACTER_CONFIG[name] == nil then
-    AUCTIONATOR_CHARACTER_CONFIG[name] = defaultValue
+  if LOGISTICIAN_CHARACTER_CONFIG ~= nil and LOGISTICIAN_CHARACTER_CONFIG[name] == nil then
+    LOGISTICIAN_CHARACTER_CONFIG[name] = defaultValue
   end
 end
 
-function Auctionator.Config.Set(name, value)
-  if AUCTIONATOR_CONFIG == nil then
-    error("AUCTIONATOR_CONFIG not initialized")
-  elseif not Auctionator.Config.IsValidOption(name) then
+function Logistician.Config.Set(name, value)
+  if LOGISTICIAN_CONFIG == nil then
+    error("LOGISTICIAN_CONFIG not initialized")
+  elseif not Logistician.Config.IsValidOption(name) then
     error("Invalid option '" .. name .. "'")
-  elseif AUCTIONATOR_CHARACTER_CONFIG ~= nil then
-    AUCTIONATOR_CHARACTER_CONFIG[name] = value
+  elseif LOGISTICIAN_CHARACTER_CONFIG ~= nil then
+    LOGISTICIAN_CHARACTER_CONFIG[name] = value
   else
-    AUCTIONATOR_CONFIG[name] = value
+    LOGISTICIAN_CONFIG[name] = value
   end
 end
 
-function Auctionator.Config.SetCharacterConfig(enabled)
+function Logistician.Config.SetCharacterConfig(enabled)
   if enabled then
-    if AUCTIONATOR_CHARACTER_CONFIG == nil then
-      AUCTIONATOR_CHARACTER_CONFIG = {}
+    if LOGISTICIAN_CHARACTER_CONFIG == nil then
+      LOGISTICIAN_CHARACTER_CONFIG = {}
     end
 
-    Auctionator.Config.InitializeCharacterConfig()
+    Logistician.Config.InitializeCharacterConfig()
   else
-    AUCTIONATOR_CHARACTER_CONFIG = nil
+    LOGISTICIAN_CHARACTER_CONFIG = nil
   end
 end
 
-function Auctionator.Config.IsCharacterConfig()
-  return AUCTIONATOR_CHARACTER_CONFIG ~= nil
+function Logistician.Config.IsCharacterConfig()
+  return LOGISTICIAN_CHARACTER_CONFIG ~= nil
 end
 
-function Auctionator.Config.Reset()
-  AUCTIONATOR_CONFIG = {}
-  AUCTIONATOR_CHARACTER_CONFIG = nil
-  for option, value in pairs(Auctionator.Config.Defaults) do
-    AUCTIONATOR_CONFIG[option] = value
+function Logistician.Config.Reset()
+  LOGISTICIAN_CONFIG = {}
+  LOGISTICIAN_CHARACTER_CONFIG = nil
+  for option, value in pairs(Logistician.Config.Defaults) do
+    LOGISTICIAN_CONFIG[option] = value
   end
 end
 
-function Auctionator.Config.InitializeData()
-  if AUCTIONATOR_CONFIG == nil then
-    Auctionator.Config.Reset()
+function Logistician.Config.InitializeData()
+  if LOGISTICIAN_CONFIG == nil then
+    Logistician.Config.Reset()
   else
-    for option, value in pairs(Auctionator.Config.Defaults) do
-      if AUCTIONATOR_CONFIG[option] == nil then
-        Auctionator.Debug.Message("Setting default config for "..option)
-        AUCTIONATOR_CONFIG[option] = value
+    for option, value in pairs(Logistician.Config.Defaults) do
+      if LOGISTICIAN_CONFIG[option] == nil then
+        Logistician.Debug.Message("Setting default config for "..option)
+        LOGISTICIAN_CONFIG[option] = value
       end
     end
-    Auctionator.Config.InitializeCharacterConfig()
+    Logistician.Config.InitializeCharacterConfig()
   end
 end
 
-function Auctionator.Config.InitializeCharacterConfig()
-  if Auctionator.Config.IsCharacterConfig() then
-    for key, value in pairs(AUCTIONATOR_CONFIG) do
-      if AUCTIONATOR_CHARACTER_CONFIG[key] == nil then
-        AUCTIONATOR_CHARACTER_CONFIG[key] = value
+function Logistician.Config.InitializeCharacterConfig()
+  if Logistician.Config.IsCharacterConfig() then
+    for key, value in pairs(LOGISTICIAN_CONFIG) do
+      if LOGISTICIAN_CHARACTER_CONFIG[key] == nil then
+        LOGISTICIAN_CHARACTER_CONFIG[key] = value
       end
     end
   end
 end
 
-function Auctionator.Config.Get(name)
+function Logistician.Config.Get(name)
   -- This is ONLY if a config is asked for before variables are loaded
-  if AUCTIONATOR_CONFIG == nil then
-    return Auctionator.Config.Defaults[name]
-  elseif AUCTIONATOR_CHARACTER_CONFIG ~= nil then
-    return AUCTIONATOR_CHARACTER_CONFIG[name]
+  if LOGISTICIAN_CONFIG == nil then
+    return Logistician.Config.Defaults[name]
+  elseif LOGISTICIAN_CHARACTER_CONFIG ~= nil then
+    return LOGISTICIAN_CHARACTER_CONFIG[name]
   else
-    return AUCTIONATOR_CONFIG[name]
+    return LOGISTICIAN_CONFIG[name]
   end
 end

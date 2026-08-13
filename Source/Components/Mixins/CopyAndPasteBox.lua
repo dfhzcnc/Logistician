@@ -1,6 +1,6 @@
-AuctionatorConfigurationCopyAndPasteMixin = {}
+LogisticianConfigurationCopyAndPasteMixin = {}
 
-function AuctionatorConfigurationCopyAndPasteMixin:OnLoad()
+function LogisticianConfigurationCopyAndPasteMixin:OnLoad()
   if self.labelText ~= nil then
     self.Label:SetText(self.labelText)
   end

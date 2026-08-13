@@ -1,10 +1,10 @@
-AuctionatorGroupsViewItemMixin = {}
+LogisticianGroupsViewItemMixin = {}
 
-function AuctionatorGroupsViewItemMixin:SetClickEvent(eventName)
+function LogisticianGroupsViewItemMixin:SetClickEvent(eventName)
   self.clickEventName = eventName
 end
 
-function AuctionatorGroupsViewItemMixin:SetItemInfo(info)
+function LogisticianGroupsViewItemMixin:SetItemInfo(info)
   self.itemInfo = info
 
   if info ~= nil then
@@ -46,13 +46,13 @@ function AuctionatorGroupsViewItemMixin:SetItemInfo(info)
   self.initializationTime = GetTime()
 end
 
-function AuctionatorGroupsViewItemMixin:OnEnter()
+function LogisticianGroupsViewItemMixin:OnEnter()
   if GetTime() - self.initializationTime > 0 then
     self:UpdateTooltip()
   end
 end
 
-function AuctionatorGroupsViewItemMixin:UpdateTooltip()
+function LogisticianGroupsViewItemMixin:UpdateTooltip()
   if self.itemInfo ~= nil then
     if IsModifiedClick("DRESSUP") then
       ShowInspectCursor();
@@ -61,7 +61,7 @@ function AuctionatorGroupsViewItemMixin:UpdateTooltip()
     end
 
     GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-    if Auctionator.Utilities.IsPetLink(self.itemInfo.itemLink) then
+    if Logistician.Utilities.IsPetLink(self.itemInfo.itemLink) then
       BattlePetToolTip_ShowLink(self.itemInfo.itemLink)
     else
       GameTooltip:SetHyperlink(self.itemInfo.itemLink)
@@ -70,7 +70,7 @@ function AuctionatorGroupsViewItemMixin:UpdateTooltip()
   end
 end
 
-function AuctionatorGroupsViewItemMixin:OnLeave()
+function LogisticianGroupsViewItemMixin:OnLeave()
   ResetCursor()
   if BattlePetTooltip then
     BattlePetTooltip:Hide()
@@ -78,41 +78,25 @@ function AuctionatorGroupsViewItemMixin:OnLeave()
   GameTooltip:Hide()
 end
 
-function AuctionatorGroupsViewItemMixin:OnClick(button)
+function LogisticianGroupsViewItemMixin:OnClick(button)
   if self.itemInfo ~= nil then
     if IsModifiedClick("DRESSUP") then
-      -- Retail vs Classic functions
       (DressUpLink or DressUpItemLink)(self.itemInfo.itemLink)
 
     elseif IsModifiedClick("CHATLINK") then
-      Auctionator.Utilities.InsertLink(self.itemInfo.itemLink)
+      Logistician.Utilities.InsertLink(self.itemInfo.itemLink)
 
     else
-      Auctionator.Groups.CallbackRegistry:TriggerEvent(self.clickEventName, self, button)
+      Logistician.Groups.CallbackRegistry:TriggerEvent(self.clickEventName, self, button)
     end
   end
 end
 
--- Adds Dragonflight (10.0) crafting quality icon for reagents on retail only
-function AuctionatorGroupsViewItemMixin:ApplyQualityIcon(itemLink)
-  if Auctionator.Constants.IsRetail then
-    local info = C_TradeSkillUI.GetItemReagentQualityInfo(itemLink)
-    if info ~= nil then
-      if not self.ProfessionQualityOverlay then
-        self.ProfessionQualityOverlay = self:CreateTexture(nil, "OVERLAY");
-        self.ProfessionQualityOverlay:SetPoint("TOPLEFT", -2, 2);
-        self.ProfessionQualityOverlay:SetDrawLayer("OVERLAY", 7);
-      end
-      self.ProfessionQualityOverlay:Show()
-
-      self.ProfessionQualityOverlay:SetAtlas(info.iconInventory, TextureKitConstants.UseAtlasSize);
-    else
-      self:HideQualityIcon()
-    end
-  end
+function LogisticianGroupsViewItemMixin:ApplyQualityIcon(itemLink)
+  self:HideQualityIcon()
 end
 
-function AuctionatorGroupsViewItemMixin:HideQualityIcon()
+function LogisticianGroupsViewItemMixin:HideQualityIcon()
   if self.ProfessionQualityOverlay then
     self.ProfessionQualityOverlay:Hide()
   end

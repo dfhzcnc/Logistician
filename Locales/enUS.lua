@@ -1,4 +1,4 @@
-AUCTIONATOR_LOCALES.enUS = function()
+LOGISTICIAN_LOCALES.enUS = function()
   local L = {}
 
   L["CONFIG_BASIC_OPTIONS_CATEGORY"] = "Basic Options"
@@ -423,7 +423,7 @@ AUCTIONATOR_LOCALES.enUS = function()
   L["SHIFT_LEFT_CLICK"] = "Shift Left Click"
   L["SHIFT_RIGHT_CLICK"] = "Shift Right Click"
   L["DISABLED"] = "Disabled"
-  L["AUCTIONATOR"] = "Logistician"
+  L["LOGISTICIAN"] = "Logistician"
 
   L["GEAR_VENDOR_PRICE_MULTIPLIER"] = "Gear vendor price multiplier"
 

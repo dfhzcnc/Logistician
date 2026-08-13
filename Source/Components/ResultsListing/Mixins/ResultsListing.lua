@@ -1,14 +1,14 @@
-AuctionatorResultsListingMixin = {}
+LogisticianResultsListingMixin = {}
 
-function AuctionatorResultsListingMixin:SetScrollBarOffsetX(offsetX)
+function LogisticianResultsListingMixin:SetScrollBarOffsetX(offsetX)
   local scrollBar = self.ScrollArea.ScrollBar
   scrollBar:ClearAllPoints()
   scrollBar:SetPoint("TOPLEFT", self.ScrollArea, "TOPRIGHT", offsetX, 0)
   scrollBar:SetPoint("BOTTOMLEFT", self.ScrollArea, "BOTTOMRIGHT", offsetX, 0)
 end
 
-function AuctionatorResultsListingMixin:Init(dataProvider)
-  Auctionator.Debug.Message("AuctionatorResultsListingMixin:Init()")
+function LogisticianResultsListingMixin:Init(dataProvider)
+  Logistician.Debug.Message("LogisticianResultsListingMixin:Init()")
 
   self.isInitialized = false
   self.dataProvider = dataProvider
@@ -26,7 +26,7 @@ function AuctionatorResultsListingMixin:Init(dataProvider)
 
   -- Create an instance of table builder - note that the ScrollFrame we reference
   -- mixes a TableBuilder implementation in
-  self.tableBuilder = AuctionatorRetailImportCreateTableBuilder()
+  self.tableBuilder = LogisticianTBCImportCreateTableBuilder()
   -- Set the frame that will be used for header columns for this tableBuilder
   self.tableBuilder:SetHeaderContainer(self.HeaderContainer)
 
@@ -34,7 +34,7 @@ function AuctionatorResultsListingMixin:Init(dataProvider)
   self:InitializeDataProvider()
 end
 
-function AuctionatorResultsListingMixin:InitializeDataProvider()
+function LogisticianResultsListingMixin:InitializeDataProvider()
   self.dataProvider:SetOnUpdateCallback(function()
     self:UpdateTable()
   end)
@@ -60,15 +60,15 @@ function AuctionatorResultsListingMixin:InitializeDataProvider()
   end)
 end
 
-function AuctionatorResultsListingMixin:RestoreScrollPosition()
+function LogisticianResultsListingMixin:RestoreScrollPosition()
   if self.savedScrollPosition ~= nil then
     self:UpdateTable()
     self.ScrollArea.ScrollBox:SetScrollPercentage(self.savedScrollPosition)
   end
 end
 
-function AuctionatorResultsListingMixin:OnShow()
-  Auctionator.Debug.Message("AuctionatorResultsListingMixin:OnShow()", self.isInitialized)
+function LogisticianResultsListingMixin:OnShow()
+  Logistician.Debug.Message("LogisticianResultsListingMixin:OnShow()", self.isInitialized)
   if not self.isInitialized then
     return
   end
@@ -78,7 +78,7 @@ function AuctionatorResultsListingMixin:OnShow()
   self:UpdateTable()
 end
 
-function AuctionatorResultsListingMixin:InitializeTable()
+function LogisticianResultsListingMixin:InitializeTable()
   self.tableBuilder:Reset()
   self.tableBuilder:SetTableMargins(15)
   self.tableBuilder:SetDataProvider(function(index)
@@ -123,7 +123,7 @@ function AuctionatorResultsListingMixin:InitializeTable()
   self:ApplyHiding()
 end
 
-function AuctionatorResultsListingMixin:UpdateTable()
+function LogisticianResultsListingMixin:UpdateTable()
   if not self.isInitialized then
     return
   end
@@ -135,13 +135,13 @@ function AuctionatorResultsListingMixin:UpdateTable()
   self.ScrollArea.ScrollBox:SetDataProvider(tmpDataProvider, shouldPreserveScroll)
 end
 
-function AuctionatorResultsListingMixin:ClearColumnSorts()
+function LogisticianResultsListingMixin:ClearColumnSorts()
   for _, col in ipairs(self.tableBuilder:GetColumns()) do
     col.headerFrame.Arrow:Hide()
   end
 end
 
-function AuctionatorResultsListingMixin:CustomiseColumns()
+function LogisticianResultsListingMixin:CustomiseColumns()
   if self.dataProvider:GetColumnHideStates() ~= nil then
     local hideStates = self.dataProvider:GetColumnHideStates()
     local listing = {}
@@ -183,7 +183,7 @@ local function SetColumnShown(column, isShown)
 end
 
 -- Prevent hidden columns displaying and overlapping visible ones
-function AuctionatorResultsListingMixin:ApplyHiding()
+function LogisticianResultsListingMixin:ApplyHiding()
   local hidingDetails = self.dataProvider:GetColumnHideStates()
   if hidingDetails == nil then
     return
@@ -195,7 +195,7 @@ function AuctionatorResultsListingMixin:ApplyHiding()
   end
 end
 
-function AuctionatorResultsListingMixin:UpdateDimensionsForHiding()
+function LogisticianResultsListingMixin:UpdateDimensionsForHiding()
   if not self.dataProvider:GetColumnHideStates() then
     self.tableBuilder:Arrange()
     return
@@ -242,13 +242,13 @@ function AuctionatorResultsListingMixin:UpdateDimensionsForHiding()
   self.tableBuilder:Arrange()
 end
 
-function AuctionatorResultsListingMixin:EnableSpinner()
+function LogisticianResultsListingMixin:EnableSpinner()
   self.ScrollArea.ResultsText:Show()
   self.ScrollArea.LoadingSpinner:Show()
   self.ScrollArea.SpinnerAnim:Play()
 end
 
-function AuctionatorResultsListingMixin:DisableSpinner()
+function LogisticianResultsListingMixin:DisableSpinner()
   self.ScrollArea.ResultsText:Hide()
   self.ScrollArea.LoadingSpinner:Hide()
   self.ScrollArea.SpinnerAnim:Stop()

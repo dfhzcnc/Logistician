@@ -14,7 +14,7 @@ local defaultVariables = {
     showCookingCategories = true,
     showEnchantingCategories = true,
     showPetCategories = true,
-    skillColorMode = 0, -- vanilla, plus, plusRarity
+    skillColorMode = 0, -- standard, plus, plusRarity
     canDragFrame = false,
     showAlternateRanks = true,
     sortRoguePoisons = false,
@@ -32,12 +32,12 @@ end
 
 function main:CreateSettingsFrame()
     local category, layout
-    if Auctionator
-        and Auctionator.State
-        and Auctionator.State.OptionsCategory
+    if Logistician
+        and Logistician.State
+        and Logistician.State.OptionsCategory
         and Settings.RegisterVerticalLayoutSubcategory then
         category, layout = Settings.RegisterVerticalLayoutSubcategory(
-            Auctionator.State.OptionsCategory,
+            Logistician.State.OptionsCategory,
             "Professions & Skills"
         )
     else
@@ -90,7 +90,7 @@ function main:CreateSettingsFrame()
             local setting = Settings.RegisterAddOnSetting(category, "skillColorMode", "skillColorMode", WiderProfessions_DB, Settings.VarType.Number, main.ClientLocale.skillColor, 0)
             local function GetOptions()
                 local container = Settings.CreateControlTextContainer();
-                container:Add(0, main.ClientLocale.skillColor_Vanilla, main.ClientLocale.skillColor_VanillaTooltip);
+                container:Add(0, main.ClientLocale.skillColor_Classic, main.ClientLocale.skillColor_ClassicTooltip);
                 container:Add(1, main.ClientLocale.skillColor_Plus, main.ClientLocale.skillColor_PlusTooltip);
                 container:Add(2, main.ClientLocale.skillColor_PlusRarity, main.ClientLocale.skillColor_PlusRarityTooltip);
                 return container:GetData();
@@ -113,7 +113,7 @@ function main:CreateSettingsFrame()
             local setting = Settings.RegisterAddOnSetting(category, "skillColorMode", "skillColorMode", WiderProfessions_DB, Settings.VarType.Number, main.ClientLocale.skillColor, 0)
             local function GetOptions()
                 local container = Settings.CreateControlTextContainer();
-                container:Add(0, main.ClientLocale.skillColor_Vanilla, main.ClientLocale.skillColor_VanillaTooltip);
+                container:Add(0, main.ClientLocale.skillColor_Classic, main.ClientLocale.skillColor_ClassicTooltip);
                 container:Add(1, main.ClientLocale.skillColor_Plus, main.ClientLocale.skillColor_PlusTooltip);
                 container:Add(2, main.ClientLocale.skillColor_PlusRarity, main.ClientLocale.skillColor_PlusRarityTooltip);
                 return container:GetData();

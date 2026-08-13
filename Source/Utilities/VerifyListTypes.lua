@@ -4,7 +4,7 @@
 -- Returns a new array with only valid entries
 
 
-function Auctionator.Utilities.VerifyListTypes(list, requiredTypeString)
+function Logistician.Utilities.VerifyListTypes(list, requiredTypeString)
   if list == nil or type(list) ~= "table" then
     return nil
   end

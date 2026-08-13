@@ -1,6 +1,6 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/">
 <!-- Template for a radio button with label -->
-  <Frame name="AuctionatorConfigurationRadioButtonGroup" mixin="AuctionatorConfigRadioButtonGroupMixin" virtual="true">
+  <Frame name="LogisticianConfigurationRadioButtonGroup" mixin="LogisticianConfigRadioButtonGroupMixin" virtual="true">
     <!--
       <KeyValues>
         <KeyValue key="subHeadingText" value="" type="string"/>
@@ -14,7 +14,7 @@
       <Anchor point="RIGHT" relativeKey="$parent" relativePoint="RIGHT"/>
     </Anchors>
     <Frames>
-      <Frame inherits="AuctionatorConfigurationSubHeadingFrame" parentKey="GroupHeading">
+      <Frame inherits="LogisticianConfigurationSubHeadingFrame" parentKey="GroupHeading">
         <Anchors>
           <Anchor point="TOPLEFT" relativeKey="$parent" relativePoint="TOPLEFT"/>
         </Anchors>

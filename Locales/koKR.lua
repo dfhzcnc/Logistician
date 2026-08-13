@@ -1,4 +1,4 @@
-AUCTIONATOR_LOCALES.koKR = function()
+LOGISTICIAN_LOCALES.koKR = function()
   local L = {}
 
   L["ADD_FAVOURITE"] = "즐겨찾기 추가"
@@ -17,7 +17,7 @@ L["AUCTION_DURATION_12"] = "12시간"
 L["AUCTION_DURATION_24"] = "24시간"
 L["AUCTION_DURATION_48"] = "48시간"
 L["AUCTION_MEAN"] = "경매 평균"
-L["AUCTIONATOR"] = "옥셔네이터"
+L["LOGISTICIAN"] = "옥셔네이터"
 L["AUTHOR_HEADER"] = "만든사람"
 L["BID_EXISTING_ON_OWNED_AUCTION"] = "누군가 이 경매에 입찰했으므로 취소하면 보증금과 수수료가 부과됩니다:"
 L["BID_ONLY_AVAILABLE"] = "입찰만 가능"

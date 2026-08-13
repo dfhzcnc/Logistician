@@ -1,5 +1,5 @@
 <Ui>
-  <Button name="AuctionatorKeyBindingButtonTemplate" inherits="UIMenuButtonStretchTemplate" virtual="true">
+  <Button name="LogisticianKeyBindingButtonTemplate" inherits="UIMenuButtonStretchTemplate" virtual="true">
     <Size x="180" y="20"/>
     <Layers>
       <Layer level="OVERLAY">
@@ -26,7 +26,7 @@
       </OnLeave>
     </Scripts>
   </Button>
-  <Frame name="AuctionatorKeyBindingConfigTemplate" mixin="AuctionatorKeyBindingConfigMixin" virtual="true">
+  <Frame name="LogisticianKeyBindingConfigTemplate" mixin="LogisticianKeyBindingConfigMixin" virtual="true">
     <Size x="400" y="35"/>
     <Layers>
       <Layer level="BACKGROUND">
@@ -39,7 +39,7 @@
       </Layer>
     </Layers>
     <Frames>
-      <Button inherits="AuctionatorKeyBindingButtonTemplate" parentKey="Button">
+      <Button inherits="LogisticianKeyBindingButtonTemplate" parentKey="Button">
         <Anchors>
           <Anchor point="LEFT" relativeKey="$parent.Description" relativePoint="RIGHT"/>
         </Anchors>

@@ -1,9 +1,9 @@
 local counter = 0
 local function GenerateDialog()
   counter = counter + 1
-  local dialog = CreateFrame("Frame", "AuctionatorDialog" .. counter, UIParent)
+  local dialog = CreateFrame("Frame", "LogisticianDialog" .. counter, UIParent)
   dialog:SetToplevel(true)
-  table.insert(UISpecialFrames, "AuctionatorDialog" .. counter)
+  table.insert(UISpecialFrames, "LogisticianDialog" .. counter)
   dialog:SetPoint("TOP", 0, -135)
   dialog:EnableMouse(true)
   dialog:SetFrameStrata("DIALOG")
@@ -28,7 +28,7 @@ local function GenerateDialog()
 end
 
 local editBoxDialogsBySkin = {}
-function Auctionator.Dialogs.ShowEditBox(text, acceptText, cancelText, confirmCallback)
+function Logistician.Dialogs.ShowEditBox(text, acceptText, cancelText, confirmCallback)
   local currentSkinKey = ""
   if not editBoxDialogsBySkin[currentSkinKey] then
     local dialog = GenerateDialog()
@@ -67,7 +67,7 @@ function Auctionator.Dialogs.ShowEditBox(text, acceptText, cancelText, confirmCa
 end
 
 local confirmDialogsBySkin = {}
-function Auctionator.Dialogs.ShowConfirm(text, yesText, noText, confirmCallback)
+function Logistician.Dialogs.ShowConfirm(text, yesText, noText, confirmCallback)
   local currentSkinKey = ""
   if not confirmDialogsBySkin[currentSkinKey] then
     local dialog = GenerateDialog()
@@ -100,7 +100,7 @@ function Auctionator.Dialogs.ShowConfirm(text, yesText, noText, confirmCallback)
 end
 
 local confirmDialogsBySkin = {}
-function Auctionator.Dialogs.ShowConfirmAlt(text, yesText, altText, noText, confirmCallback, altCallback)
+function Logistician.Dialogs.ShowConfirmAlt(text, yesText, altText, noText, confirmCallback, altCallback)
   local currentSkinKey = ""
   if not confirmDialogsBySkin[currentSkinKey] then
     local dialog = GenerateDialog()
@@ -138,7 +138,7 @@ function Auctionator.Dialogs.ShowConfirmAlt(text, yesText, altText, noText, conf
 end
 
 local moneyShowDialogsBySkin = {}
-function Auctionator.Dialogs.ShowMoney(text, value, acceptText, cancelText, confirmCallback)
+function Logistician.Dialogs.ShowMoney(text, value, acceptText, cancelText, confirmCallback)
   local currentSkinKey = ""
   if not moneyShowDialogsBySkin[currentSkinKey] then
     local dialog = GenerateDialog()

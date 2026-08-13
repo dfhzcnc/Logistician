@@ -1,6 +1,6 @@
-AuctionatorPanelConfigMixin = {}
+LogisticianPanelConfigMixin = {}
 
-function AuctionatorPanelConfigMixin:SetupPanel()
+function LogisticianPanelConfigMixin:SetupPanel()
   self.cancel = function()
     self:Cancel()
   end
@@ -23,7 +23,7 @@ function AuctionatorPanelConfigMixin:SetupPanel()
     -- TOC IconTexture and falls back to the generic red addon icon.
     local category = Settings.RegisterCanvasLayoutCategory(self, self.name, "!Logistician")
     Settings.RegisterAddOnCategory(category)
-    Auctionator.State.OptionsCategory = category
+    Logistician.State.OptionsCategory = category
 
     -- Keep the integrated addon's settings easy to navigate: auction-house
     -- pages live below Auction, while profession and pet-skill controls use a
@@ -31,26 +31,26 @@ function AuctionatorPanelConfigMixin:SetupPanel()
     if Settings.RegisterVerticalLayoutSubcategory then
       local auctionCategory = Settings.RegisterVerticalLayoutSubcategory(category, "Auction")
       Settings.RegisterAddOnCategory(auctionCategory)
-      Auctionator.State.AuctionOptionsCategory = auctionCategory
+      Logistician.State.AuctionOptionsCategory = auctionCategory
     end
   else
-    local parentCategory = Auctionator.State.AuctionOptionsCategory or Auctionator.State.OptionsCategory
+    local parentCategory = Logistician.State.AuctionOptionsCategory or Logistician.State.OptionsCategory
     local subcategory = Settings.RegisterCanvasLayoutSubcategory(parentCategory, self, self.name)
     Settings.RegisterAddOnCategory(subcategory)
   end
 end
 
-function AuctionatorPanelConfigMixin:OnShow()
+function LogisticianPanelConfigMixin:OnShow()
   self:ShowSettings()
   self.shownSettings = true
 end
 
 -- Derive
-function AuctionatorPanelConfigMixin:Cancel()
-  Auctionator.Debug.Message("AuctionatorPanelConfigMixin:Cancel() Unimplemented")
+function LogisticianPanelConfigMixin:Cancel()
+  Logistician.Debug.Message("LogisticianPanelConfigMixin:Cancel() Unimplemented")
 end
 
 -- Derive
-function AuctionatorPanelConfigMixin:Save()
-  Auctionator.Debug.Message("AuctionatorPanelConfigMixin:Save() Unimplemented")
+function LogisticianPanelConfigMixin:Save()
+  Logistician.Debug.Message("LogisticianPanelConfigMixin:Save() Unimplemented")
 end

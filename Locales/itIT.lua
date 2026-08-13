@@ -1,4 +1,4 @@
-AUCTIONATOR_LOCALES.itIT = function()
+LOGISTICIAN_LOCALES.itIT = function()
   local L = {}
 
   L["ADD_FAVOURITE"] = "Aggiungi Preferito"
@@ -17,7 +17,7 @@ L["AUCTION_DURATION_12"] = "12 Ore"
 L["AUCTION_DURATION_24"] = "24 Ore"
 L["AUCTION_DURATION_48"] = "48 Ore"
 L["AUCTION_MEAN"] = "Significato Asta"
-L["AUCTIONATOR"] = "Logistician"
+L["LOGISTICIAN"] = "Logistician"
 L["AUTHOR_HEADER"] = "Autore"
 L["BID_EXISTING_ON_OWNED_AUCTION"] = "Qualcuno ha fatto un'offerta per questa asta; cancellarla ti costarà il suo deposito e:"
 L["BID_ONLY_AVAILABLE"] = "disponibile solo l'offerta"

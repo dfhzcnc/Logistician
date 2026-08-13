@@ -1,6 +1,6 @@
-AuctionatorConfigTooltipMixin = {}
+LogisticianConfigTooltipMixin = {}
 
-function AuctionatorConfigTooltipMixin:OnEnter()
+function LogisticianConfigTooltipMixin:OnEnter()
   if self.tooltipText ~= nil then
     GameTooltip:SetOwner(self, "ANCHOR_LEFT")
     GameTooltip:SetText((self.tooltipTitleText or ""), 0.9, 1.0, 1.0)
@@ -13,7 +13,7 @@ function AuctionatorConfigTooltipMixin:OnEnter()
   end
 end
 
-function AuctionatorConfigTooltipMixin:OnLeave()
+function LogisticianConfigTooltipMixin:OnLeave()
   if self.tooltipText ~= nil or self.tooltipTitleText ~= nil then
     GameTooltip:Hide()
   end

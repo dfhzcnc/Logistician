@@ -1,7 +1,7 @@
--- Shows all Auctionator shopping lists and their search terms, and includes
+-- Shows all Logistician shopping lists and their search terms, and includes
 -- buttons to register a callback to (for example) do search, edit and delete
 -- commands
-AuctionatorShoppingTabListsContainerMixin = {}
+LogisticianShoppingTabListsContainerMixin = {}
 
 RowType = {
   List = "list header",
@@ -30,7 +30,7 @@ local CATEGORY_ICONS = {
 }
 
 local function GetSearchTermIcon(searchTerm)
-  local split = Auctionator.Search.SplitAdvancedSearch(searchTerm)
+  local split = Logistician.Search.SplitAdvancedSearch(searchTerm)
   local categoryKey = split.categoryKey or ""
   if categoryKey ~= "" then
     local topLevels = {}
@@ -48,8 +48,8 @@ local function GetSearchTermIcon(searchTerm)
   local plainName = split.searchString and split.searchString:gsub('^"(.*)"$', '%1') or ""
   if plainName == "" then return "Interface\\Icons\\INV_Misc_Spyglass_03" end
 
-  local iconCache = Auctionator.Shopping.ListIconCache or {}
-  Auctionator.Shopping.ListIconCache = iconCache
+  local iconCache = Logistician.Shopping.ListIconCache or {}
+  Logistician.Shopping.ListIconCache = iconCache
   local _, _, _, _, _, _, _, _, _, texture = GetItemInfo(plainName)
   if texture then iconCache[string.lower(plainName)] = texture end
   return texture or iconCache[string.lower(plainName)] or "Interface\\Icons\\INV_Misc_QuestionMark"
@@ -101,7 +101,7 @@ local function DisplayCategory(categoryKey)
 end
 
 local function GetSearchTermDisplay(searchTerm)
-  local search = Auctionator.Search.SplitAdvancedSearch(searchTerm)
+  local search = Logistician.Search.SplitAdvancedSearch(searchTerm)
   local primary = search.searchString or ""
   if primary ~= "" and search.isExact then primary = '"' .. primary .. '"' end
 
@@ -118,7 +118,7 @@ local function GetSearchTermDisplay(searchTerm)
   local qualities = {}
   for _, quality in ipairs(search.qualities or {}) do
     if ITEM_QUALITY_COLORS[quality] then
-      table.insert(qualities, Auctionator.Utilities.CreateColoredQuality(quality))
+      table.insert(qualities, Logistician.Utilities.CreateColoredQuality(quality))
     end
   end
   Add(table.concat(qualities, ", "))
@@ -142,59 +142,59 @@ end
 -- Callbacks to add wanted behaviour, e.g. editing a list or searching for a
 -- search term
 -- When a list is expanded to show its search terms
-function AuctionatorShoppingTabListsContainerMixin:SetOnListExpanded(func)
+function LogisticianShoppingTabListsContainerMixin:SetOnListExpanded(func)
   self.onListExpanded = func
 end
 
 -- When a list is collapsed by an explicit button press to hide its search terms
-function AuctionatorShoppingTabListsContainerMixin:SetOnListCollapsed(func)
+function LogisticianShoppingTabListsContainerMixin:SetOnListCollapsed(func)
   self.onListCollapsed = func
 end
 
 -- When the search button is clicked on a particular list
-function AuctionatorShoppingTabListsContainerMixin:SetOnListSearch(func)
+function LogisticianShoppingTabListsContainerMixin:SetOnListSearch(func)
   self.onListSearch = func
 end
 
 -- When the edit button is clicked on a particular list
-function AuctionatorShoppingTabListsContainerMixin:SetOnListEdit(func)
+function LogisticianShoppingTabListsContainerMixin:SetOnListEdit(func)
   self.onListEdit = func
 end
 
 -- When the delete button is clicked on a particular list
-function AuctionatorShoppingTabListsContainerMixin:SetOnListDelete(func)
+function LogisticianShoppingTabListsContainerMixin:SetOnListDelete(func)
   self.onListDelete = func
 end
 
 -- When the edit button is clicked on a particular search term in a list
-function AuctionatorShoppingTabListsContainerMixin:SetOnSearchTermEdit(func)
+function LogisticianShoppingTabListsContainerMixin:SetOnSearchTermEdit(func)
   self.onSearchTermEdit = func
 end
 
 -- When the delete button is clicked on a particular search term in a list
-function AuctionatorShoppingTabListsContainerMixin:SetOnSearchTermDelete(func)
+function LogisticianShoppingTabListsContainerMixin:SetOnSearchTermDelete(func)
   self.onSearchTermDelete = func
 end
 
 -- When the search term is just clicked
-function AuctionatorShoppingTabListsContainerMixin:SetOnSearchTermClicked(func)
+function LogisticianShoppingTabListsContainerMixin:SetOnSearchTermClicked(func)
   self.onSearchTermClicked = func
 end
 
 -- When a search term is dragged to a different position
-function AuctionatorShoppingTabListsContainerMixin:SetOnListItemDrag(func)
+function LogisticianShoppingTabListsContainerMixin:SetOnListItemDrag(func)
   self.onListItemDrag = func
 end
 
-function AuctionatorShoppingTabListsContainerMixin:SetOnListDrag(func)
+function LogisticianShoppingTabListsContainerMixin:SetOnListDrag(func)
   self.onListDrag = func
 end
 
-function AuctionatorShoppingTabListsContainerMixin:SetOnListItemMove(func)
+function LogisticianShoppingTabListsContainerMixin:SetOnListItemMove(func)
   self.onListItemMove = func
 end
 
-function AuctionatorShoppingTabListsContainerMixin:ExpandList(list)
+function LogisticianShoppingTabListsContainerMixin:ExpandList(list)
   if self.expandedList then
     self.expandedList = nil
     if self.onListCollapsed then
@@ -209,7 +209,7 @@ function AuctionatorShoppingTabListsContainerMixin:ExpandList(list)
   end
 end
 
-function AuctionatorShoppingTabListsContainerMixin:CollapseList(list)
+function LogisticianShoppingTabListsContainerMixin:CollapseList(list)
   self.expandedList = nil
   self:Populate()
   if list ~= nil then
@@ -220,7 +220,7 @@ function AuctionatorShoppingTabListsContainerMixin:CollapseList(list)
   end
 end
 
-function AuctionatorShoppingTabListsContainerMixin:TemporarilySelectSearchTerm(index)
+function LogisticianShoppingTabListsContainerMixin:TemporarilySelectSearchTerm(index)
   self.ScrollBox:ForEachFrame(function(frame)
     if frame.elementData.type == RowType.SearchTerm then
       frame.Selected:SetShown(frame.elementData.index == index)
@@ -228,7 +228,7 @@ function AuctionatorShoppingTabListsContainerMixin:TemporarilySelectSearchTerm(i
   end)
 end
 
-function AuctionatorShoppingTabListsContainerMixin:ScrollToList(list)
+function LogisticianShoppingTabListsContainerMixin:ScrollToList(list)
   local dataIndex = self.ScrollBox:FindElementDataIndexByPredicate(function(elementData)
     return elementData.type == RowType.List and elementData.list:GetName() == list:GetName()
   end)
@@ -241,7 +241,7 @@ function AuctionatorShoppingTabListsContainerMixin:ScrollToList(list)
   end
 end
 
-function AuctionatorShoppingTabListsContainerMixin:ScrollToListEnd()
+function LogisticianShoppingTabListsContainerMixin:ScrollToListEnd()
   if not self.expandedList then
     return
   end
@@ -252,15 +252,15 @@ function AuctionatorShoppingTabListsContainerMixin:ScrollToListEnd()
   self.ScrollBox:ScrollToNearest(dataIndex)
 end
 
-function AuctionatorShoppingTabListsContainerMixin:IsListExpanded(list)
+function LogisticianShoppingTabListsContainerMixin:IsListExpanded(list)
   return self.expandedList and self.expandedList:GetName() == list:GetName()
 end
 
-function AuctionatorShoppingTabListsContainerMixin:GetExpandedList()
+function LogisticianShoppingTabListsContainerMixin:GetExpandedList()
   return self.expandedList
 end
 
-function AuctionatorShoppingTabListsContainerMixin:OnLoad()
+function LogisticianShoppingTabListsContainerMixin:OnLoad()
   self:SetupContent()
 
   if self:IsVisible() then
@@ -268,24 +268,24 @@ function AuctionatorShoppingTabListsContainerMixin:OnLoad()
   end
 end
 
-function AuctionatorShoppingTabListsContainerMixin:OnShow()
+function LogisticianShoppingTabListsContainerMixin:OnShow()
   self:Populate()
 
   -- Listen to events to make sure the lists view is up to date
-  Auctionator.EventBus:Register(self, {
-    Auctionator.Shopping.Events.ListMetaChange,
-    Auctionator.Shopping.Events.ListItemChange,
+  Logistician.EventBus:Register(self, {
+    Logistician.Shopping.Events.ListMetaChange,
+    Logistician.Shopping.Events.ListItemChange,
   })
 end
 
-function AuctionatorShoppingTabListsContainerMixin:OnHide()
-  Auctionator.EventBus:Unregister(self, {
-    Auctionator.Shopping.Events.ListMetaChange,
-    Auctionator.Shopping.Events.ListItemChange,
+function LogisticianShoppingTabListsContainerMixin:OnHide()
+  Logistician.EventBus:Unregister(self, {
+    Logistician.Shopping.Events.ListMetaChange,
+    Logistician.Shopping.Events.ListItemChange,
   })
 end
 
-function AuctionatorShoppingTabListsContainerMixin:OnDragUpdate()
+function LogisticianShoppingTabListsContainerMixin:OnDragUpdate()
   if not IsMouseButtonDown("LeftButton") then
     local source = self.dragSource
     local target = self.dragTarget
@@ -311,17 +311,17 @@ function AuctionatorShoppingTabListsContainerMixin:OnDragUpdate()
   end
 end
 
-function AuctionatorShoppingTabListsContainerMixin:ReceiveEvent(eventName, eventData)
-  if eventName == Auctionator.Shopping.Events.ListItemChange then
+function LogisticianShoppingTabListsContainerMixin:ReceiveEvent(eventName, eventData)
+  if eventName == Logistician.Shopping.Events.ListItemChange then
     if self.expandedList and self.expandedList:GetName() == eventData then
       self:Populate()
     end
-  elseif eventName == Auctionator.Shopping.Events.ListMetaChange then
+  elseif eventName == Logistician.Shopping.Events.ListMetaChange then
     self:Populate()
   end
 end
 
-function AuctionatorShoppingTabListsContainerMixin:SetupContent()
+function LogisticianShoppingTabListsContainerMixin:SetupContent()
   local function OnClick(button, buttonClickedString)
     if buttonClickedString == "RightButton" then
       if self.expandedList then
@@ -346,7 +346,7 @@ function AuctionatorShoppingTabListsContainerMixin:SetupContent()
     button.Highlight:Show()
     if button.elementData and button.elementData.type == RowType.SearchTerm then
       GameTooltip:SetOwner(button, "ANCHOR_NONE")
-      Auctionator.Shopping.Tab.ComposeSearchTermTooltip(button.elementData.searchTerm)
+      Logistician.Shopping.Tab.ComposeSearchTermTooltip(button.elementData.searchTerm)
       GameTooltip:SetPoint("BOTTOMRIGHT", button, "TOPRIGHT")
       GameTooltip:Show()
     end
@@ -452,7 +452,7 @@ function AuctionatorShoppingTabListsContainerMixin:SetupContent()
 
   local function SetupButton(button)
     button.setup = true
-    Auctionator.Shopping.Tab.SetupContainerRow(button, buttonHeight, buttonSpacing)
+    Logistician.Shopping.Tab.SetupContainerRow(button, buttonHeight, buttonSpacing)
     button:SetScript("OnEnter", OnEnter)
     button:SetScript("OnLeave", OnLeave)
     button:SetScript("OnClick", OnClick)
@@ -466,9 +466,9 @@ function AuctionatorShoppingTabListsContainerMixin:SetupContent()
     button.DropCue:SetBlendMode("ADD")
     button.DropCue:Hide()
 
-    button.options1 = Auctionator.Shopping.Tab.CreateOptionButton(button, 0, buttonHeight + 5, buttonHeight)
-    button.options2 = Auctionator.Shopping.Tab.CreateOptionButton(button, -buttonHeight - 5, buttonHeight + 5, buttonHeight)
-    button.options3 = Auctionator.Shopping.Tab.CreateOptionButton(button, - 2 * buttonHeight - 10, buttonHeight + 5, buttonHeight)
+    button.options1 = Logistician.Shopping.Tab.CreateOptionButton(button, 0, buttonHeight + 5, buttonHeight)
+    button.options2 = Logistician.Shopping.Tab.CreateOptionButton(button, -buttonHeight - 5, buttonHeight + 5, buttonHeight)
+    button.options3 = Logistician.Shopping.Tab.CreateOptionButton(button, - 2 * buttonHeight - 10, buttonHeight + 5, buttonHeight)
   end
 
   local function OnButtonAcquire(button, elementData)
@@ -499,21 +499,21 @@ function AuctionatorShoppingTabListsContainerMixin:SetupContent()
         icon = "|TInterface\\AddOns\\!Logistician\\Images\\Minus_Icon:8:8|t"
       end
       button.Text:SetText(icon .. "  " .. color:WrapTextInColorCode(elementData.list:GetName()))
-      Auctionator.Shopping.Tab.SetOptionIcon(button.options1, "search")
+      Logistician.Shopping.Tab.SetOptionIcon(button.options1, "search")
       button.options1:SetScript("OnClick", OnListSearchOptionClicked)
-      button.options1.TooltipText = AUCTIONATOR_L_SEARCH_ALL
+      button.options1.TooltipText = LOGISTICIAN_L_SEARCH_ALL
       button.options1:Show()
-      Auctionator.Shopping.Tab.SetOptionIcon(button.options2, "edit")
+      Logistician.Shopping.Tab.SetOptionIcon(button.options2, "edit")
       button.options2:SetScript("OnClick", OnListEditOptionClicked)
       if elementData.list:IsTemporary() then
-        button.options2.TooltipText = AUCTIONATOR_L_MAKE_PERMANENT
+        button.options2.TooltipText = LOGISTICIAN_L_MAKE_PERMANENT
       else
-        button.options2.TooltipText = AUCTIONATOR_L_RENAME
+        button.options2.TooltipText = LOGISTICIAN_L_RENAME
       end
       button.options2:Show()
-      Auctionator.Shopping.Tab.SetOptionIcon(button.options3, "delete")
+      Logistician.Shopping.Tab.SetOptionIcon(button.options3, "delete")
       button.options3:SetScript("OnClick", OnListDeleteOptionClicked)
-      button.options3.TooltipText = AUCTIONATOR_L_DELETE
+      button.options3.TooltipText = LOGISTICIAN_L_DELETE
       button.options3:Show()
     elseif elementData.type == RowType.SearchTerm then
       if elementData.index == self.draggingIndex then
@@ -523,13 +523,13 @@ function AuctionatorShoppingTabListsContainerMixin:SetupContent()
       local iconPath = GetSearchTermIcon(elementData.searchTerm)
       local displayText = GetSearchTermDisplay(elementData.searchTerm)
       button.Text:SetText("|T" .. iconPath .. ":16:16:0:0|t  " .. displayText)
-      Auctionator.Shopping.Tab.SetOptionIcon(button.options1, "delete")
+      Logistician.Shopping.Tab.SetOptionIcon(button.options1, "delete")
       button.options1:SetScript("OnClick", OnSearchTermDeleteOptionClicked)
-      button.options1.TooltipText = AUCTIONATOR_L_DELETE
+      button.options1.TooltipText = LOGISTICIAN_L_DELETE
       button.options1:Show()
-      Auctionator.Shopping.Tab.SetOptionIcon(button.options2, "edit")
+      Logistician.Shopping.Tab.SetOptionIcon(button.options2, "edit")
       button.options2:SetScript("OnClick", OnSearchTermEditOptionClicked)
-      button.options2.TooltipText = AUCTIONATOR_L_EDIT_ITEM
+      button.options2.TooltipText = LOGISTICIAN_L_EDIT_ITEM
       button.options2:Show()
     else
       xOffset = listEntryInset
@@ -545,7 +545,7 @@ function AuctionatorShoppingTabListsContainerMixin:SetupContent()
     return button
   end
 
-  self.Inset = CreateFrame("Frame", nil, self, "AuctionatorInsetTemplate")
+  self.Inset = CreateFrame("Frame", nil, self, "LogisticianInsetTemplate")
   self.Inset:SetAllPoints()
 
   self.ScrollBox = CreateFrame("Frame", nil, self, "WowScrollBoxList")
@@ -564,11 +564,11 @@ function AuctionatorShoppingTabListsContainerMixin:SetupContent()
   ScrollUtil.InitScrollBoxListWithScrollBar(self.ScrollBox, self.ScrollBar, view)
 end
 
-function AuctionatorShoppingTabListsContainerMixin:Populate()
+function LogisticianShoppingTabListsContainerMixin:Populate()
   local rows = {}
 
-  for index = 1, Auctionator.Shopping.ListManager:GetCount() do
-    local list = Auctionator.Shopping.ListManager:GetByIndex(index)
+  for index = 1, Logistician.Shopping.ListManager:GetCount() do
+    local list = Logistician.Shopping.ListManager:GetByIndex(index)
     table.insert(rows, {
       type = RowType.List,
       list = list,

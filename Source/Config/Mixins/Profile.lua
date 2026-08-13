@@ -1,24 +1,24 @@
-AuctionatorConfigProfileFrameMixin = CreateFromMixins(AuctionatorPanelConfigMixin)
+LogisticianConfigProfileFrameMixin = CreateFromMixins(LogisticianPanelConfigMixin)
 
-function AuctionatorConfigProfileFrameMixin:OnLoad()
-  Auctionator.Debug.Message("AuctionatorConfigProfileFrameMixin:OnLoad()")
+function LogisticianConfigProfileFrameMixin:OnLoad()
+  Logistician.Debug.Message("LogisticianConfigProfileFrameMixin:OnLoad()")
 
-  self.name = AUCTIONATOR_L_CONFIG_PROFILE_CATEGORY
-  self.parent = "Auctionator"
+  self.name = LOGISTICIAN_L_CONFIG_PROFILE_CATEGORY
+  self.parent = "Logistician"
 
   self:SetupPanel()
 end
 
-function AuctionatorConfigProfileFrameMixin:ShowSettings()
-  self.ProfileToggle:SetChecked(Auctionator.Config.IsCharacterConfig())
+function LogisticianConfigProfileFrameMixin:ShowSettings()
+  self.ProfileToggle:SetChecked(Logistician.Config.IsCharacterConfig())
 end
 
-function AuctionatorConfigProfileFrameMixin:Save()
-  Auctionator.Debug.Message("AuctionatorConfigProfileFrameMixin:Save()")
+function LogisticianConfigProfileFrameMixin:Save()
+  Logistician.Debug.Message("LogisticianConfigProfileFrameMixin:Save()")
 
-  Auctionator.Config.SetCharacterConfig(self.ProfileToggle:GetChecked())
+  Logistician.Config.SetCharacterConfig(self.ProfileToggle:GetChecked())
 end
 
-function AuctionatorConfigProfileFrameMixin:Cancel()
-  Auctionator.Debug.Message("AuctionatorConfigProfileFrameMixin:Cancel()")
+function LogisticianConfigProfileFrameMixin:Cancel()
+  Logistician.Debug.Message("LogisticianConfigProfileFrameMixin:Cancel()")
 end

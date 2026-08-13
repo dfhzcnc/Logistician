@@ -1,5 +1,5 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/">
-  <Frame name="AuctionatorConfigurationTooltip" mixin="AuctionatorConfigTooltipMixin" virtual="true">
+  <Frame name="LogisticianConfigurationTooltip" mixin="LogisticianConfigTooltipMixin" virtual="true">
     <!--
       <KeyValues>
         <KeyValue key="tooltipTitleText" value="" type="string"/>

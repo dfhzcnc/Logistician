@@ -1,9 +1,9 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/">
   <Frame
-    name="AuctionatorSellingBagFrame"
+    name="LogisticianSellingBagFrame"
     virtual="true"
     parentKey="BagListing"
-    mixin="AuctionatorBagUseMixin"
+    mixin="LogisticianBagUseMixin"
   >
     <Scripts>
       <OnLoad method="OnLoad" />
@@ -12,10 +12,10 @@
     </Scripts>
 
     <Frames>
-      <Frame inherits="AuctionatorGroupsViewTemplate">
+      <Frame inherits="LogisticianGroupsViewTemplate">
         <KeyValues>
-          <KeyValue key="itemTemplate" value="AuctionatorGroupsViewItemTemplate" type="string" />
-          <KeyValue key="groupTemplate" value="AuctionatorSellingViewGroupTemplate" type="string" />
+          <KeyValue key="itemTemplate" value="LogisticianGroupsViewItemTemplate" type="string" />
+          <KeyValue key="groupTemplate" value="LogisticianSellingViewGroupTemplate" type="string" />
           <KeyValue key="clickEventName" value="BagUse.BagItemClicked" type="string" />
           <KeyValue key="hideHiddenItems" value="true" type="boolean" />
           <KeyValue key="applyVisibility" value="true" type="boolean" />

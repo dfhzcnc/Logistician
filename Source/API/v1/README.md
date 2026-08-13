@@ -1,6 +1,6 @@
-# Auctionator External API
+# Logistician External API
 
-Calling any other functions related to Auctionator is not supported and may
+Calling any other functions related to Logistician is not supported and may
 break without warning in future releases.
 
 This API is intended to remain stable.
@@ -8,25 +8,25 @@ This API is intended to remain stable.
 ```lua
 -- Returns the last scanned price for an item identified by itemID
 -- Returns the price in coppers, or nil if one wasn't found
-Auctionator.API.v1.GetAuctionPriceByItemID(callerID, itemID)
+Logistician.API.v1.GetAuctionPriceByItemID(callerID, itemID)
 
 -- Returns the last scanned price for an item identified by itemLink
 -- Returns the price in coppers, or nil if one wasn't found
-Auctionator.API.v1.GetAuctionPriceByItemLink(callerID, itemLink)
+Logistician.API.v1.GetAuctionPriceByItemLink(callerID, itemLink)
 
 -- Searches for an array of search terms and displays the results
 -- The auction house MUST be open.
-Auctionator.API.v1.MultiSearch(callerID, terms)
+Logistician.API.v1.MultiSearch(callerID, terms)
 ```
 
 
 ### Current market snapshot / depth price (custom integrated build)
 
 ```lua
-Auctionator.API.v1.GetMarketSnapshotByItemID(callerID, itemID)
-Auctionator.API.v1.GetMarketSnapshotByItemLink(callerID, itemLink)
-Auctionator.API.v1.GetMarketPriceByItemID(callerID, itemID)
-Auctionator.API.v1.GetMarketPriceByItemLink(callerID, itemLink)
+Logistician.API.v1.GetMarketSnapshotByItemID(callerID, itemID)
+Logistician.API.v1.GetMarketSnapshotByItemLink(callerID, itemLink)
+Logistician.API.v1.GetMarketPriceByItemID(callerID, itemID)
+Logistician.API.v1.GetMarketPriceByItemLink(callerID, itemLink)
 ```
 
 On the legacy Classic/TBC AH, the full scan retains a compact structural
@@ -44,8 +44,8 @@ claim about a completed sale price.
 ### Robust historical average (custom integrated build)
 
 ```lua
-Auctionator.API.v1.GetAuctionAverageByItemID(callerID, itemID, days)
-Auctionator.API.v1.GetAuctionAverageByItemLink(callerID, itemLink, days)
+Logistician.API.v1.GetAuctionAverageByItemID(callerID, itemID, days)
+Logistician.API.v1.GetAuctionAverageByItemLink(callerID, itemLink, days)
 ```
 
 The first return value is the robust historical auction price in copper. The
@@ -53,7 +53,7 @@ optional second and third return values are the number of historical day
 samples used and the number of samples rejected by the final Tukey biweight
 stage.
 
-The estimator uses Auctionator's stored daily price history, log-price space,
+The estimator uses Logistician's stored daily price history, log-price space,
 exponential recency weighting, a Huber M-estimator warm start, and Tukey
 biweight refinement.
 
@@ -61,14 +61,14 @@ biweight refinement.
 ### Sale likelihood / marketability score (custom integrated build)
 
 ```lua
-Auctionator.API.v1.GetSaleLikelihoodByItemID(callerID, itemID, days)
-Auctionator.API.v1.GetSaleLikelihoodByItemLink(callerID, itemLink, days)
+Logistician.API.v1.GetSaleLikelihoodByItemID(callerID, itemID, days)
+Logistician.API.v1.GetSaleLikelihoodByItemLink(callerID, itemLink, days)
 ```
 
 Returns a 0-100 score, qualitative label, confidence label, and a details table.
 
 This score is intentionally not described as a calibrated probability of a
-completed sale: Auctionator's historical database observes listing-market
+completed sale: Logistician's historical database observes listing-market
 snapshots, not verified outcomes for every auction. The model combines
 Bayesian-shrunk stock-depletion evidence, current price versus robust history,
 relative supply pressure, robust price stability, and recency, then shrinks
@@ -78,7 +78,7 @@ toward 50 when evidence is sparse.
 ### Expiration-aware exposure history (custom integrated build)
 
 ```lua
-Auctionator.API.v1.GetSaleExposureHistoryByItemID(callerID, itemID)
+Logistician.API.v1.GetSaleExposureHistoryByItemID(callerID, itemID)
 ```
 
 Returns compact watched-item scan observations used by the Sale Likelihood

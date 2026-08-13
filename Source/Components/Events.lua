@@ -1,3 +1,3 @@
-Auctionator.Components.Events = {
+Logistician.Components.Events = {
   EnterPressed = "components_enter_pressed",
 }

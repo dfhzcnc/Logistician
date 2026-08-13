@@ -1,5 +1,5 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/">
-  <Frame name="AuctionatorConfigurationTitleFrame" mixin="AuctionatorConfigurationTitleFrameMixin" virtual="true">
+  <Frame name="LogisticianConfigurationTitleFrame" mixin="LogisticianConfigurationTitleFrameMixin" virtual="true">
     <!--
       <KeyValues>
         <KeyValue key="titleText" value="" type="string" />

@@ -4,7 +4,7 @@ local haveHookedCraftCreateButton = false
 local BEAST_TRAINING_SPELL_ID = 5149
 local BEAST_TRAINING_ICON_ID = 132162
 local BEAST_LORE_SPELL_ID = 1462
-local VANILLA_SKILL_RANKS_PER_LEVEL = 5
+local BASE_SKILL_RANKS_PER_LEVEL = 5
 local ROMAN_NUMERIALS = {"I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X"}
 local NEW_WORD = string.lower(NEW)
 
@@ -276,7 +276,7 @@ main.CRAFT_SHOW = function(self, event, ...)
         else
             ShowNewPetSkillsTradeCrafts:Hide()
         end
-        maxRank = UnitLevel("player") *VANILLA_SKILL_RANKS_PER_LEVEL
+        maxRank = UnitLevel("player") *BASE_SKILL_RANKS_PER_LEVEL
         rank = maxRank
 
         if main.hasBeastLore then

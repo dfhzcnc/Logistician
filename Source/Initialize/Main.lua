@@ -1,4 +1,4 @@
-local AUCTIONATOR_EVENTS = {
+local LOGISTICIAN_EVENTS = {
   -- Addon Initialization Events
   "PLAYER_LOGIN",
   "ADDON_LOADED",
@@ -6,23 +6,23 @@ local AUCTIONATOR_EVENTS = {
   -- "CHAT_MSG_ADDON"
 }
 
-AuctionatorInitializeMixin = {}
+LogisticianInitializeMixin = {}
 
-function AuctionatorInitializeMixin:OnLoad()
-  Auctionator.Debug.Message("Auctionator.Events.CoreFrameLoaded")
-  C_ChatInfo.RegisterAddonMessagePrefix("Auctionator")
+function LogisticianInitializeMixin:OnLoad()
+  Logistician.Debug.Message("Logistician.Events.CoreFrameLoaded")
+  C_ChatInfo.RegisterAddonMessagePrefix("Logistician")
 
-  FrameUtil.RegisterFrameForEvents(self, AUCTIONATOR_EVENTS)
+  FrameUtil.RegisterFrameForEvents(self, LOGISTICIAN_EVENTS)
 end
 
-function AuctionatorInitializeMixin:OnEvent(event, ...)
-  -- Auctionator.Debug.Message("AuctionatorInitializeMixin", event, ...)
+function LogisticianInitializeMixin:OnEvent(event, ...)
+  -- Logistician.Debug.Message("LogisticianInitializeMixin", event, ...)
   if event == "PLAYER_LOGIN" then
-    Auctionator.Variables.InitializeLate()
+    Logistician.Variables.InitializeLate()
   elseif event == "ADDON_LOADED" and (...) == "!Logistician" then
-    Auctionator.Variables.Initialize()
+    Logistician.Variables.Initialize()
 
-    Auctionator.SlashCmd.Initialize()
+    Logistician.SlashCmd.Initialize()
   elseif event == "CHAT_MSG_ADDON" then
     -- For now, just drop the message - we
     -- need to aggregate the messages and provide a pop up
@@ -30,6 +30,6 @@ function AuctionatorInitializeMixin:OnEvent(event, ...)
   end
 end
 
-function AuctionatorInitializeMixin:AddonDataLoaded(event, ...)
-  Auctionator.Debug.Message("AuctionatorInitializeMixin:VariablesLoaded")
+function LogisticianInitializeMixin:AddonDataLoaded(event, ...)
+  Logistician.Debug.Message("LogisticianInitializeMixin:VariablesLoaded")
 end

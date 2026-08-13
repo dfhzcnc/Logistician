@@ -1,35 +1,35 @@
-Auctionator.Shopping.Recents = {}
+Logistician.Shopping.Recents = {}
 
-function Auctionator.Shopping.Recents.Save(searchText)
-  local prevIndex = tIndexOf(AUCTIONATOR_RECENT_SEARCHES, searchText)
+function Logistician.Shopping.Recents.Save(searchText)
+  local prevIndex = tIndexOf(LOGISTICIAN_RECENT_SEARCHES, searchText)
   if prevIndex ~= nil then
-    table.remove(AUCTIONATOR_RECENT_SEARCHES, prevIndex)
+    table.remove(LOGISTICIAN_RECENT_SEARCHES, prevIndex)
   end
 
-  table.insert(AUCTIONATOR_RECENT_SEARCHES, 1, searchText)
+  table.insert(LOGISTICIAN_RECENT_SEARCHES, 1, searchText)
 
-  while #AUCTIONATOR_RECENT_SEARCHES > Auctionator.Constants.RecentsListLimit do
-    table.remove(AUCTIONATOR_RECENT_SEARCHES)
+  while #LOGISTICIAN_RECENT_SEARCHES > Logistician.Constants.RecentsListLimit do
+    table.remove(LOGISTICIAN_RECENT_SEARCHES)
   end
 
-  Auctionator.EventBus
-    :RegisterSource(Auctionator.Shopping.Recents.Save, "save recents entry")
-    :Fire(Auctionator.Shopping.Recents.Save, Auctionator.Shopping.Events.RecentSearchesUpdate)
-    :UnregisterSource(Auctionator.Shopping.Recents.Save)
+  Logistician.EventBus
+    :RegisterSource(Logistician.Shopping.Recents.Save, "save recents entry")
+    :Fire(Logistician.Shopping.Recents.Save, Logistician.Shopping.Events.RecentSearchesUpdate)
+    :UnregisterSource(Logistician.Shopping.Recents.Save)
 end
 
-function Auctionator.Shopping.Recents.DeleteEntry(searchTerm)
-  local index = tIndexOf(AUCTIONATOR_RECENT_SEARCHES, searchTerm)
+function Logistician.Shopping.Recents.DeleteEntry(searchTerm)
+  local index = tIndexOf(LOGISTICIAN_RECENT_SEARCHES, searchTerm)
 
   if index ~= nil then
-    table.remove(AUCTIONATOR_RECENT_SEARCHES, index)
-    Auctionator.EventBus
-      :RegisterSource(Auctionator.Shopping.Recents.DeleteEntry, "delete recents entry")
-      :Fire(Auctionator.Shopping.Recents.DeleteEntry, Auctionator.Shopping.Events.RecentSearchesUpdate)
-      :UnregisterSource(Auctionator.Shopping.Recents.DeleteEntry)
+    table.remove(LOGISTICIAN_RECENT_SEARCHES, index)
+    Logistician.EventBus
+      :RegisterSource(Logistician.Shopping.Recents.DeleteEntry, "delete recents entry")
+      :Fire(Logistician.Shopping.Recents.DeleteEntry, Logistician.Shopping.Events.RecentSearchesUpdate)
+      :UnregisterSource(Logistician.Shopping.Recents.DeleteEntry)
   end
 end
 
-function Auctionator.Shopping.Recents.GetAll()
-  return AUCTIONATOR_RECENT_SEARCHES
+function Logistician.Shopping.Recents.GetAll()
+  return LOGISTICIAN_RECENT_SEARCHES
 end

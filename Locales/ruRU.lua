@@ -1,4 +1,4 @@
-AUCTIONATOR_LOCALES.ruRU = function()
+LOGISTICIAN_LOCALES.ruRU = function()
   local L = {}
 
   L["ADD_FAVOURITE"] = "Добавить в избранное"
@@ -17,7 +17,7 @@ L["AUCTION_DURATION_12"] = "12 часов"
 L["AUCTION_DURATION_24"] = "24 часа"
 L["AUCTION_DURATION_48"] = "48 часов"
 L["AUCTION_MEAN"] = "Аукцион Среднее"
-L["AUCTIONATOR"] = "Logistician"
+L["LOGISTICIAN"] = "Logistician"
 L["AUTHOR_HEADER"] = "Автор"
 L["BID_EXISTING_ON_OWNED_AUCTION"] = "Кто-то сделал ставку на этот лот, поэтому отмена будет стоить вам вашего депозита и:"
 L["BID_ONLY_AVAILABLE"] = "доступна только ставка"

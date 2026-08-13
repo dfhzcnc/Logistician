@@ -1,3 +1,3 @@
-function Auctionator.Utilities.GetQualityColorFromLink(itemLink)
+function Logistician.Utilities.GetQualityColorFromLink(itemLink)
   return string.match(itemLink, "|c(nIQ%d+:)|") or string.match(itemLink, "|c(........)|")
 end

@@ -1,7 +1,7 @@
-AuctionatorBagListResultsRowMixin = CreateFromMixins(AuctionatorResultsRowTemplateMixin)
+LogisticianBagListResultsRowMixin = CreateFromMixins(LogisticianResultsRowTemplateMixin)
 
-function AuctionatorBagListResultsRowMixin:OnClick(...)
-  Auctionator.Debug.Message("AuctionatorBagListResultsRowMixin:OnClick()")
-  Auctionator.Utilities.TablePrint(self.rowData)
+function LogisticianBagListResultsRowMixin:OnClick(...)
+  Logistician.Debug.Message("LogisticianBagListResultsRowMixin:OnClick()")
+  Logistician.Utilities.TablePrint(self.rowData)
 
 end

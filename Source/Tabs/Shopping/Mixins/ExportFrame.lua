@@ -1,7 +1,7 @@
-AuctionatorListExportFrameMixin = {}
+LogisticianListExportFrameMixin = {}
 
-function AuctionatorListExportFrameMixin:OnLoad()
-  Auctionator.Debug.Message("AuctionatorListExportFrameMixin:OnLoad()")
+function LogisticianListExportFrameMixin:OnLoad()
+  Logistician.Debug.Message("LogisticianListExportFrameMixin:OnLoad()")
 
   -- Setup scrolling region
   local view = CreateScrollBoxLinearView()
@@ -13,7 +13,7 @@ function AuctionatorListExportFrameMixin:OnLoad()
     self.ScrollBox:FullUpdate(ScrollBoxConstants.UpdateImmediately);
   end
 
-  self.copyTextDialog = CreateFrame("Frame", nil, self:GetParent(), "AuctionatorExportTextFrame")
+  self.copyTextDialog = CreateFrame("Frame", nil, self:GetParent(), "LogisticianExportTextFrame")
   self.copyTextDialog:SetPoint("CENTER")
 
   if self:GetParent().dialogs then
@@ -21,56 +21,56 @@ function AuctionatorListExportFrameMixin:OnLoad()
   end
 
   -- self.ExportOption:SetOnChange(function(selectedValue)
-  --   if selectedValue == Auctionator.Constants.EXPORT_TYPES.WHISPER then
+  --   if selectedValue == Logistician.Constants.EXPORT_TYPES.WHISPER then
   --     self.Recipient:Show()
   --     self.Recipient:SetFocus()
   --   else
   --     self.Recipient:Hide()
   --   end
   -- end)
-  -- self.ExportOption:SetSelectedValue(Auctionator.Constants.EXPORT_TYPES.STRING)
+  -- self.ExportOption:SetSelectedValue(Logistician.Constants.EXPORT_TYPES.STRING)
 
-  self.checkBoxPool = CreateFramePool("Frame", self.ScrollBox.ListListingFrame, "AuctionatorConfigurationCheckbox")
+  self.checkBoxPool = CreateFramePool("Frame", self.ScrollBox.ListListingFrame, "LogisticianConfigurationCheckbox")
 end
 
-function AuctionatorListExportFrameMixin:OnShow()
-  Auctionator.Debug.Message("AuctionatorListExportFrameMixin:OnShow()")
+function LogisticianListExportFrameMixin:OnShow()
+  Logistician.Debug.Message("LogisticianListExportFrameMixin:OnShow()")
 
-  Auctionator.EventBus:Register(self, { Auctionator.Shopping.Events.ListMetaChange })
+  Logistician.EventBus:Register(self, { Logistician.Shopping.Events.ListMetaChange })
 
   self:RefreshLists()
 
-  Auctionator.EventBus
+  Logistician.EventBus
     :RegisterSource(self, "lists export dialog 1")
-    :Fire(self, Auctionator.Shopping.Tab.Events.DialogOpened)
+    :Fire(self, Logistician.Shopping.Tab.Events.DialogOpened)
     :UnregisterSource(self)
 end
 
-function AuctionatorListExportFrameMixin:OnHide()
+function LogisticianListExportFrameMixin:OnHide()
   self:Hide()
 
-  Auctionator.EventBus:Unregister(self, { Auctionator.Shopping.Events.ListMetaChange })
+  Logistician.EventBus:Unregister(self, { Logistician.Shopping.Events.ListMetaChange })
 
-  Auctionator.EventBus
+  Logistician.EventBus
     :RegisterSource(self, "lists export dialog 1")
-    :Fire(self, Auctionator.Shopping.Tab.Events.DialogClosed)
+    :Fire(self, Logistician.Shopping.Tab.Events.DialogClosed)
     :UnregisterSource(self)
 end
 
-function AuctionatorListExportFrameMixin:ReceiveEvent(eventName, listName)
-  if eventName == Auctionator.Shopping.Events.ListMetaChange then
+function LogisticianListExportFrameMixin:ReceiveEvent(eventName, listName)
+  if eventName == Logistician.Shopping.Events.ListMetaChange then
     if self:IsShown() then
       self:RefreshLists()
     end
   end
 end
 
-function AuctionatorListExportFrameMixin:RefreshLists()
-  Auctionator.Debug.Message("AuctionatorListExportFrameMixin:RefreshLists()")
+function LogisticianListExportFrameMixin:RefreshLists()
+  Logistician.Debug.Message("LogisticianListExportFrameMixin:RefreshLists()")
   self.checkBoxPool:ReleaseAll()
 
-  for index = 1, Auctionator.Shopping.ListManager:GetCount() do
-    local list = Auctionator.Shopping.ListManager:GetByIndex(index)
+  for index = 1, Logistician.Shopping.ListManager:GetCount() do
+    local list = Logistician.Shopping.ListManager:GetByIndex(index)
     local checkBox = self.checkBoxPool:Acquire()
     checkBox:SetText(list:GetName())
     checkBox:SetHeight(25)
@@ -82,28 +82,28 @@ function AuctionatorListExportFrameMixin:RefreshLists()
   self.ScrollBox.ListListingFrame:MarkDirty()
 end
 
-function AuctionatorListExportFrameMixin:OnCloseDialogClicked()
+function LogisticianListExportFrameMixin:OnCloseDialogClicked()
   self:Hide()
 end
 
-function AuctionatorListExportFrameMixin:OnSelectAllClicked()
+function LogisticianListExportFrameMixin:OnSelectAllClicked()
   for checkbox in self.checkBoxPool:EnumerateActive() do
     checkbox:SetChecked(true)
   end
 end
 
-function AuctionatorListExportFrameMixin:OnUnselectAllClicked()
+function LogisticianListExportFrameMixin:OnUnselectAllClicked()
   for checkbox in self.checkBoxPool:EnumerateActive() do
     checkbox:SetChecked(false)
   end
 end
 
-function AuctionatorListExportFrameMixin:OnExportClicked()
+function LogisticianListExportFrameMixin:OnExportClicked()
   local exportString = ""
 
   for checkbox in self.checkBoxPool:EnumerateActive() do
     if checkbox:GetChecked() then
-      exportString = exportString .. Auctionator.Shopping.Lists.GetBatchExportString(checkbox:GetText()) .. "\n"
+      exportString = exportString .. Logistician.Shopping.Lists.GetBatchExportString(checkbox:GetText()) .. "\n"
     end
   end
 
@@ -115,10 +115,10 @@ function AuctionatorListExportFrameMixin:OnExportClicked()
     -- Addon messages can not exceed 254 characters, so do lists one by one?
     -- for checkbox in self.checkBoxPool:EnumerateActive() do
     --   if checkbox:IsVisible() and checkbox:GetChecked() then
-    --     C_ChatInfo.SendAddonMessage( "Auctionator", Auctionator.Shopping.Lists.GetBatchExportString(checkbox:GetText()), "WHISPER", self.Recipient:GetText())
+    --     C_ChatInfo.SendAddonMessage( "Logistician", Logistician.Shopping.Lists.GetBatchExportString(checkbox:GetText()), "WHISPER", self.Recipient:GetText())
     --   end
     -- end
-    -- C_ChatInfo.SendAddonMessage( "Auctionator", exportString, "WHISPER", self.Recipient:GetText())
+    -- C_ChatInfo.SendAddonMessage( "Logistician", exportString, "WHISPER", self.Recipient:GetText())
   -- end
 
 end

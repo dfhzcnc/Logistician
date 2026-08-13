@@ -1,28 +1,28 @@
-AuctionatorShoppingTabRecentsContainerMixin = {}
+LogisticianShoppingTabRecentsContainerMixin = {}
 
 local listHeaderInset = 10
 local buttonSpacing = 60
 local buttonHeight = 20
 
-function AuctionatorShoppingTabRecentsContainerMixin:SetOnSearchRecent(func)
+function LogisticianShoppingTabRecentsContainerMixin:SetOnSearchRecent(func)
   self.onSearchRecent = func
 end
 
-function AuctionatorShoppingTabRecentsContainerMixin:SetOnDeleteRecent(func)
+function LogisticianShoppingTabRecentsContainerMixin:SetOnDeleteRecent(func)
   self.onDeleteRecent = func
 end
 
-function AuctionatorShoppingTabRecentsContainerMixin:SetOnCopyRecent(func)
+function LogisticianShoppingTabRecentsContainerMixin:SetOnCopyRecent(func)
   self.onCopyRecent = func
 end
 
-function AuctionatorShoppingTabRecentsContainerMixin:TemporarilySelectSearchTerm(searchTerm)
+function LogisticianShoppingTabRecentsContainerMixin:TemporarilySelectSearchTerm(searchTerm)
   self.ScrollBox:ForEachFrame(function(frame)
     frame.Selected:SetShown(frame.elementData == searchTerm)
   end)
 end
 
-function AuctionatorShoppingTabRecentsContainerMixin:OnLoad()
+function LogisticianShoppingTabRecentsContainerMixin:OnLoad()
   self:SetupContent()
 
   if self:IsVisible() then
@@ -30,27 +30,27 @@ function AuctionatorShoppingTabRecentsContainerMixin:OnLoad()
   end
 end
 
-function AuctionatorShoppingTabRecentsContainerMixin:OnShow()
+function LogisticianShoppingTabRecentsContainerMixin:OnShow()
   self:Populate()
 
-  Auctionator.EventBus:Register(self, {
-    Auctionator.Shopping.Events.RecentSearchesUpdate
+  Logistician.EventBus:Register(self, {
+    Logistician.Shopping.Events.RecentSearchesUpdate
   })
 end
 
-function AuctionatorShoppingTabRecentsContainerMixin:OnHide()
-  Auctionator.EventBus:Unregister(self, {
-    Auctionator.Shopping.Events.RecentSearchesUpdate
+function LogisticianShoppingTabRecentsContainerMixin:OnHide()
+  Logistician.EventBus:Unregister(self, {
+    Logistician.Shopping.Events.RecentSearchesUpdate
   })
 end
 
-function AuctionatorShoppingTabRecentsContainerMixin:ReceiveEvent(eventName, eventData)
-  if eventName == Auctionator.Shopping.Events.RecentSearchesUpdate then
+function LogisticianShoppingTabRecentsContainerMixin:ReceiveEvent(eventName, eventData)
+  if eventName == Logistician.Shopping.Events.RecentSearchesUpdate then
     self:Populate()
   end
 end
 
-function AuctionatorShoppingTabRecentsContainerMixin:SetupContent()
+function LogisticianShoppingTabRecentsContainerMixin:SetupContent()
   local function OnClick(button)
     if self.onSearchRecent then
       self.onSearchRecent(button.elementData)
@@ -60,7 +60,7 @@ function AuctionatorShoppingTabRecentsContainerMixin:SetupContent()
   local function OnEnter(button)
     button.Highlight:Show()
     GameTooltip:SetOwner(button, "ANCHOR_NONE")
-    Auctionator.Shopping.Tab.ComposeSearchTermTooltip(button.elementData)
+    Logistician.Shopping.Tab.ComposeSearchTermTooltip(button.elementData)
     GameTooltip:SetPoint("BOTTOMRIGHT", button, "TOPRIGHT")
     GameTooltip:Show()
   end
@@ -86,26 +86,26 @@ function AuctionatorShoppingTabRecentsContainerMixin:SetupContent()
 
   local function SetupButton(button)
     button.setup = true
-    Auctionator.Shopping.Tab.SetupContainerRow(button, buttonHeight, buttonSpacing)
+    Logistician.Shopping.Tab.SetupContainerRow(button, buttonHeight, buttonSpacing)
     button.Text:SetPoint("LEFT", listHeaderInset, 0)
 
     button:SetScript("OnEnter", OnEnter)
     button:SetScript("OnLeave", OnLeave)
     button:SetScript("OnClick", OnClick)
 
-    button.options1 = Auctionator.Shopping.Tab.CreateOptionButton(button, 0, buttonHeight + 5, buttonHeight)
-    button.options2 = Auctionator.Shopping.Tab.CreateOptionButton(button, -buttonHeight - 5, buttonHeight + 5, buttonHeight)
+    button.options1 = Logistician.Shopping.Tab.CreateOptionButton(button, 0, buttonHeight + 5, buttonHeight)
+    button.options2 = Logistician.Shopping.Tab.CreateOptionButton(button, -buttonHeight - 5, buttonHeight + 5, buttonHeight)
 
-    Auctionator.Shopping.Tab.SetOptionIcon(button.options1, "delete")
+    Logistician.Shopping.Tab.SetOptionIcon(button.options1, "delete")
     button.options1:SetScript("OnClick", OnRecentDeleteOptionClicked)
-    button.options1.TooltipText = AUCTIONATOR_L_DELETE
+    button.options1.TooltipText = LOGISTICIAN_L_DELETE
 
-    Auctionator.Shopping.Tab.SetOptionIcon(button.options2, "copy")
+    Logistician.Shopping.Tab.SetOptionIcon(button.options2, "copy")
     button.options2:SetScript("OnClick", OnRecentCopyOptionClicked)
-    button.options2.TooltipText = AUCTIONATOR_L_COPY_TO_LIST
+    button.options2.TooltipText = LOGISTICIAN_L_COPY_TO_LIST
   end
 
-  self.Inset = CreateFrame("Frame", nil, self, "AuctionatorInsetTemplate")
+  self.Inset = CreateFrame("Frame", nil, self, "LogisticianInsetTemplate")
   self.Inset:SetAllPoints()
 
   self.ScrollBox = CreateFrame("Frame", nil, self, "WowScrollBoxList")
@@ -121,7 +121,7 @@ function AuctionatorShoppingTabRecentsContainerMixin:SetupContent()
       SetupButton(button)
     end
     button.elementData = elementData
-    button.Text:SetText(Auctionator.Search.PrettifySearchString(elementData))
+    button.Text:SetText(Logistician.Search.PrettifySearchString(elementData))
     button.Selected:Hide()
   end
 
@@ -133,10 +133,10 @@ function AuctionatorShoppingTabRecentsContainerMixin:SetupContent()
   ScrollUtil.InitScrollBoxListWithScrollBar(self.ScrollBox, self.ScrollBar, view)
 end
 
-function AuctionatorShoppingTabRecentsContainerMixin:Populate()
+function LogisticianShoppingTabRecentsContainerMixin:Populate()
   local rows = {}
 
-  for _, recent in ipairs(Auctionator.Shopping.Recents.GetAll()) do
+  for _, recent in ipairs(Logistician.Shopping.Recents.GetAll()) do
     table.insert(rows, recent)
   end
   self.ScrollBox:SetDataProvider(CreateDataProvider(rows), true)

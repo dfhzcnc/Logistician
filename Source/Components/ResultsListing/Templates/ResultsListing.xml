@@ -1,9 +1,9 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/">
   <Frame
-    name="AuctionatorResultsListingTemplate"
+    name="LogisticianResultsListingTemplate"
     virtual="true"
     parentKey="ResultsListing"
-    mixin="AuctionatorResultsListingMixin"
+    mixin="LogisticianResultsListingMixin"
   >
 
     <Scripts>
@@ -41,7 +41,7 @@
         </Frames>
         <Layers>
           <Layer level="OVERLAY">
-            <FontString parentKey="NoResultsText" inherits="GameFontNormal" hidden="true" text="AUCTIONATOR_L_NO_RESULTS">
+            <FontString parentKey="NoResultsText" inherits="GameFontNormal" hidden="true" text="LOGISTICIAN_L_NO_RESULTS">
               <Anchors>
                 <Anchor point="CENTER" />
               </Anchors>
@@ -49,7 +49,7 @@
                 <Color r="0" g="0" b="0"/>
               </Shadow>
             </FontString>
-            <FontString parentKey="ResultsText" inherits="GameFontNormal" hidden="true" text="AUCTIONATOR_L_FETCHING_ITEM_INFO">
+            <FontString parentKey="ResultsText" inherits="GameFontNormal" hidden="true" text="LOGISTICIAN_L_FETCHING_ITEM_INFO">
               <Anchors>
                 <Anchor point="TOP" relativeKey="$parent.LoadingSpinner" relativePoint="CENTER" y="8"/>
                 <Anchor point="LEFT" x="45"/>

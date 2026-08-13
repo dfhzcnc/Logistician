@@ -1,4 +1,4 @@
-function Auctionator.Utilities.InsertLink(link)
+function Logistician.Utilities.InsertLink(link)
   if link ~= nil then
     if ChatFrameUtil and ChatFrameUtil.InsertLink then
       if not C_ChatInfo.InChatMessagingLockdown or not C_ChatInfo.InChatMessagingLockdown() then

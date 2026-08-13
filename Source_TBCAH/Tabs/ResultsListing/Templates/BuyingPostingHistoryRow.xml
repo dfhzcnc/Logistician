@@ -1,0 +1,9 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/">
+  <Frame
+    name="LogisticianBuyingPostingHistoryRowTemplate"
+    mixin="LogisticianBuyingPostingHistoryRowMixin"
+    inherits="LogisticianResultsRowTemplate"
+    virtual="true"
+    enableMouse="true"
+  />
+</Ui>

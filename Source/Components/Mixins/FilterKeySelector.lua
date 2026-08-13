@@ -1,6 +1,6 @@
-AuctionatorFilterKeySelectorMixin = {}
+LogisticianFilterKeySelectorMixin = {}
 
-function AuctionatorFilterKeySelectorMixin:OnLoad()
+function LogisticianFilterKeySelectorMixin:OnLoad()
   self.selectedCategories = {}
   self.onEntrySelected = function() end
   self.ResetButton:SetClickCallback(function()
@@ -17,7 +17,7 @@ function AuctionatorFilterKeySelectorMixin:OnLoad()
   self:RefreshText()
 end
 
-function AuctionatorFilterKeySelectorMixin:GetValue()
+function LogisticianFilterKeySelectorMixin:GetValue()
   local values = {}
   for key in pairs(self.selectedCategories) do
     table.insert(values, key)
@@ -26,7 +26,7 @@ function AuctionatorFilterKeySelectorMixin:GetValue()
   return table.concat(values, "|")
 end
 
-function AuctionatorFilterKeySelectorMixin:SetValue(value)
+function LogisticianFilterKeySelectorMixin:SetValue(value)
   if value == nil then
     value = ""
   end
@@ -40,18 +40,18 @@ function AuctionatorFilterKeySelectorMixin:SetValue(value)
   self.DropDown:GenerateMenu()
 end
 
-function AuctionatorFilterKeySelectorMixin:Reset()
+function LogisticianFilterKeySelectorMixin:Reset()
   self.selectedCategories = {}
   self:RefreshText()
   self.DropDown:GenerateMenu()
   self.onEntrySelected("")
 end
 
-function AuctionatorFilterKeySelectorMixin:SetOnEntrySelected(callback)
+function LogisticianFilterKeySelectorMixin:SetOnEntrySelected(callback)
   self.onEntrySelected = callback
 end
 
-function AuctionatorFilterKeySelectorMixin:EntrySelected(displayText)
+function LogisticianFilterKeySelectorMixin:EntrySelected(displayText)
   local prefix = displayText .. "/"
   local selectedInBranch = self.selectedCategories[displayText] ~= nil
 
@@ -85,7 +85,7 @@ function AuctionatorFilterKeySelectorMixin:EntrySelected(displayText)
   self:RefreshText()
 end
 
-function AuctionatorFilterKeySelectorMixin:IsCategorySelected(key)
+function LogisticianFilterKeySelectorMixin:IsCategorySelected(key)
   if self.selectedCategories[key] then return true end
 
   -- A parent class reflects selections made below it. For example, selecting
@@ -99,13 +99,13 @@ function AuctionatorFilterKeySelectorMixin:IsCategorySelected(key)
   return false
 end
 
-function AuctionatorFilterKeySelectorMixin:RefreshText()
+function LogisticianFilterKeySelectorMixin:RefreshText()
   local count, only = 0, nil
   for key in pairs(self.selectedCategories) do
     count = count + 1
     only = key
   end
-  local text = AUCTIONATOR_L_ANY_UPPER
+  local text = LOGISTICIAN_L_ANY_UPPER
   if count == 1 then
     text = only
   elseif count > 1 then
@@ -116,7 +116,7 @@ function AuctionatorFilterKeySelectorMixin:RefreshText()
   end
 end
 
-function AuctionatorFilterKeySelectorMixin:InitializeLevels(rootDescription, level, allCategories, prefix)
+function LogisticianFilterKeySelectorMixin:InitializeLevels(rootDescription, level, allCategories, prefix)
   if allCategories == nil then
     return
   end

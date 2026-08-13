@@ -1,4 +1,4 @@
-Auctionator = {
+Logistician = {
   Debug = {},
   Constants = {},
   Utilities = {},

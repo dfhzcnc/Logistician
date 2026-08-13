@@ -15,7 +15,7 @@ function formatter:GetMaxInterval()
   return SecondsFormatter.Interval.Hours
 end
 
-function Auctionator.Utilities.FormatTimeLeft(seconds)
+function Logistician.Utilities.FormatTimeLeft(seconds)
 	local timeLeftMinutes = math.ceil(seconds / 60);
 	local color = WHITE_FONT_COLOR
   if timeLeftMinutes < 60 then
@@ -31,7 +31,7 @@ local MEDIUM    = formatter:Format(hour/2) .. " - " .. formatter:Format(hour * 2
 local LONG      = formatter:Format(hour * 2) .. " - " .. formatter:Format(hour * 12)  -- 2h - 12h
 local VERY_LONG = formatter:Format(hour * 12) .. " - " .. formatter:Format(hour * 48) -- 12h - 48h
 
-function Auctionator.Utilities.FormatTimeLeftBand(timeLeftBand)
+function Logistician.Utilities.FormatTimeLeftBand(timeLeftBand)
 	if timeLeftBand == Enum.AuctionHouseTimeLeftBand.Short then
 		return RED_FONT_COLOR:WrapTextInColorCode(SHORT)
 	elseif timeLeftBand == Enum.AuctionHouseTimeLeftBand.Medium then

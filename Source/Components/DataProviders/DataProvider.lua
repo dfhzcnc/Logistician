@@ -1,6 +1,6 @@
-AuctionatorDataProviderMixin = {}
+LogisticianDataProviderMixin = {}
 
-function AuctionatorDataProviderMixin:OnLoad()
+function LogisticianDataProviderMixin:OnLoad()
   self.results = {}
   self.cachedResults = {}
   self.insertedKeys = {}
@@ -21,13 +21,13 @@ function AuctionatorDataProviderMixin:OnLoad()
   self.onResetScroll = function() end
 end
 
-function AuctionatorDataProviderMixin:OnUpdate(elapsed)
+function LogisticianDataProviderMixin:OnUpdate(elapsed)
   if elapsed >= 0 then
     self:CheckForEntriesToProcess()
   end
 end
 
-function AuctionatorDataProviderMixin:Reset()
+function LogisticianDataProviderMixin:Reset()
    -- Last set of results passed to self.onUpdate. Used to avoid errors with out
    -- of range indexes if :GetEntry is called before the OnUpdate fires.
   self.cachedResults = self.cachedResults or self.results or {}
@@ -42,22 +42,22 @@ function AuctionatorDataProviderMixin:Reset()
 end
 
 -- Derive: This will be used to help with sorting and filtering unique entries
-function AuctionatorDataProviderMixin:UniqueKey(entry)
+function LogisticianDataProviderMixin:UniqueKey(entry)
 end
 
 -- Derive: This is the template for sorting the dataset contained by this provider
-function AuctionatorDataProviderMixin:Sort(fieldName, sortDirection)
+function LogisticianDataProviderMixin:Sort(fieldName, sortDirection)
 end
 
 -- Sets sorting fieldName/sortDirection to use as data is being processed. Set
 -- either to nil to disable any sorting.
-function AuctionatorDataProviderMixin:SetPresetSort(fieldName, sortDirection)
+function LogisticianDataProviderMixin:SetPresetSort(fieldName, sortDirection)
   self.presetSort.key = fieldName
   self.presetSort.direction = sortDirection
 end
 
 -- Uses sortingIndex to restore original order before sorting
-function AuctionatorDataProviderMixin:ClearSort()
+function LogisticianDataProviderMixin:ClearSort()
   self:SetPresetSort(nil, nil)
   table.sort(self.results, function(left, right)
     return left.sortingIndex < right.sortingIndex
@@ -83,64 +83,64 @@ end
 --   6. OPTIONAL width - Integer
 --      If supplied, this will be used to define the column's fixed width.
 --      If omitted, the column will use ColumnWidthConstraints.Fill from TableBuilder
-function AuctionatorDataProviderMixin:GetTableLayout()
+function LogisticianDataProviderMixin:GetTableLayout()
   return {}
 end
 
 -- Derive: This sets table which stores the options for saving the customised
 -- column view.  If this is nil, it won't be possible to customise the columns.
-function AuctionatorDataProviderMixin:GetColumnHideStates()
+function LogisticianDataProviderMixin:GetColumnHideStates()
   return nil
 end
 
-function AuctionatorDataProviderMixin:GetRowTemplate()
-  return "AuctionatorResultsRowTemplate"
+function LogisticianDataProviderMixin:GetRowTemplate()
+  return "LogisticianResultsRowTemplate"
 end
 
-function AuctionatorDataProviderMixin:GetEntryAt(index)
-  -- Auctionator.Debug.Message("INDEX", index)
+function LogisticianDataProviderMixin:GetEntryAt(index)
+  -- Logistician.Debug.Message("INDEX", index)
 
   return self.cachedResults[index]
 end
 
-function AuctionatorDataProviderMixin:GetCount()
+function LogisticianDataProviderMixin:GetCount()
   return #self.cachedResults
 end
 
-function AuctionatorDataProviderMixin:SetOnEntryProcessedCallback(onEntryProcessedCallback)
+function LogisticianDataProviderMixin:SetOnEntryProcessedCallback(onEntryProcessedCallback)
   self.onEntryProcessed = onEntryProcessedCallback
 end
 
-function AuctionatorDataProviderMixin:SetOnUpdateCallback(onUpdateCallback)
+function LogisticianDataProviderMixin:SetOnUpdateCallback(onUpdateCallback)
   self.onUpdate = onUpdateCallback
 end
 
-function AuctionatorDataProviderMixin:SetOnSearchStartedCallback(onSearchStartedCallback)
+function LogisticianDataProviderMixin:SetOnSearchStartedCallback(onSearchStartedCallback)
   self.onSearchStarted = onSearchStartedCallback
 end
 
-function AuctionatorDataProviderMixin:SetOnSearchEndedCallback(onSearchEndedCallback)
+function LogisticianDataProviderMixin:SetOnSearchEndedCallback(onSearchEndedCallback)
   self.onSearchEnded = onSearchEndedCallback
 end
 
-function AuctionatorDataProviderMixin:NotifyCacheUsed()
+function LogisticianDataProviderMixin:NotifyCacheUsed()
   self.cacheUsedCount = self.cacheUsedCount + 1
 end
 
-function AuctionatorDataProviderMixin:SetDirty()
+function LogisticianDataProviderMixin:SetDirty()
   self.isDirty = true
 end
 
-function AuctionatorDataProviderMixin:SetOnPreserveScrollCallback(onPreserveScrollCallback)
+function LogisticianDataProviderMixin:SetOnPreserveScrollCallback(onPreserveScrollCallback)
   self.onPreserveScroll = onPreserveScrollCallback
 end
 
-function AuctionatorDataProviderMixin:SetOnResetScrollCallback(onResetScrollCallback)
+function LogisticianDataProviderMixin:SetOnResetScrollCallback(onResetScrollCallback)
   self.onResetScroll = onResetScrollCallback
 end
 
-function AuctionatorDataProviderMixin:AppendEntries(entries, isLastSetOfResults)
-  Auctionator.Debug.Message("AuctionatorDataProviderMixin:AppendEntries()", #entries)
+function LogisticianDataProviderMixin:AppendEntries(entries, isLastSetOfResults)
+  Logistician.Debug.Message("LogisticianDataProviderMixin:AppendEntries()", #entries)
 
   self.searchCompleted = isLastSetOfResults
   self.announcedCompletion = false
@@ -152,7 +152,7 @@ end
 
 -- We process a limited number of entries every frame to avoid freezing the
 -- client.
-function AuctionatorDataProviderMixin:CheckForEntriesToProcess()
+function LogisticianDataProviderMixin:CheckForEntriesToProcess()
   if #self.entriesToProcess == 0 then
     if self.isDirty then
       self.cachedResults = self.results
@@ -167,7 +167,7 @@ function AuctionatorDataProviderMixin:CheckForEntriesToProcess()
     return
   end
 
-  Auctionator.Debug.Message("AuctionatorDataProviderMixin:CheckForEntriesToProcess()")
+  Logistician.Debug.Message("LogisticianDataProviderMixin:CheckForEntriesToProcess()")
 
   local processCount = 0
   local entry
@@ -221,7 +221,7 @@ local function WrapCSVParameter(parameter)
   end
 end
 
-function AuctionatorDataProviderMixin:GetCSV(callback)
+function LogisticianDataProviderMixin:GetCSV(callback)
   if self:GetCount() == 0 then
     callback("")
   end

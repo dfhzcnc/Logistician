@@ -1,11 +1,11 @@
-AuctionatorEscapeToCloseMixin = {}
+LogisticianEscapeToCloseMixin = {}
 
-function AuctionatorEscapeToCloseMixin:OnKeyDown(key)
+function LogisticianEscapeToCloseMixin:OnKeyDown(key)
   self:SetPropagateKeyboardInput(key ~= "ESCAPE")
 end
 
-function AuctionatorEscapeToCloseMixin:OnKeyUp(key)
-  Auctionator.Debug.Message("AuctionatorEscapeToCloseMixin:OnKeyUp()", key)
+function LogisticianEscapeToCloseMixin:OnKeyUp(key)
+  Logistician.Debug.Message("LogisticianEscapeToCloseMixin:OnKeyUp()", key)
 
   if key == "ESCAPE" then
     self:Hide()

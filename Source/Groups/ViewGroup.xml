@@ -1,5 +1,5 @@
 <Ui>
-  <Frame name="AuctionatorGroupsViewGroupTemplate" mixin="AuctionatorGroupsViewGroupMixin" virtual="true">
+  <Frame name="LogisticianGroupsViewGroupTemplate" mixin="LogisticianGroupsViewGroupMixin" virtual="true">
     <KeyValues>
       <KeyValue key="collapsable" value="true" type="boolean" />
       <KeyValue key="insetLeft" value="2" type="number" />

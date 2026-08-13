@@ -1,4 +1,4 @@
-Auctionator.Selling.Events = {
+Logistician.Selling.Events = {
   BagItemClicked = "bag_item_clicked",
   BagItemRequest = "bag_item_request",
   ClearBagItem = "clear_bag_item",

@@ -1,4 +1,4 @@
-function Auctionator.Shopping.Tab.CreateOptionButton(button, xOffset, width, height)
+function Logistician.Shopping.Tab.CreateOptionButton(button, xOffset, width, height)
   local option = CreateFrame("Button", nil, button)
   local size = 16
   option:SetPoint("RIGHT", button, "RIGHT", xOffset - 3, 0)
@@ -27,7 +27,7 @@ function Auctionator.Shopping.Tab.CreateOptionButton(button, xOffset, width, hei
   return option
 end
 
-function Auctionator.Shopping.Tab.SetOptionIcon(option, action)
+function Logistician.Shopping.Tab.SetOptionIcon(option, action)
   option.Icon:SetTexCoord(0, 1, 0, 1)
   option.Icon:SetVertexColor(1, 1, 1, 1)
   if action == "delete" then
@@ -42,7 +42,7 @@ function Auctionator.Shopping.Tab.SetOptionIcon(option, action)
   end
 end
 
-function Auctionator.Shopping.Tab.SetupContainerRow(button, buttonHeight, buttonSpacing)
+function Logistician.Shopping.Tab.SetupContainerRow(button, buttonHeight, buttonSpacing)
   local fontString = button:CreateFontString(nil, nil, "GameFontHighlightSmall")
   fontString:SetJustifyH("LEFT")
   fontString:SetPoint("RIGHT", button, "RIGHT", -buttonSpacing, 0)

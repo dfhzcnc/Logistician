@@ -1,8 +1,8 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/">
   <Frame
-    name="AuctionatorImportListTemplate"
-    mixin="AuctionatorListImportFrameMixin"
-    inherits="AuctionatorSimplePanelTemplate"
+    name="LogisticianImportListTemplate"
+    mixin="LogisticianListImportFrameMixin"
+    inherits="LogisticianSimplePanelTemplate"
     frameStrata="Dialog"
     enableMouse="true"
     virtual="true"
@@ -17,7 +17,7 @@
     </Scripts>
 
     <Frames>
-      <Frame parentKey="Inset" inherits="AuctionatorInsetDarkTemplate">
+      <Frame parentKey="Inset" inherits="LogisticianInsetDarkTemplate">
         <Anchors>
           <Anchor point="TOPLEFT" x="4" y="-30"/>
           <Anchor point="BOTTOMRIGHT" x="-6" y="32"/>
@@ -48,7 +48,7 @@
         </Scripts>
       </Button>
 
-      <Button parentKey="Import" inherits="UIPanelDynamicResizeButtonTemplate" text="AUCTIONATOR_L_IMPORT">
+      <Button parentKey="Import" inherits="UIPanelDynamicResizeButtonTemplate" text="LOGISTICIAN_L_IMPORT">
         <Anchors>
           <Anchor point="TOPRIGHT" relativeKey="$parent.Inset" relativePoint="BOTTOMRIGHT" y="-3" />
         </Anchors>
@@ -60,7 +60,7 @@
 
     <Layers>
       <Layer>
-        <FontString text="AUCTIONATOR_L_LIST_IMPORT_HEADER" inherits="GameFontHighlight">
+        <FontString text="LOGISTICIAN_L_LIST_IMPORT_HEADER" inherits="GameFontHighlight">
           <Anchors>
             <Anchor point="TOP" relativePoint="TOP" y="-10"/>
           </Anchors>

@@ -1,4 +1,4 @@
-AUCTIONATOR_LOCALES.esMX = function()
+LOGISTICIAN_LOCALES.esMX = function()
   local L = {}
 
   L["ADD_FAVOURITE"] = "Añadir favorito"
@@ -17,7 +17,7 @@ L["AUCTION_DURATION_12"] = "12 Horas"
 L["AUCTION_DURATION_24"] = "24 Horas"
 L["AUCTION_DURATION_48"] = "48 Horas"
 L["AUCTION_MEAN"] = "Media de subasta"
-L["AUCTIONATOR"] = "Logistician"
+L["LOGISTICIAN"] = "Logistician"
 L["AUTHOR_HEADER"] = "Autor"
 L["BID_EXISTING_ON_OWNED_AUCTION"] = "Alguien ha hecho una puja en esta subasta por lo que cancelarla te costará tu depósito y:"
 L["BID_ONLY_AVAILABLE"] = "puja solo disponible"

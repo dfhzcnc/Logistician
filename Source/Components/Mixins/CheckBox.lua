@@ -1,41 +1,41 @@
-AuctionatorConfigCheckboxMixin = {}
+LogisticianConfigCheckboxMixin = {}
 
-function AuctionatorConfigCheckboxMixin:OnLoad()
+function LogisticianConfigCheckboxMixin:OnLoad()
   if self.labelText ~= nil then
     self.CheckBox.Label:SetText(self.labelText)
   end
 end
 
-function AuctionatorConfigCheckboxMixin:SetText(text)
+function LogisticianConfigCheckboxMixin:SetText(text)
   self.labelText = text
   self.CheckBox.Label:SetText(self.labelText)
 end
 
-function AuctionatorConfigCheckboxMixin:GetText()
+function LogisticianConfigCheckboxMixin:GetText()
   return self.CheckBox.Label:GetText()
 end
 
-function AuctionatorConfigCheckboxMixin:SetChecked(value)
+function LogisticianConfigCheckboxMixin:SetChecked(value)
   self.CheckBox:SetChecked(value)
 end
 
 -- Makes clicking on the text flip the toggle
-function AuctionatorConfigCheckboxMixin:OnMouseUp()
+function LogisticianConfigCheckboxMixin:OnMouseUp()
   self.CheckBox:Click()
 end
 
-function AuctionatorConfigCheckboxMixin:OnEnter()
+function LogisticianConfigCheckboxMixin:OnEnter()
   self.CheckBox:LockHighlight()
 
-  AuctionatorConfigTooltipMixin.OnEnter(self)
+  LogisticianConfigTooltipMixin.OnEnter(self)
 end
 
-function AuctionatorConfigCheckboxMixin:OnLeave()
+function LogisticianConfigCheckboxMixin:OnLeave()
   self.CheckBox:UnlockHighlight()
 
-  AuctionatorConfigTooltipMixin.OnLeave(self)
+  LogisticianConfigTooltipMixin.OnLeave(self)
 end
 
-function AuctionatorConfigCheckboxMixin:GetChecked()
+function LogisticianConfigCheckboxMixin:GetChecked()
   return self.CheckBox:GetChecked()
 end

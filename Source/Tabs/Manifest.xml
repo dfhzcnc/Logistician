@@ -8,5 +8,5 @@
   <Include file="Shopping\Manifest.xml" />
   <Include file="Selling\Manifest.xml" />
   <Include file="Cancelling\Manifest.xml" />
-  <Include file="Auctionator\Manifest.xml"/>
+  <Include file="Logistician\Manifest.xml"/>
 </Ui>

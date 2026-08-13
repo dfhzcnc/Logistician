@@ -19,7 +19,7 @@ if buildVersion >= 20000 then
     MAX_PETS_SHOWN = 19
 end
 
-local VANILLA_SKILL_RANKS_PER_LEVEL = 5
+local BASE_SKILL_RANKS_PER_LEVEL = 5
 local BEAST_TRAINING_SPELL_ID = 5149
 local POISONS_SPELL_ID = 2842
 local MINIMUM_SCROLLBAR_INCREMENT = 0.5
@@ -536,7 +536,7 @@ function main:CraftTradeSkillFrame()
 
     -- WPP visual integration:
     -- WPP and Favorite now share the top-right row, so the description can
-    -- use almost the full vanilla pane width again.
+    -- use almost the full profession pane width again.
     CraftTradeDetailDescription:SetSize(CraftTradeReagentsInset:GetWidth()-30, 60)
     CraftTradeDetailDescription:SetText("")
     CraftTradeDetailDescription:SetJustifyH("LEFT")
@@ -1376,11 +1376,11 @@ main.HideOriginalFrames = function()
         CraftFrame:ClearAllPoints()
         CraftFrame:SetPoint("TOPLEFT", UIParent, "TOPRIGHT", 0, 0)
 
-        if AuctionatorEnchantInfoFrame ~= nil and AuctionatorEnchantInfoFrame.haveAlreadyHooked == nil then
-            AuctionatorEnchantInfoFrame.haveAlreadyHooked = true
-            hooksecurefunc(AuctionatorEnchantInfoFrame, "ShowIfRelevant", function(self)
-                if AuctionatorCraftingInfo ~= nil then
-                    AuctionatorCraftingInfo:Hide()
+        if LogisticianEnchantInfoFrame ~= nil and LogisticianEnchantInfoFrame.haveAlreadyHooked == nil then
+            LogisticianEnchantInfoFrame.haveAlreadyHooked = true
+            hooksecurefunc(LogisticianEnchantInfoFrame, "ShowIfRelevant", function(self)
+                if LogisticianCraftingInfo ~= nil then
+                    LogisticianCraftingInfo:Hide()
                 end
                 if not CraftIsEnchanting() then return end
                 self:ClearAllPoints()
@@ -1396,13 +1396,13 @@ main.HideOriginalFrames = function()
         TradeSkillFrame:ClearAllPoints()
         TradeSkillFrame:SetPoint("TOPLEFT", UIParent, "TOPRIGHT", 0, 0)
 
-        if AuctionatorCraftingInfo ~= nil and AuctionatorCraftingInfo.haveAlreadyHooked == nil then
-            AuctionatorCraftingInfo.haveAlreadyHooked = true
-            hooksecurefunc(AuctionatorCraftingInfo, "AdjustPosition", function(self)
-                if AuctionatorEnchantInfoFrame ~= nil then
-                    AuctionatorEnchantInfoFrame:Hide()
+        if LogisticianCraftingInfo ~= nil and LogisticianCraftingInfo.haveAlreadyHooked == nil then
+            LogisticianCraftingInfo.haveAlreadyHooked = true
+            hooksecurefunc(LogisticianCraftingInfo, "AdjustPosition", function(self)
+                if LogisticianEnchantInfoFrame ~= nil then
+                    LogisticianEnchantInfoFrame:Hide()
                 end
-                -- WPP 0.1.8 renders Auctionator pricing as a compact footer.
+                -- WPP 0.1.8 renders Logistician pricing as a compact footer.
                 -- Keep this native two-line frame out of the reagent area.
                 self:Hide()
             end)
@@ -1420,7 +1420,7 @@ main.CRAFT_TRADE_UPDATE = function()
     if main.windowType == "Craft" then
         if not CraftIsEnchanting() then
             currentProfession = "Pet"
-            maxRank = UnitLevel("player") *VANILLA_SKILL_RANKS_PER_LEVEL
+            maxRank = UnitLevel("player") *BASE_SKILL_RANKS_PER_LEVEL
             rank = maxRank
         else
             currentProfession, rank, maxRank = GetCraftDisplaySkillLine()

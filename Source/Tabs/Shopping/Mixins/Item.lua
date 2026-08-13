@@ -1,4 +1,4 @@
-AuctionatorShoppingItemMixin = CreateFromMixins(AuctionatorEscapeToCloseMixin)
+LogisticianShoppingItemMixin = CreateFromMixins(LogisticianEscapeToCloseMixin)
 
 local NO_QUALITY = ""
 
@@ -16,21 +16,21 @@ local function InitializeQualityDropDown(dropDown)
   local qualityStrings = {}
   local qualityIDs = {}
 
-  for _, quality in ipairs(Auctionator.Constants.QualityIDs) do
-    table.insert(qualityStrings, Auctionator.Utilities.CreateColoredQuality(quality))
+  for _, quality in ipairs(Logistician.Constants.QualityIDs) do
+    table.insert(qualityStrings, Logistician.Utilities.CreateColoredQuality(quality))
     table.insert(qualityIDs, tostring(quality))
   end
-  dropDown:InitMulti(qualityStrings, qualityIDs, AUCTIONATOR_L_ANY_UPPER)
+  dropDown:InitMulti(qualityStrings, qualityIDs, LOGISTICIAN_L_ANY_UPPER)
 end
 
 local function InitializeTierDropDown(dropDown)
   local tierStrings = {}
   local tierIDs = {}
 
-  table.insert(tierStrings, AUCTIONATOR_L_ANY_UPPER)
+  table.insert(tierStrings, LOGISTICIAN_L_ANY_UPPER)
   table.insert(tierIDs, NO_QUALITY)
 
-  if Auctionator.Constants.IsRetail then
+  if Logistician.Constants.IsRetail then
     for tier = 1, 2 do
       table.insert(tierStrings, CreateAtlasMarkup("Professions-ChatIcon-Quality-12-Tier" .. tier) .. "/" .. CreateAtlasMarkup("Professions-Icon-Quality-Tier" .. tier .. "-Small", 17, 17))
       table.insert(tierIDs, tostring(tier))
@@ -48,7 +48,7 @@ local function InitializeExpansionDropDown(dropDown)
   local expansionStrings = {}
   local expansionIDs = {}
 
-  table.insert(expansionStrings, AUCTIONATOR_L_ANY_UPPER)
+  table.insert(expansionStrings, LOGISTICIAN_L_ANY_UPPER)
   table.insert(expansionIDs, NO_QUALITY)
 
   for i = 0, LE_EXPANSION_LEVEL_CURRENT do
@@ -61,7 +61,7 @@ local function InitializeExpansionDropDown(dropDown)
   dropDown:InitAgain(expansionStrings, expansionIDs)
 end
 
-function AuctionatorShoppingItemMixin:OnLoad()
+function LogisticianShoppingItemMixin:OnLoad()
   ButtonFrameTemplate_HidePortrait(self)
   local _, rt, rp, ox, oy = self.Inset:GetPointByName("TOPLEFT")
   self.Inset:SetPoint("TOPLEFT", rt, rp, ox, -25)
@@ -134,7 +134,7 @@ function AuctionatorShoppingItemMixin:OnLoad()
   self.ExpansionContainer.DropDown:SetOnValueChanged(update)
   self.TierContainer.DropDown:SetOnValueChanged(update)
 
-  if Auctionator.Constants.IsRetail then
+  if Logistician.Constants.IsRetail then
     self:SetHeight(470)
     self.TierContainer:Show()
     self.ExpansionContainer:Show()
@@ -144,13 +144,13 @@ function AuctionatorShoppingItemMixin:OnLoad()
     self.ExpansionContainer:Hide()
   end
 
-  Auctionator.EventBus:Register(self, {
-    Auctionator.Shopping.Tab.Events.ListSearchStarted,
-    Auctionator.Shopping.Tab.Events.ListSearchEnded
+  Logistician.EventBus:Register(self, {
+    Logistician.Shopping.Tab.Events.ListSearchStarted,
+    Logistician.Shopping.Tab.Events.ListSearchEnded
   })
 end
 
-function AuctionatorShoppingItemMixin:UpdateResetStates()
+function LogisticianShoppingItemMixin:UpdateResetStates()
   local searchSet = self.SearchContainer.SearchString:GetText() ~= ""
   local classSet = self.FilterKeySelector:GetValue() ~= ""
   local levelSet = self.LevelRange.MinBox:GetText() ~= "" or self.LevelRange.MaxBox:GetText() ~= ""
@@ -188,7 +188,7 @@ function AuctionatorShoppingItemMixin:UpdateResetStates()
   end
 end
 
-function AuctionatorShoppingItemMixin:Init(title, finishedButtonText, requireChange)
+function LogisticianShoppingItemMixin:Init(title, finishedButtonText, requireChange)
   self:SetTitle(title)
   self.Finished:SetText(finishedButtonText)
   DynamicResizeButton_Resize(self.Finished)
@@ -202,34 +202,34 @@ function AuctionatorShoppingItemMixin:Init(title, finishedButtonText, requireCha
   end
 end
 
-function AuctionatorShoppingItemMixin:OnShow()
+function LogisticianShoppingItemMixin:OnShow()
   self:ResetAll()
   self.SearchContainer.SearchString:SetFocus()
 
-  Auctionator.EventBus
+  Logistician.EventBus
     :RegisterSource(self, "add item dialog")
-    :Fire(self, Auctionator.Shopping.Tab.Events.DialogOpened)
+    :Fire(self, Logistician.Shopping.Tab.Events.DialogOpened)
     :UnregisterSource(self)
 end
 
-function AuctionatorShoppingItemMixin:OnHide()
+function LogisticianShoppingItemMixin:OnHide()
   self:Hide()
 
-  Auctionator.EventBus
+  Logistician.EventBus
     :RegisterSource(self, "add item dialog")
-    :Fire(self, Auctionator.Shopping.Tab.Events.DialogClosed)
+    :Fire(self, Logistician.Shopping.Tab.Events.DialogClosed)
     :UnregisterSource(self)
 end
 
-function AuctionatorShoppingItemMixin:OnCancelClicked()
+function LogisticianShoppingItemMixin:OnCancelClicked()
   self:Hide()
 end
 
-function AuctionatorShoppingItemMixin:SetOnFinishedClicked(callback)
+function LogisticianShoppingItemMixin:SetOnFinishedClicked(callback)
   self.onFinishedClicked = callback
 end
 
-function AuctionatorShoppingItemMixin:OnFinishedClicked()
+function LogisticianShoppingItemMixin:OnFinishedClicked()
   if not self.Finished:IsEnabled() then
     return
   end
@@ -239,19 +239,19 @@ function AuctionatorShoppingItemMixin:OnFinishedClicked()
   if self:HasItemInfo() then
     self.onFinishedClicked(self:GetItemString())
   else
-    Auctionator.Utilities.Message(AUCTIONATOR_L_NO_ITEM_INFO_SPECIFIED)
+    Logistician.Utilities.Message(LOGISTICIAN_L_NO_ITEM_INFO_SPECIFIED)
   end
 end
 
-function AuctionatorShoppingItemMixin:HasItemInfo()
+function LogisticianShoppingItemMixin:HasItemInfo()
   return
     self:GetItemString()
-      :gsub(Auctionator.Constants.AdvancedSearchDivider, "")
+      :gsub(Logistician.Constants.AdvancedSearchDivider, "")
       :gsub("\"", "")
       :len() > 0
 end
 
-function AuctionatorShoppingItemMixin:GetItemString()
+function LogisticianShoppingItemMixin:GetItemString()
   local search = {
     searchString = self.SearchContainer.SearchString:GetText(),
     isExact = self.SearchContainer.IsExact:GetChecked(),
@@ -270,11 +270,11 @@ function AuctionatorShoppingItemMixin:GetItemString()
     quantity = tonumber(self.PurchaseQuantity:GetNumber()),
   }
   
-  return Auctionator.Search.ReconstituteAdvancedSearch(search)
+  return Logistician.Search.ReconstituteAdvancedSearch(search)
 end
 
-function AuctionatorShoppingItemMixin:SetItemString(itemString)
-  local search = Auctionator.Search.SplitAdvancedSearch(itemString)
+function LogisticianShoppingItemMixin:SetItemString(itemString)
+  local search = Logistician.Search.SplitAdvancedSearch(itemString)
 
   self.SearchContainer.IsExact:SetChecked(search.isExact)
   self.SearchContainer.SearchString:SetText(search.searchString)
@@ -314,13 +314,13 @@ function AuctionatorShoppingItemMixin:SetItemString(itemString)
   end
   self.QualityContainer.DropDown:SetValues(qualityValues)
 
-  if not Auctionator.Constants.IsRetail or search.tier == nil then
+  if not Logistician.Constants.IsRetail or search.tier == nil then
     self.TierContainer.DropDown:SetValue(NO_QUALITY)
   else
     self.TierContainer.DropDown:SetValue(tostring(search.tier))
   end
 
-  if not Auctionator.Constants.IsRetail or search.expansion == nil then
+  if not Logistician.Constants.IsRetail or search.expansion == nil then
     self.ExpansionContainer.DropDown:SetValue(NO_QUALITY)
   else
     self.ExpansionContainer.DropDown:SetValue(tostring(search.expansion))
@@ -333,8 +333,8 @@ function AuctionatorShoppingItemMixin:SetItemString(itemString)
   self:UpdateResetStates()
 end
 
-function AuctionatorShoppingItemMixin:ResetAll()
-  Auctionator.Debug.Message("AuctionatorShoppingItemMixin:ResetAll()")
+function LogisticianShoppingItemMixin:ResetAll()
+  Logistician.Debug.Message("LogisticianShoppingItemMixin:ResetAll()")
 
   self.SearchContainer.SearchString:SetText("")
   self.SearchContainer.IsExact:SetChecked(false)
@@ -352,11 +352,11 @@ function AuctionatorShoppingItemMixin:ResetAll()
   self:UpdateResetStates()
 end
 
-function AuctionatorShoppingItemMixin:ReceiveEvent(eventName)
-  if eventName == Auctionator.Shopping.Tab.Events.ListSearchStarted then
+function LogisticianShoppingItemMixin:ReceiveEvent(eventName)
+  if eventName == Logistician.Shopping.Tab.Events.ListSearchStarted then
     self.searchInProgress = true
     self.Finished:Disable()
-  elseif eventName == Auctionator.Shopping.Tab.Events.ListSearchEnded then
+  elseif eventName == Logistician.Shopping.Tab.Events.ListSearchEnded then
     self.searchInProgress = false
     if self.requireChange then
       self:UpdateResetStates()

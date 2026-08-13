@@ -25,6 +25,19 @@ jobs:
           test -n "$(sed -n 's/^## Interface: //p' '!Logistician.toc')"
           echo "Validated Logistician $version"
 
+      - name: Enforce TBC-only namespace
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(sed -n 's/^## Interface: //p' '!Logistician.toc' | tr -d '\r')" = "20506"
+          if grep -RniE 'auctionator|themouseNest' . \
+            --exclude-dir=.git \
+            --exclude=LICENSE \
+            --exclude='*.png' --exclude='*.jpg' --exclude='*.tga' --exclude='*.blp'; then
+            echo "Inherited branding found" >&2
+            exit 1
+          fi
+
       - name: Validate XML files
         shell: bash
         run: |

@@ -1,4 +1,4 @@
----@class Auctionator.Search.SearchTerm
+---@class Logistician.Search.SearchTerm
 ---@field searchString string
 ---@field categoryKey string?
 ---@field isExact boolean?
@@ -17,108 +17,108 @@
 
 
 ---@param callerID string
----@param term Auctionator.Search.SearchTerm
+---@param term Logistician.Search.SearchTerm
 ---@return string searchString
-function Auctionator.API.v1.ConvertToSearchString(callerID, term)
+function Logistician.API.v1.ConvertToSearchString(callerID, term)
   if not term or not term.searchString or type(term.searchString) ~= "string" then
-    Auctionator.API.ComposeError(
+    Logistician.API.ComposeError(
       callerID,
-      "Usage Auctionator.API.v1.ConvertToSearchString(table)"
+      "Usage Logistician.API.v1.ConvertToSearchString(table)"
     )
   end
-  return Auctionator.Search.ReconstituteAdvancedSearch(term)
+  return Logistician.Search.ReconstituteAdvancedSearch(term)
 end
 
 ---@param callerID string
 ---@param searchString string
----@return Auctionator.Search.SearchTerm searchTerm
-function Auctionator.API.v1.ConvertFromSearchString(callerID, searchString)
+---@return Logistician.Search.SearchTerm searchTerm
+function Logistician.API.v1.ConvertFromSearchString(callerID, searchString)
   if not searchString or type(searchString) ~= "string" then
-    Auctionator.API.ComposeError(
+    Logistician.API.ComposeError(
       callerID,
-      "Usage Auctionator.API.v1.ConvertFromSearchString(string)"
+      "Usage Logistician.API.v1.ConvertFromSearchString(string)"
     )
   end
-  return Auctionator.Search.SplitAdvancedSearch(searchString)
+  return Logistician.Search.SplitAdvancedSearch(searchString)
 end
 
 ---@param callerID string
 ---@param shoppingListName string
 ---@return string[]
-function Auctionator.API.v1.GetShoppingListItems(callerID, shoppingListName)
-  Auctionator.API.InternalVerifyID(callerID)
+function Logistician.API.v1.GetShoppingListItems(callerID, shoppingListName)
+  Logistician.API.InternalVerifyID(callerID)
 
   if type(shoppingListName) ~= "string" then
-    Auctionator.API.ComposeError(
+    Logistician.API.ComposeError(
       callerID,
-      "Usage Auctionator.API.v1.GetShoppingListItems(string, string)"
+      "Usage Logistician.API.v1.GetShoppingListItems(string, string)"
     )
   end
 
-  local listIndex = Auctionator.Shopping.ListManager:GetIndexForName(shoppingListName)
+  local listIndex = Logistician.Shopping.ListManager:GetIndexForName(shoppingListName)
 
   if not listIndex then
-    Auctionator.API.ComposeError(
+    Logistician.API.ComposeError(
       callerID,
-      "Auctionator.API.v1.GetShoppingListItems: List does not exist: " .. tostring(shoppingListName)
+      "Logistician.API.v1.GetShoppingListItems: List does not exist: " .. tostring(shoppingListName)
     )
   end
 
-  local shoppingList = Auctionator.Shopping.ListManager:GetByIndex(listIndex)
+  local shoppingList = Logistician.Shopping.ListManager:GetByIndex(listIndex)
 
   return shoppingList:GetAllItems()
 end
 
---- Creates an Auctionator Shopping List and if at the AH, starts searching immediately. If a shopping list with the given name already exists it will be replaced
+--- Creates an Logistician Shopping List and if at the AH, starts searching immediately. If a shopping list with the given name already exists it will be replaced
 ---@param callerID string
 ---@param name string
 ---@param searchStrings string[]
-function Auctionator.API.v1.CreateShoppingList(callerID, name, searchStrings)
-  Auctionator.API.InternalVerifyID(callerID)
+function Logistician.API.v1.CreateShoppingList(callerID, name, searchStrings)
+  Logistician.API.InternalVerifyID(callerID)
 
   if type(name) ~= "string" or type(searchStrings) ~= "table" then
-    Auctionator.API.ComposeError(
+    Logistician.API.ComposeError(
       callerID,
-      "Usage Auctionator.API.v1.CreateShoppingList(string, string, string[])"
+      "Usage Logistician.API.v1.CreateShoppingList(string, string, string[])"
     )
   end
 
-  local listExists = Auctionator.Shopping.ListManager:GetIndexForName(name)
+  local listExists = Logistician.Shopping.ListManager:GetIndexForName(name)
   if listExists then
-      Auctionator.Shopping.ListManager:Delete(name)
+      Logistician.Shopping.ListManager:Delete(name)
   end
 
-  Auctionator.Shopping.ListManager:Create(name)
-  local list = Auctionator.Shopping.ListManager:GetByName(name)
+  Logistician.Shopping.ListManager:Create(name)
+  local list = Logistician.Shopping.ListManager:GetByName(name)
   list:AppendItems(searchStrings)
 
-  Auctionator.EventBus
-    :RegisterSource(Auctionator.API.v1.CreateShoppingList, "Auctionator.API.v1.CreateShoppingList")
-    :Fire(Auctionator.API.v1.CreateShoppingList, Auctionator.Shopping.Events.ListImportFinished, name)
+  Logistician.EventBus
+    :RegisterSource(Logistician.API.v1.CreateShoppingList, "Logistician.API.v1.CreateShoppingList")
+    :Fire(Logistician.API.v1.CreateShoppingList, Logistician.Shopping.Events.ListImportFinished, name)
 end
 
 ---@param callerID string
 ---@param shoppingListName string
 ---@param itemSearchString string
-function Auctionator.API.v1.DeleteShoppingListItem(callerID, shoppingListName, itemSearchString)
-  Auctionator.API.InternalVerifyID(callerID)
+function Logistician.API.v1.DeleteShoppingListItem(callerID, shoppingListName, itemSearchString)
+  Logistician.API.InternalVerifyID(callerID)
 
   if type(shoppingListName) ~= "string" or type(itemSearchString) ~= "string" then
-    Auctionator.API.ComposeError(
+    Logistician.API.ComposeError(
       callerID,
-      "Usage Auctionator.API.v1.DeleteShoppingListItem(string, string, string)"
+      "Usage Logistician.API.v1.DeleteShoppingListItem(string, string, string)"
     )
   end
 
-  local listIndex = Auctionator.Shopping.ListManager:GetIndexForName(shoppingListName)
+  local listIndex = Logistician.Shopping.ListManager:GetIndexForName(shoppingListName)
   if not listIndex then
-    Auctionator.API.ComposeError(
+    Logistician.API.ComposeError(
       callerID,
-      "Auctionator.API.v1.DeleteShoppingListItem ShoppingList does not exist: " .. tostring(shoppingListName)
+      "Logistician.API.v1.DeleteShoppingListItem ShoppingList does not exist: " .. tostring(shoppingListName)
     )
   end
 
-  local shoppingList = Auctionator.Shopping.ListManager:GetByIndex(listIndex)
+  local shoppingList = Logistician.Shopping.ListManager:GetByIndex(listIndex)
 
   local itemIndex = shoppingList:GetIndexForItem(itemSearchString)
   if itemIndex then
@@ -130,39 +130,39 @@ end
 ---@param shoppingListName string
 ---@param oldItemSearchString string
 ---@param newItemSearchString string
-function Auctionator.API.v1.AlterShoppingListItem(callerID, shoppingListName, oldItemSearchString, newItemSearchString)
-  Auctionator.API.InternalVerifyID(callerID)
+function Logistician.API.v1.AlterShoppingListItem(callerID, shoppingListName, oldItemSearchString, newItemSearchString)
+  Logistician.API.InternalVerifyID(callerID)
 
   if type(shoppingListName) ~= "string" or type(oldItemSearchString) ~= "string" or type(newItemSearchString) ~= "string" then
-    Auctionator.API.ComposeError(
+    Logistician.API.ComposeError(
       callerID,
-      "Usage Auctionator.API.v1.AlterShoppingListItem(string, string, string, string)"
+      "Usage Logistician.API.v1.AlterShoppingListItem(string, string, string, string)"
     )
   end
 
-  local listIndex = Auctionator.Shopping.ListManager:GetIndexForName(shoppingListName)
+  local listIndex = Logistician.Shopping.ListManager:GetIndexForName(shoppingListName)
   if not listIndex then
-    Auctionator.API.ComposeError(
+    Logistician.API.ComposeError(
       callerID,
-      "Auctionator.API.v1.AlterShoppingListItem ShoppingList does not exist: " .. tostring(shoppingListName)
+      "Logistician.API.v1.AlterShoppingListItem ShoppingList does not exist: " .. tostring(shoppingListName)
     )
   end
 
-  local shoppingList = Auctionator.Shopping.ListManager:GetByIndex(listIndex)
+  local shoppingList = Logistician.Shopping.ListManager:GetByIndex(listIndex)
 
   local oldItemIndex = shoppingList:GetIndexForItem(oldItemSearchString)
   if oldItemIndex then
     shoppingList:AlterItem(oldItemIndex, newItemSearchString)
   else
-    Auctionator.API.ComposeError(
+    Logistician.API.ComposeError(
         callerID,
-        "Error in Auctionator.API.v1.AlterShoppingListItem: Could not find item in shopping list:\n" .. tostring(oldItemSearchString)
+        "Error in Logistician.API.v1.AlterShoppingListItem: Could not find item in shopping list:\n" .. tostring(oldItemSearchString)
         )
   end
 end
 
 --- Very Simple Testing of API
-function Auctionator.API.v1.ShoppingListAPITests()
+function Logistician.API.v1.ShoppingListAPITests()
   local callerID = "APITest"
   local shoppingListName = "APITestShoppingList"
   local creationTerms = {
@@ -183,34 +183,34 @@ function Auctionator.API.v1.ShoppingListAPITests()
   }
   local searchStrings = {}
   for _, term in ipairs(creationTerms) do
-    table.insert(searchStrings, Auctionator.API.v1.ConvertToSearchString(callerID, term))
+    table.insert(searchStrings, Logistician.API.v1.ConvertToSearchString(callerID, term))
   end
 
-  local s1, e1 = pcall(Auctionator.API.v1.CreateShoppingList, callerID, shoppingListName, searchStrings)
+  local s1, e1 = pcall(Logistician.API.v1.CreateShoppingList, callerID, shoppingListName, searchStrings)
   assert(s1, "CreateShoppingList failed: " .. tostring(e1))
 
-  local s2, items = pcall(Auctionator.API.v1.GetShoppingListItems, callerID, shoppingListName)
+  local s2, items = pcall(Logistician.API.v1.GetShoppingListItems, callerID, shoppingListName)
   assert(s2, "GetShoppingListItems failed: " .. tostring(items))
 
   assert(items[1] == '"Draconium Ore";;;;;;;;;;;2;;15', "Shopping List Creation failed")
   assert(items[2] == '"Serevite Ore";;;;;;;;;;;3;;10', "Shopping List Creation failed")
 
-  local s3, e3 = pcall(Auctionator.API.v1.DeleteShoppingListItem, callerID, shoppingListName, searchStrings[1])
+  local s3, e3 = pcall(Logistician.API.v1.DeleteShoppingListItem, callerID, shoppingListName, searchStrings[1])
 
   assert(s3, "DeleteShoppingListItem failed: " .. tostring(e3))
 
-  items = Auctionator.API.v1.GetShoppingListItems(callerID, shoppingListName)
+  items = Logistician.API.v1.GetShoppingListItems(callerID, shoppingListName)
 
   assert(items[1] == '"Serevite Ore";;;;;;;;;;;3;;10', "DeleteShoppingListItem failed")
   assert(#items < 2, "DeleteShoppingListItem failed")
 
-  local s4, e4 = pcall(Auctionator.API.v1.AlterShoppingListItem, callerID, shoppingListName, 
-  Auctionator.API.v1.ConvertToSearchString(callerID, {
+  local s4, e4 = pcall(Logistician.API.v1.AlterShoppingListItem, callerID, shoppingListName,
+  Logistician.API.v1.ConvertToSearchString(callerID, {
         searchString="Serevite Ore",
         isExact=true,
         tier=3,
         quantity=10,
-  }), Auctionator.API.v1.ConvertToSearchString(callerID, {
+  }), Logistician.API.v1.ConvertToSearchString(callerID, {
         searchString="Draconium Ore",
         isExact=true,
         tier=2,
@@ -218,7 +218,7 @@ function Auctionator.API.v1.ShoppingListAPITests()
   }))
   assert(s4, "AlterShoppingListItem failed: " .. tostring(e4))
 
-  items = Auctionator.API.v1.GetShoppingListItems(callerID, shoppingListName)
+  items = Logistician.API.v1.GetShoppingListItems(callerID, shoppingListName)
 
   assert(items[1] == '"Draconium Ore";;;;;;;;;;;2;;5', "AlterShoppingListItem failed")
   assert(#items <  2, "AlterShoppingListItem failed")

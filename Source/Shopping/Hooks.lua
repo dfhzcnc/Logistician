@@ -1,5 +1,5 @@
 local function SearchItem(text)
-  if text == nil or AuctionatorShoppingFrame == nil or not AuctionatorShoppingFrame:IsVisible() then
+  if text == nil or LogisticianShoppingFrame == nil or not LogisticianShoppingFrame:IsVisible() then
     return false
   end
 
@@ -16,7 +16,7 @@ local function SearchItem(text)
   elseif ( strfind(text, "item:", 1, true) ) then
     name = C_Item.GetItemInfo(text);
   elseif ( strfind(text, "enchant:", 1, true) ) then
-    name = Auctionator.Utilities.GetNameFromLink(text)
+    name = Logistician.Utilities.GetNameFromLink(text)
   end
 
   if name == nil then
@@ -26,9 +26,9 @@ local function SearchItem(text)
   -- A modified bag click is equivalent to typing in the main Name field. Do
   -- not wrap the name as an exact/advanced search expression.
   local searchTerm = name
-  AuctionatorShoppingFrame:DoSearch({searchTerm}, {})
-  AuctionatorShoppingFrame.SearchOptions:SetPlainSearchText(searchTerm)
-  Auctionator.Shopping.Recents.Save(searchTerm)
+  LogisticianShoppingFrame:DoSearch({searchTerm}, {})
+  LogisticianShoppingFrame.SearchOptions:SetPlainSearchText(searchTerm)
+  Logistician.Shopping.Recents.Save(searchTerm)
 
   return true
 end

@@ -1,8 +1,8 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/">
   <Frame
-    name="AuctionatorStringColumnHeaderTemplate"
-    mixin="AuctionatorStringColumnHeaderTemplateMixin"
-    inherits="AuctionatorRetailImportColumnDisplayButtonShortTemplate"
+    name="LogisticianStringColumnHeaderTemplate"
+    mixin="LogisticianStringColumnHeaderTemplateMixin"
+    inherits="LogisticianTBCImportColumnDisplayButtonShortTemplate"
     parentKey="header" enableMouse="true" virtual="true"
   >
     <Size y="19"/>

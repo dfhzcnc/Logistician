@@ -1,6 +1,6 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/">
   <!-- Template for a radio button with label -->
-  <Frame name="AuctionatorConfigurationRadioButton" mixin="AuctionatorConfigRadioButtonMixin" inherits="AuctionatorConfigurationTooltip" virtual="true">
+  <Frame name="LogisticianConfigurationRadioButton" mixin="LogisticianConfigRadioButtonMixin" inherits="LogisticianConfigurationTooltip" virtual="true">
     <!--
       <KeyValues>
         <KeyValue key="value" value="" type="string"/>

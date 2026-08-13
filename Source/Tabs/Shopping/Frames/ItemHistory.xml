@@ -1,8 +1,8 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/">
   <Frame
-    name="AuctionatorItemHistoryTemplate"
-    mixin="AuctionatorItemHistoryFrameMixin"
-    inherits="AuctionatorSimplePanelTemplate"
+    name="LogisticianItemHistoryTemplate"
+    mixin="LogisticianItemHistoryFrameMixin"
+    inherits="LogisticianSimplePanelTemplate"
     frameStrata="Dialog"
     enableMouse="true"
     virtual="true"
@@ -18,21 +18,21 @@
     </Scripts>
 
     <Frames>
-      <Frame parentKey="DataProvider" mixin="AuctionatorShoppingHistoricalPriceProviderMixin">
+      <Frame parentKey="DataProvider" mixin="LogisticianShoppingHistoricalPriceProviderMixin">
         <Scripts>
           <OnLoad method="OnLoad"/>
           <OnUpdate method="OnUpdate" />
         </Scripts>
       </Frame>
 
-      <Frame inherits="AuctionatorResultsListingTemplate">
+      <Frame inherits="LogisticianResultsListingTemplate">
         <Anchors>
           <Anchor point="TOPLEFT" x="8" y="-30"/>
           <Anchor point="BOTTOMRIGHT" x="-26" y="32"/>
         </Anchors>
       </Frame>
 
-      <Frame parentKey="Inset" inherits="AuctionatorInsetDarkTemplate">
+      <Frame parentKey="Inset" inherits="LogisticianInsetDarkTemplate">
         <Anchors>
           <Anchor point="TOPLEFT" relativeKey="$parent.ResultsListing" relativePoint="TOPLEFT" x="-5" y="-25"/>
           <Anchor point="BOTTOMRIGHT" relativeKey="$parent.ResultsListing" relativePoint="BOTTOMRIGHT"/>
@@ -60,7 +60,7 @@
         </Scripts>
       </Button>
 
-      <Button parentKey="Close" inherits="UIPanelDynamicResizeButtonTemplate" text="AUCTIONATOR_L_CLOSE">
+      <Button parentKey="Close" inherits="UIPanelDynamicResizeButtonTemplate" text="LOGISTICIAN_L_CLOSE">
         <Anchors>
           <Anchor point="TOPRIGHT" relativeKey="$parent.Dock" relativePoint="TOPLEFT"/>
         </Anchors>
@@ -72,7 +72,7 @@
 
     <Layers>
       <Layer>
-        <FontString text="AUCTIONATOR_L_X_PRICE_HISTORY" parentKey="Title" inherits="GameFontHighlight">
+        <FontString text="LOGISTICIAN_L_X_PRICE_HISTORY" parentKey="Title" inherits="GameFontHighlight">
           <Anchors>
             <Anchor point="TOP" relativePoint="TOP" y="-10"/>
           </Anchors>

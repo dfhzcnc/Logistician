@@ -1,11 +1,11 @@
-AuctionatorConfigHorizontalRadioButtonGroupMixin = CreateFromMixins(AuctionatorConfigRadioButtonGroupMixin)
+LogisticianConfigHorizontalRadioButtonGroupMixin = CreateFromMixins(LogisticianConfigRadioButtonGroupMixin)
 
-function AuctionatorConfigHorizontalRadioButtonGroupMixin:SetupRadioButtons()
+function LogisticianConfigHorizontalRadioButtonGroupMixin:SetupRadioButtons()
   local children = { self:GetChildren() }
   local size = 0
 
   for _, child in ipairs(children) do
-    if child.isAuctionatorRadio then
+    if child.isLogisticianRadio then
       table.insert(self.radioButtons, child)
 
       child:SetPoint("TOPLEFT", size, -20)

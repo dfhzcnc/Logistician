@@ -1,6 +1,6 @@
-AuctionatorConfigurationTitleFrameMixin = {}
+LogisticianConfigurationTitleFrameMixin = {}
 
-function AuctionatorConfigurationTitleFrameMixin:OnLoad()
+function LogisticianConfigurationTitleFrameMixin:OnLoad()
   if self.titleText ~= nil then
     self.Title:SetText(self.titleText)
   end

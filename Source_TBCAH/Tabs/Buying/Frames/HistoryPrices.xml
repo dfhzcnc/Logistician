@@ -1,0 +1,61 @@
+<Ui>
+  <Frame name="LogisticianBuyHistoryPricesFrameTemplate" mixin="LogisticianBuyHistoryPricesFrameMixin" virtual="true">
+    <Frames>
+      <Frame parentKey="RealmHistoryDataProvider" mixin="LogisticianBuyingRealmHistoryDataProviderMixin">
+        <Scripts>
+          <OnLoad method="OnLoad"/>
+          <OnUpdate method="OnUpdate" />
+        </Scripts>
+      </Frame>
+      <Frame parentKey="RealmHistoryResultsListing" inherits="LogisticianResultsListingTemplate">
+        <Anchors>
+          <Anchor point="TOPLEFT"/>
+          <Anchor point="BOTTOMRIGHT" x="-20"/>
+        </Anchors>
+      </Frame>
+
+      <Frame parentKey="PostingHistoryDataProvider" mixin="LogisticianBuyingPostingHistoryProviderMixin">
+        <Scripts>
+          <OnLoad method="OnLoad"/>
+          <OnUpdate method="OnUpdate" />
+        </Scripts>
+      </Frame>
+      <Frame parentKey="PostingHistoryResultsListing" inherits="LogisticianResultsListingTemplate">
+        <Anchors>
+          <Anchor point="TOPLEFT"/>
+          <Anchor point="BOTTOMRIGHT" x="-20"/>
+        </Anchors>
+      </Frame>
+
+      <Frame parentKey="Inset" inherits="LogisticianInsetTemplate">
+        <Anchors>
+          <Anchor point="TOPLEFT" relativeKey="$parent.RealmHistoryResultsListing" relativePoint="TOPLEFT" x="-10" y="-25"/>
+          <Anchor point="BOTTOMRIGHT" relativeKey="$parent.RealmHistoryResultsListing" relativePoint="BOTTOMRIGHT" y="2"/>
+        </Anchors>
+      </Frame>
+
+      <Button inherits="UIPanelDynamicResizeButtonTemplate" text="LOGISTICIAN_L_YOUR_HISTORY" parentKey="PostingHistoryButton">
+        <Anchors>
+          <Anchor point="TOP" relativeKey="$parent.RealmHistoryResultsListing" relativePoint="BOTTOM"/>
+          <Anchor point="RIGHT" relativePoint="RIGHT" x="-8" y="10" />
+        </Anchors>
+        <Scripts>
+          <OnClick>
+            self:GetParent():SelectPostingHistory()
+          </OnClick>
+        </Scripts>
+      </Button>
+
+      <Button inherits="UIPanelDynamicResizeButtonTemplate" text="LOGISTICIAN_L_REALM_HISTORY" parentKey="RealmHistoryButton">
+        <Anchors>
+          <Anchor point="BOTTOMRIGHT" relativePoint="BOTTOMLEFT" relativeKey="$parent.PostingHistoryButton"/>
+        </Anchors>
+        <Scripts>
+          <OnClick>
+            self:GetParent():SelectRealmHistory()
+          </OnClick>
+        </Scripts>
+      </Button>
+    </Frames>
+  </Frame>
+</Ui>

@@ -1,26 +1,26 @@
-AuctionatorConfigAdvancedFrameMixin = CreateFromMixins(AuctionatorPanelConfigMixin)
+LogisticianConfigAdvancedFrameMixin = CreateFromMixins(LogisticianPanelConfigMixin)
 
-function AuctionatorConfigAdvancedFrameMixin:OnLoad()
-  Auctionator.Debug.Message("AuctionatorConfigAdvancedFrameMixin:OnLoad()")
+function LogisticianConfigAdvancedFrameMixin:OnLoad()
+  Logistician.Debug.Message("LogisticianConfigAdvancedFrameMixin:OnLoad()")
 
-  self.name = AUCTIONATOR_L_CONFIG_ADVANCED_CATEGORY
-  self.parent = "Auctionator"
+  self.name = LOGISTICIAN_L_CONFIG_ADVANCED_CATEGORY
+  self.parent = "Logistician"
 
   self:SetupPanel()
 end
 
-function AuctionatorConfigAdvancedFrameMixin:ShowSettings()
-  self.ReplicateScan:SetChecked(Auctionator.Config.Get(Auctionator.Config.Options.REPLICATE_SCAN))
-  self.Debug:SetChecked(Auctionator.Config.Get(Auctionator.Config.Options.DEBUG))
+function LogisticianConfigAdvancedFrameMixin:ShowSettings()
+  self.ReplicateScan:SetChecked(Logistician.Config.Get(Logistician.Config.Options.REPLICATE_SCAN))
+  self.Debug:SetChecked(Logistician.Config.Get(Logistician.Config.Options.DEBUG))
 end
 
-function AuctionatorConfigAdvancedFrameMixin:Save()
-  Auctionator.Debug.Message("AuctionatorConfigAdvancedFrameMixin:Save()")
+function LogisticianConfigAdvancedFrameMixin:Save()
+  Logistician.Debug.Message("LogisticianConfigAdvancedFrameMixin:Save()")
 
-  Auctionator.Config.Set(Auctionator.Config.Options.REPLICATE_SCAN, self.ReplicateScan:GetChecked())
-  Auctionator.Config.Set(Auctionator.Config.Options.DEBUG, self.Debug:GetChecked())
+  Logistician.Config.Set(Logistician.Config.Options.REPLICATE_SCAN, self.ReplicateScan:GetChecked())
+  Logistician.Config.Set(Logistician.Config.Options.DEBUG, self.Debug:GetChecked())
 end
 
-function AuctionatorConfigAdvancedFrameMixin:Cancel()
-  Auctionator.Debug.Message("AuctionatorConfigAdvancedFrameMixin:Cancel()")
+function LogisticianConfigAdvancedFrameMixin:Cancel()
+  Logistician.Debug.Message("LogisticianConfigAdvancedFrameMixin:Cancel()")
 end

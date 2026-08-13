@@ -1,8 +1,8 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/">
   <Button
-    name="AuctionatorStringCellTemplate"
-    mixin="AuctionatorStringCellTemplateMixin"
-    inherits="AuctionatorCell"
+    name="LogisticianStringCellTemplate"
+    mixin="LogisticianStringCellTemplateMixin"
+    inherits="LogisticianCell"
     virtual="true"
   >
     <Layers>

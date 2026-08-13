@@ -1,11 +1,11 @@
-AuctionatorPriceCellTemplateMixin = CreateFromMixins(AuctionatorCellMixin, AuctionatorRetailImportTableBuilderCellMixin)
+LogisticianPriceCellTemplateMixin = CreateFromMixins(LogisticianCellMixin, LogisticianTBCImportTableBuilderCellMixin)
 
-function AuctionatorPriceCellTemplateMixin:Init(columnName)
+function LogisticianPriceCellTemplateMixin:Init(columnName)
   self.columnName = columnName
 end
 
-function AuctionatorPriceCellTemplateMixin:Populate(rowData, index)
-  AuctionatorCellMixin.Populate(self, rowData, index)
+function LogisticianPriceCellTemplateMixin:Populate(rowData, index)
+  LogisticianCellMixin.Populate(self, rowData, index)
 
   if rowData[self.columnName] ~= nil then
     self.MoneyDisplay:SetAmount(rowData[self.columnName])

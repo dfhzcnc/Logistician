@@ -1,92 +1,92 @@
-function Auctionator.API.v1.GetAuctionPriceByItemID(callerID, itemID)
-  Auctionator.API.InternalVerifyID(callerID)
+function Logistician.API.v1.GetAuctionPriceByItemID(callerID, itemID)
+  Logistician.API.InternalVerifyID(callerID)
 
   if type(itemID) ~= "number" then
-    Auctionator.API.ComposeError(
+    Logistician.API.ComposeError(
       callerID,
-      "Usage Auctionator.API.v1.GetAuctionPriceByItemID(string, number)"
+      "Usage Logistician.API.v1.GetAuctionPriceByItemID(string, number)"
     )
   end
 
-  if Auctionator.Database == nil then
+  if Logistician.Database == nil then
     return nil
   end
 
-  return Auctionator.Database:GetPrice(tostring(itemID))
+  return Logistician.Database:GetPrice(tostring(itemID))
 end
 
-function Auctionator.API.v1.GetAuctionPriceByItemLink(callerID, itemLink)
-  Auctionator.API.InternalVerifyID(callerID)
+function Logistician.API.v1.GetAuctionPriceByItemLink(callerID, itemLink)
+  Logistician.API.InternalVerifyID(callerID)
 
   if type(itemLink) ~= "string" then
-    Auctionator.API.ComposeError(
+    Logistician.API.ComposeError(
       callerID,
-      "Usage Auctionator.API.v1.GetAuctionPriceByItemLink(string, string)"
+      "Usage Logistician.API.v1.GetAuctionPriceByItemLink(string, string)"
     )
   end
 
-  if Auctionator.Database == nil then
+  if Logistician.Database == nil then
     return nil
   end
 
   local dbKeys = nil
   -- Use that the callback is called immediately (and populates dbKeys) if the
   -- item info for item levels is available now.
-  Auctionator.Utilities.DBKeyFromLink(itemLink, function(dbKeysCallback)
+  Logistician.Utilities.DBKeyFromLink(itemLink, function(dbKeysCallback)
     dbKeys = dbKeysCallback
   end)
 
   if dbKeys then
-    return Auctionator.Database:GetFirstPrice(dbKeys)
+    return Logistician.Database:GetFirstPrice(dbKeys)
   else
-    return Auctionator.Database:GetPrice(
-      Auctionator.Utilities.BasicDBKeyFromLink(itemLink)
+    return Logistician.Database:GetPrice(
+      Logistician.Utilities.BasicDBKeyFromLink(itemLink)
     )
   end
 end
 
 
 -- Custom integrated build: richer current-market snapshot collected from the
--- same scan data Auctionator already receives. No extra AH query is performed.
-function Auctionator.API.v1.GetMarketSnapshotByItemID(callerID, itemID)
-  Auctionator.API.InternalVerifyID(callerID)
+-- same scan data Logistician already receives. No extra AH query is performed.
+function Logistician.API.v1.GetMarketSnapshotByItemID(callerID, itemID)
+  Logistician.API.InternalVerifyID(callerID)
 
   if type(itemID) ~= "number" then
-    Auctionator.API.ComposeError(
+    Logistician.API.ComposeError(
       callerID,
-      "Usage Auctionator.API.v1.GetMarketSnapshotByItemID(string, number)"
+      "Usage Logistician.API.v1.GetMarketSnapshotByItemID(string, number)"
     )
   end
 
-  if Auctionator.Database == nil then
+  if Logistician.Database == nil then
     return nil
   end
 
-  return Auctionator.Database:GetMarketSnapshot(tostring(itemID))
+  return Logistician.Database:GetMarketSnapshot(tostring(itemID))
 end
 
-function Auctionator.API.v1.GetMarketSnapshotByItemLink(callerID, itemLink)
-  Auctionator.API.InternalVerifyID(callerID)
+function Logistician.API.v1.GetMarketSnapshotByItemLink(callerID, itemLink)
+  Logistician.API.InternalVerifyID(callerID)
 
   if type(itemLink) ~= "string" then
-    Auctionator.API.ComposeError(
+    Logistician.API.ComposeError(
       callerID,
-      "Usage Auctionator.API.v1.GetMarketSnapshotByItemLink(string, string)"
+      "Usage Logistician.API.v1.GetMarketSnapshotByItemLink(string, string)"
     )
   end
 
-  if Auctionator.Database == nil then
+  if Logistician.Database == nil then
     return nil
   end
 
   local dbKeys = nil
-  Auctionator.Utilities.DBKeyFromLink(itemLink, function(dbKeysCallback)
+  Logistician.Utilities.DBKeyFromLink(itemLink, function(dbKeysCallback)
     dbKeys = dbKeysCallback
   end)
 
   if dbKeys and #dbKeys > 0 then
     for _, dbKey in ipairs(dbKeys) do
-      local snapshot = Auctionator.Database:GetMarketSnapshot(dbKey)
+      local snapshot = Logistician.Database:GetMarketSnapshot(dbKey)
       if snapshot ~= nil then
         return snapshot
       end
@@ -94,20 +94,20 @@ function Auctionator.API.v1.GetMarketSnapshotByItemLink(callerID, itemLink)
     return nil
   end
 
-  return Auctionator.Database:GetMarketSnapshot(
-    Auctionator.Utilities.BasicDBKeyFromLink(itemLink)
+  return Logistician.Database:GetMarketSnapshot(
+    Logistician.Utilities.BasicDBKeyFromLink(itemLink)
   )
 end
 
-function Auctionator.API.v1.GetMarketPriceByItemID(callerID, itemID)
+function Logistician.API.v1.GetMarketPriceByItemID(callerID, itemID)
   local snapshot =
-    Auctionator.API.v1.GetMarketSnapshotByItemID(callerID, itemID)
+    Logistician.API.v1.GetMarketSnapshotByItemID(callerID, itemID)
   return snapshot and snapshot.marketPrice or nil
 end
 
-function Auctionator.API.v1.GetMarketPriceByItemLink(callerID, itemLink)
+function Logistician.API.v1.GetMarketPriceByItemLink(callerID, itemLink)
   local snapshot =
-    Auctionator.API.v1.GetMarketSnapshotByItemLink(callerID, itemLink)
+    Logistician.API.v1.GetMarketSnapshotByItemLink(callerID, itemLink)
   return snapshot and snapshot.marketPrice or nil
 end
 
@@ -115,55 +115,55 @@ end
 -- Custom integrated build: robust historical average.
 -- Returns price in copper. Additional return values are:
 --   number of historical day samples, number of final Tukey-rejected samples.
-function Auctionator.API.v1.GetAuctionAverageByItemID(callerID, itemID, days)
-  Auctionator.API.InternalVerifyID(callerID)
+function Logistician.API.v1.GetAuctionAverageByItemID(callerID, itemID, days)
+  Logistician.API.InternalVerifyID(callerID)
 
   if type(itemID) ~= "number" then
-    Auctionator.API.ComposeError(
+    Logistician.API.ComposeError(
       callerID,
-      "Usage Auctionator.API.v1.GetAuctionAverageByItemID(string, number, [number])"
+      "Usage Logistician.API.v1.GetAuctionAverageByItemID(string, number, [number])"
     )
   end
 
-  if Auctionator.Database == nil then
+  if Logistician.Database == nil then
     return nil
   end
 
-  return Auctionator.Database:GetRobustAveragePrice(
+  return Logistician.Database:GetRobustAveragePrice(
     tostring(itemID),
-    days or Auctionator.Config.Get(
-      Auctionator.Config.Options.AUCTION_MEAN_DAYS_LIMIT
+    days or Logistician.Config.Get(
+      Logistician.Config.Options.AUCTION_MEAN_DAYS_LIMIT
     ) or 21
   )
 end
 
-function Auctionator.API.v1.GetAuctionAverageByItemLink(callerID, itemLink, days)
-  Auctionator.API.InternalVerifyID(callerID)
+function Logistician.API.v1.GetAuctionAverageByItemLink(callerID, itemLink, days)
+  Logistician.API.InternalVerifyID(callerID)
 
   if type(itemLink) ~= "string" then
-    Auctionator.API.ComposeError(
+    Logistician.API.ComposeError(
       callerID,
-      "Usage Auctionator.API.v1.GetAuctionAverageByItemLink(string, string, [number])"
+      "Usage Logistician.API.v1.GetAuctionAverageByItemLink(string, string, [number])"
     )
   end
 
-  if Auctionator.Database == nil then
+  if Logistician.Database == nil then
     return nil
   end
 
   local dbKeys = nil
-  Auctionator.Utilities.DBKeyFromLink(itemLink, function(dbKeysCallback)
+  Logistician.Utilities.DBKeyFromLink(itemLink, function(dbKeysCallback)
     dbKeys = dbKeysCallback
   end)
 
-  local window = days or Auctionator.Config.Get(
-    Auctionator.Config.Options.AUCTION_MEAN_DAYS_LIMIT
+  local window = days or Logistician.Config.Get(
+    Logistician.Config.Options.AUCTION_MEAN_DAYS_LIMIT
   ) or 21
 
   if dbKeys and #dbKeys > 0 then
     for _, dbKey in ipairs(dbKeys) do
       local price, sampleCount, rejected =
-        Auctionator.Database:GetRobustAveragePrice(dbKey, window)
+        Logistician.Database:GetRobustAveragePrice(dbKey, window)
 
       if price ~= nil then
         return price, sampleCount, rejected
@@ -172,8 +172,8 @@ function Auctionator.API.v1.GetAuctionAverageByItemLink(callerID, itemLink, days
     return nil
   end
 
-  return Auctionator.Database:GetRobustAveragePrice(
-    Auctionator.Utilities.BasicDBKeyFromLink(itemLink),
+  return Logistician.Database:GetRobustAveragePrice(
+    Logistician.Utilities.BasicDBKeyFromLink(itemLink),
     window
   )
 end
@@ -185,57 +185,57 @@ end
 --   label ("Very Low".."Very High"),
 --   confidence label,
 --   details table.
--- This is NOT a calibrated completed-sale probability because Auctionator
+-- This is NOT a calibrated completed-sale probability because Logistician
 -- observes market snapshots rather than verified outcomes for every auction.
-function Auctionator.API.v1.GetSaleLikelihoodByItemID(callerID, itemID, days)
-  Auctionator.API.InternalVerifyID(callerID)
+function Logistician.API.v1.GetSaleLikelihoodByItemID(callerID, itemID, days)
+  Logistician.API.InternalVerifyID(callerID)
 
   if type(itemID) ~= "number" then
-    Auctionator.API.ComposeError(
+    Logistician.API.ComposeError(
       callerID,
-      "Usage Auctionator.API.v1.GetSaleLikelihoodByItemID(string, number, [number])"
+      "Usage Logistician.API.v1.GetSaleLikelihoodByItemID(string, number, [number])"
     )
   end
 
-  if Auctionator.Database == nil then
+  if Logistician.Database == nil then
     return nil
   end
 
-  return Auctionator.Database:GetSaleLikelihood(
+  return Logistician.Database:GetSaleLikelihood(
     tostring(itemID),
-    days or Auctionator.Config.Get(
-      Auctionator.Config.Options.AUCTION_MEAN_DAYS_LIMIT
+    days or Logistician.Config.Get(
+      Logistician.Config.Options.AUCTION_MEAN_DAYS_LIMIT
     ) or 21
   )
 end
 
-function Auctionator.API.v1.GetSaleLikelihoodByItemLink(callerID, itemLink, days)
-  Auctionator.API.InternalVerifyID(callerID)
+function Logistician.API.v1.GetSaleLikelihoodByItemLink(callerID, itemLink, days)
+  Logistician.API.InternalVerifyID(callerID)
 
   if type(itemLink) ~= "string" then
-    Auctionator.API.ComposeError(
+    Logistician.API.ComposeError(
       callerID,
-      "Usage Auctionator.API.v1.GetSaleLikelihoodByItemLink(string, string, [number])"
+      "Usage Logistician.API.v1.GetSaleLikelihoodByItemLink(string, string, [number])"
     )
   end
 
-  if Auctionator.Database == nil then
+  if Logistician.Database == nil then
     return nil
   end
 
   local dbKeys = nil
-  Auctionator.Utilities.DBKeyFromLink(itemLink, function(dbKeysCallback)
+  Logistician.Utilities.DBKeyFromLink(itemLink, function(dbKeysCallback)
     dbKeys = dbKeysCallback
   end)
 
-  local window = days or Auctionator.Config.Get(
-    Auctionator.Config.Options.AUCTION_MEAN_DAYS_LIMIT
+  local window = days or Logistician.Config.Get(
+    Logistician.Config.Options.AUCTION_MEAN_DAYS_LIMIT
   ) or 21
 
   if dbKeys and #dbKeys > 0 then
     for _, dbKey in ipairs(dbKeys) do
       local score, label, confidence, details =
-        Auctionator.Database:GetSaleLikelihood(dbKey, window)
+        Logistician.Database:GetSaleLikelihood(dbKey, window)
 
       if score ~= nil then
         return score, label, confidence, details
@@ -244,29 +244,29 @@ function Auctionator.API.v1.GetSaleLikelihoodByItemLink(callerID, itemLink, days
     return nil
   end
 
-  return Auctionator.Database:GetSaleLikelihood(
-    Auctionator.Utilities.BasicDBKeyFromLink(itemLink),
+  return Logistician.Database:GetSaleLikelihood(
+    Logistician.Utilities.BasicDBKeyFromLink(itemLink),
     window
   )
 end
 
 
 -- Custom integrated build: compact expiration-aware exposure observations.
--- Intended primarily for diagnostics and future WPP/Auctionator interaction.
-function Auctionator.API.v1.GetSaleExposureHistoryByItemID(callerID, itemID)
-  Auctionator.API.InternalVerifyID(callerID)
+-- Intended primarily for diagnostics and future WPP/Logistician interaction.
+function Logistician.API.v1.GetSaleExposureHistoryByItemID(callerID, itemID)
+  Logistician.API.InternalVerifyID(callerID)
 
   if type(itemID) ~= "number" then
-    Auctionator.API.ComposeError(
+    Logistician.API.ComposeError(
       callerID,
-      "Usage Auctionator.API.v1.GetSaleExposureHistoryByItemID(string, number)"
+      "Usage Logistician.API.v1.GetSaleExposureHistoryByItemID(string, number)"
     )
   end
 
-  if Auctionator.Database == nil then
+  if Logistician.Database == nil then
     return {}
   end
 
-  Auctionator.Database:WatchSaleExposure(tostring(itemID))
-  return Auctionator.Database:GetSaleExposureHistory(tostring(itemID))
+  Logistician.Database:WatchSaleExposure(tostring(itemID))
+  return Logistician.Database:GetSaleExposureHistory(tostring(itemID))
 end

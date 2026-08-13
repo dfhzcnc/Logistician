@@ -1,24 +1,24 @@
-AuctionatorConfigNumericInputMixin = {}
+LogisticianConfigNumericInputMixin = {}
 
-function AuctionatorConfigNumericInputMixin:OnLoad()
+function LogisticianConfigNumericInputMixin:OnLoad()
   if self.labelText ~= nil then
     self.InputBox.Label:SetText(self.labelText)
   end
 end
 
-function AuctionatorConfigNumericInputMixin:OnMouseUp()
+function LogisticianConfigNumericInputMixin:OnMouseUp()
   self.InputBox:SetFocus()
 end
 
-function AuctionatorConfigNumericInputMixin:SetFocus()
+function LogisticianConfigNumericInputMixin:SetFocus()
   self.InputBox:SetFocus()
 end
 
-function AuctionatorConfigNumericInputMixin:SetNumber(value)
+function LogisticianConfigNumericInputMixin:SetNumber(value)
   self.InputBox:SetNumber(value)
   self.InputBox:SetCursorPosition(0)
 end
 
-function AuctionatorConfigNumericInputMixin:GetNumber(value)
+function LogisticianConfigNumericInputMixin:GetNumber(value)
   return self.InputBox:GetNumber(value)
 end

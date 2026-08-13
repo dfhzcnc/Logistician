@@ -1,5 +1,5 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/">
-  <Frame name="AuctionatorDropDown" mixin="AuctionatorDropDownMixin" virtual="true">
+  <Frame name="LogisticianDropDown" mixin="LogisticianDropDownMixin" virtual="true">
     <!--
       <KeyValues>
         <KeyValue key="labelText" value="" type="string"/>

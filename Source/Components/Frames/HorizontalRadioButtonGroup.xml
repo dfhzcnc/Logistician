@@ -1,9 +1,9 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/">
   <Frame
-    name="AuctionatorConfigurationHorizontalRadioButtonGroup"
-    mixin="AuctionatorConfigHorizontalRadioButtonGroupMixin"
+    name="LogisticianConfigurationHorizontalRadioButtonGroup"
+    mixin="LogisticianConfigHorizontalRadioButtonGroupMixin"
     virtual="true"
-    inherits="AuctionatorConfigurationRadioButtonGroup"
+    inherits="LogisticianConfigurationRadioButtonGroup"
   >
   </Frame>
 </Ui>

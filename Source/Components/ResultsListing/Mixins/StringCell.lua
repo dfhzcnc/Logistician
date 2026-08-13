@@ -1,6 +1,6 @@
-AuctionatorStringCellTemplateMixin = CreateFromMixins(AuctionatorCellMixin, AuctionatorRetailImportTableBuilderCellMixin)
+LogisticianStringCellTemplateMixin = CreateFromMixins(LogisticianCellMixin, LogisticianTBCImportTableBuilderCellMixin)
 
-function AuctionatorStringCellTemplateMixin:Init(columnName, fontObjectName)
+function LogisticianStringCellTemplateMixin:Init(columnName, fontObjectName)
   self.columnName = columnName
 
   self.text:SetJustifyH("LEFT")
@@ -9,16 +9,16 @@ function AuctionatorStringCellTemplateMixin:Init(columnName, fontObjectName)
   end
 end
 
-function AuctionatorStringCellTemplateMixin:Populate(rowData, index)
-  AuctionatorCellMixin.Populate(self, rowData, index)
+function LogisticianStringCellTemplateMixin:Populate(rowData, index)
+  LogisticianCellMixin.Populate(self, rowData, index)
 
   self.text:SetText(rowData[self.columnName])
 end
 
-function AuctionatorStringCellTemplateMixin:OnHide()
+function LogisticianStringCellTemplateMixin:OnHide()
   self.text:Hide()
 end
 
-function AuctionatorStringCellTemplateMixin:OnShow()
+function LogisticianStringCellTemplateMixin:OnShow()
   self.text:Show()
 end

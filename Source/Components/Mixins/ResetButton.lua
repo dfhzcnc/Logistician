@@ -1,13 +1,13 @@
-AuctionatorResetButtonMixin = {}
+LogisticianResetButtonMixin = {}
 
-function AuctionatorResetButtonMixin:OnLoad()
+function LogisticianResetButtonMixin:OnLoad()
   self.clickCallback = function() end
 end
 
-function AuctionatorResetButtonMixin:OnClick()
+function LogisticianResetButtonMixin:OnClick()
   self.clickCallback()
 end
 
-function AuctionatorResetButtonMixin:SetClickCallback(callback)
+function LogisticianResetButtonMixin:SetClickCallback(callback)
   self.clickCallback = callback
 end

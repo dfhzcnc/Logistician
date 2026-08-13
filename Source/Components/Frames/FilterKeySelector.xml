@@ -1,7 +1,7 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/">
   <Frame
-    name="AuctionatorFilterKeySelectorTemplate"
-    mixin="AuctionatorFilterKeySelectorMixin"
+    name="LogisticianFilterKeySelectorTemplate"
+    mixin="LogisticianFilterKeySelectorMixin"
     virtual="true"
   >
     <Size x="320" y="32"/>
@@ -11,7 +11,7 @@
     </Scripts>
 
     <Frames>
-      <Button parentKey="ResetButton" inherits="AuctionatorResetButton">
+      <Button parentKey="ResetButton" inherits="LogisticianResetButton">
         <Anchors>
           <Anchor point="TOPRIGHT" y="-6"/>
         </Anchors>

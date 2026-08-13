@@ -1,7 +1,7 @@
-AuctionatorBagItemSelectedMixin = CreateFromMixins(AuctionatorGroupsViewItemMixin)
+LogisticianBagItemSelectedMixin = CreateFromMixins(LogisticianGroupsViewItemMixin)
 
-function AuctionatorBagItemSelectedMixin:SetItemInfo(info, ...)
-  AuctionatorGroupsViewItemMixin.SetItemInfo(self, info, ...)
+function LogisticianBagItemSelectedMixin:SetItemInfo(info, ...)
+  LogisticianGroupsViewItemMixin.SetItemInfo(self, info, ...)
   self.IconSelectedHighlight:Hide()
   self.IconBorder:SetShown(info ~= nil)
   self.Icon:SetAlpha(1)
@@ -11,33 +11,33 @@ end
 
 local seenBag, seenSlot
 
-function AuctionatorBagItemSelectedMixin:OnClick(button)
+function LogisticianBagItemSelectedMixin:OnClick(button)
   local wasCursorItem = C_Cursor.GetCursorItem()
   self:ProcessCursor(function(check)
     if not check then
       if button == "LeftButton" and not wasCursorItem and self.itemInfo ~= nil and not IsModifiedClick("DRESSUP") and not IsModifiedClick("CHATLINK") then
         self:SearchInShoppingTab()
       else
-        AuctionatorGroupsViewItemMixin.OnClick(self, button)
+        LogisticianGroupsViewItemMixin.OnClick(self, button)
       end
     end
   end)
 end
 
-function AuctionatorBagItemSelectedMixin:SearchInShoppingTab()
-  Auctionator.API.v1.MultiSearchExact(AUCTIONATOR_L_SELLING_TAB, { self.itemInfo.itemName })
+function LogisticianBagItemSelectedMixin:SearchInShoppingTab()
+  Logistician.API.v1.MultiSearchExact(LOGISTICIAN_L_SELLING_TAB, { self.itemInfo.itemName })
 end
 
-function AuctionatorBagItemSelectedMixin:OnReceiveDrag()
+function LogisticianBagItemSelectedMixin:OnReceiveDrag()
   self:ProcessCursor(function() end)
 end
 
-function AuctionatorBagItemSelectedMixin:ProcessCursor(callback)
+function LogisticianBagItemSelectedMixin:ProcessCursor(callback)
   local location = C_Cursor.GetCursorItem()
   ClearCursor()
 
   if not location then
-    Auctionator.Debug.Message("nothing on cursor")
+    Logistician.Debug.Message("nothing on cursor")
     callback(false)
     return
   end
@@ -50,35 +50,35 @@ function AuctionatorBagItemSelectedMixin:ProcessCursor(callback)
   --  clicks.
   -- We use 2.
   if not location:HasAnyLocation() then
-    Auctionator.Debug.Message("AuctionatorBagItemSelected", "recovering")
+    Logistician.Debug.Message("LogisticianBagItemSelected", "recovering")
     location = ItemLocation:CreateFromBagAndSlot(seenBag, seenSlot)
   end
 
   if not C_Item.DoesItemExist(location) then
-    Auctionator.Debug.Message("AuctionatorBagItemSelected", "not exists")
+    Logistician.Debug.Message("LogisticianBagItemSelected", "not exists")
     callback(false)
     return
   end
 
   local itemLink = C_Item.GetItemLink(location)
 
-  Auctionator.EventBus:RegisterSource(self, "BagItemSelected")
-  Auctionator.Groups.CallbackRegistry:RegisterCallback("BagCacheUpdated", function(_, cache)
-    Auctionator.Groups.CallbackRegistry:UnregisterCallback("BagCacheUpdated", self)
-    Auctionator.Groups.CallbackRegistry:TriggerEvent("BagCacheOff")
+  Logistician.EventBus:RegisterSource(self, "BagItemSelected")
+  Logistician.Groups.CallbackRegistry:RegisterCallback("BagCacheUpdated", function(_, cache)
+    Logistician.Groups.CallbackRegistry:UnregisterCallback("BagCacheUpdated", self)
+    Logistician.Groups.CallbackRegistry:TriggerEvent("BagCacheOff")
     cache:CacheLinkInfo(itemLink, function()
-      local info = Auctionator.Groups.Utilities.ToPostingItem(AuctionatorBagCacheFrame:GetByLinkInstant(itemLink, true))
+      local info = Logistician.Groups.Utilities.ToPostingItem(LogisticianBagCacheFrame:GetByLinkInstant(itemLink, true))
       if info.location then
         callback(true)
         info.location = location
-        Auctionator.EventBus:Fire(self, Auctionator.Selling.Events.BagItemClicked, info)
+        Logistician.EventBus:Fire(self, Logistician.Selling.Events.BagItemClicked, info)
       else
-        Auctionator.Selling.ShowCannotSellReason(location)
+        Logistician.Selling.ShowCannotSellReason(location)
         callback(false)
       end
     end)
   end, self)
-  Auctionator.Groups.CallbackRegistry:TriggerEvent("BagCacheOn")
+  Logistician.Groups.CallbackRegistry:TriggerEvent("BagCacheOn")
 end
 
 local function HookForPickup(bag, slot)

@@ -1,9 +1,9 @@
-function Auctionator.Config.InternalInitializeFrames(templateNames)
+function Logistician.Config.InternalInitializeFrames(templateNames)
   for _, name in ipairs(templateNames) do
     CreateFrame(
       "FRAME",
-      "AuctionatorConfig" .. name .. "Frame",
+      "LogisticianConfig" .. name .. "Frame",
       SettingsPanel,
-      "AuctionatorConfig" .. name .. "FrameTemplate")
+      "LogisticianConfig" .. name .. "FrameTemplate")
   end
 end

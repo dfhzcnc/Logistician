@@ -1,13 +1,13 @@
 <Ui>
-  <Frame name="AuctionatorGroupsViewTemplate" virtual="true" parentKey="View" mixin="AuctionatorGroupsViewMixin">
+  <Frame name="LogisticianGroupsViewTemplate" virtual="true" parentKey="View" mixin="LogisticianGroupsViewMixin">
     <Scripts>
       <OnLoad method="OnLoad"/>
       <OnShow method="OnShow"/>
       <OnHide method="OnHide"/>
     </Scripts>
     <KeyValues>
-      <KeyValue key="itemTemplate" value="AuctionatorGroupsViewItemTemplate" type="string" />
-      <KeyValue key="groupTemplate" value="AuctionatorGroupsViewGroupTemplate" type="string" />
+      <KeyValue key="itemTemplate" value="LogisticianGroupsViewItemTemplate" type="string" />
+      <KeyValue key="groupTemplate" value="LogisticianGroupsViewGroupTemplate" type="string" />
       <KeyValue key="groupInsetX" value="0" type="number" />
       <KeyValue key="clickEventName" value="BagItemClicked" type="string" />
       <KeyValue key="completeEventName" value="ViewComplete" type="string" />
