@@ -1,0 +1,33 @@
+# Operating-system and editor files
+.DS_Store
+Thumbs.db
+Desktop.ini
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Local tooling and test output
+.luacheckcache
+.cache/
+coverage/
+tmp/
+temp/
+*.log
+
+# Packaged releases and generated archives
+.release/
+release/
+dist/
+*.zip
+
+# WoW runtime data must never be committed
+WTF/
+Cache/
+Logs/
+Errors/
+Screenshots/
+SavedVariables/
+*.bak
+
