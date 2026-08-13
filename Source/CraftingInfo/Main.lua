@@ -4,7 +4,7 @@ local GetMerchantItemInfo = GetMerchantItemInfo or function(index)
     return info.name, info.texture, info.price, info.stackCount, info.numAvailable, info.isPurchasable, info.isUsable, info.hasExtendedCost, info.currencyID, info.spellID;
   end
 end
-function Logistician.CraftingInfo.CacheVendorPrices()
+function Auctionator.CraftingInfo.CacheVendorPrices()
   for i = 1, GetMerchantNumItems() do
     local itemID = GetMerchantItemID(i)
     if itemID ~= nil then
@@ -13,13 +13,13 @@ function Logistician.CraftingInfo.CacheVendorPrices()
         item:ContinueOnItemLoad(function()
           local price, stack, numAvailable = select(3, GetMerchantItemInfo(i))
           local itemLink = GetMerchantItemLink(i)
-          local dbKey = Logistician.Utilities.BasicDBKeyFromLink(itemLink)
+          local dbKey = Auctionator.Utilities.BasicDBKeyFromLink(itemLink)
           if dbKey ~= nil and price ~= 0 and numAvailable == -1 then
-            local oldPrice = LOGISTICIAN_VENDOR_PRICE_CACHE[dbKey]
+            local oldPrice = AUCTIONATOR_VENDOR_PRICE_CACHE[dbKey]
             local newPrice = price / stack
-            LOGISTICIAN_VENDOR_PRICE_CACHE[dbKey] = newPrice
+            AUCTIONATOR_VENDOR_PRICE_CACHE[dbKey] = newPrice
           elseif dbKey ~= nil then
-            LOGISTICIAN_VENDOR_PRICE_CACHE[dbKey] = nil
+            AUCTIONATOR_VENDOR_PRICE_CACHE[dbKey] = nil
           end
         end)
       end
@@ -27,13 +27,13 @@ function Logistician.CraftingInfo.CacheVendorPrices()
   end
 end
 
-function Logistician.CraftingInfo.GetProfitWarning(profit, age, anyPrice, exact)
+function Auctionator.CraftingInfo.GetProfitWarning(profit, age, anyPrice, exact)
   if not exact and anyPrice then
-    return " " .. LOGISTICIAN_L_PROFIT_WARNING_NOT_EXACT_ITEM
+    return " " .. AUCTIONATOR_L_PROFIT_WARNING_NOT_EXACT_ITEM
   elseif age == nil then
-    return " " .. LOGISTICIAN_L_PROFIT_WARNING_MISSING
+    return " " .. AUCTIONATOR_L_PROFIT_WARNING_MISSING
   elseif age > 10 then
-    return " " .. LOGISTICIAN_L_PROFIT_WARNING_AGE
+    return " " .. AUCTIONATOR_L_PROFIT_WARNING_AGE
   else
     return ""
   end

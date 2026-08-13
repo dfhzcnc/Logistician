@@ -1,63 +1,63 @@
-LogisticianSearchProviderMixin = {}
+AuctionatorSearchProviderMixin = {}
 
 -- Derive
-function LogisticianSearchProviderMixin:OnSearchEventReceived(eventName, ...)
+function AuctionatorSearchProviderMixin:OnSearchEventReceived(eventName, ...)
 end
 
 -- Derive
-function LogisticianSearchProviderMixin:CreateSearchTerm(term)
+function AuctionatorSearchProviderMixin:CreateSearchTerm(term)
 end
 
 -- Derive
-function LogisticianSearchProviderMixin:GetSearchProvider()
+function AuctionatorSearchProviderMixin:GetSearchProvider()
 end
 
 -- Derive
-function LogisticianSearchProviderMixin:RegisterProviderEvents()
+function AuctionatorSearchProviderMixin:RegisterProviderEvents()
 end
 
 -- Derive
-function LogisticianSearchProviderMixin:UnregisterProviderEvents()
+function AuctionatorSearchProviderMixin:UnregisterProviderEvents()
 end
 
 -- Derive
-function LogisticianSearchProviderMixin:HasCompleteTermResults()
+function AuctionatorSearchProviderMixin:HasCompleteTermResults()
 end
 
 -- Derive
-function LogisticianSearchProviderMixin:GetCurrentEmptyResult()
+function AuctionatorSearchProviderMixin:GetCurrentEmptyResult()
 end
 
-function LogisticianSearchProviderMixin:RegisterEvents(events)
-  Logistician.Debug.Message("LogisticianSearchProviderMixin:RegisterEvents()", events)
+function AuctionatorSearchProviderMixin:RegisterEvents(events)
+  Auctionator.Debug.Message("AuctionatorSearchProviderMixin:RegisterEvents()", events)
 
   FrameUtil.RegisterFrameForEvents(self, events)
 end
 
-function LogisticianSearchProviderMixin:UnregisterEvents(events)
-  Logistician.Debug.Message("LogisticianSearchProviderMixin:UnregisterEvents()", events)
+function AuctionatorSearchProviderMixin:UnregisterEvents(events)
+  Auctionator.Debug.Message("AuctionatorSearchProviderMixin:UnregisterEvents()", events)
 
   FrameUtil.UnregisterFrameForEvents(self, events)
 end
 
-function LogisticianSearchProviderMixin:SetTerms(terms, config)
-  Logistician.Debug.Message("LogisticianSearchProviderMixin:SetTerms()", terms, config)
+function AuctionatorSearchProviderMixin:SetTerms(terms, config)
+  Auctionator.Debug.Message("AuctionatorSearchProviderMixin:SetTerms()", terms, config)
 
   self.terms = terms
   self.config = config or {}
   self.index = 1
 end
 
-function LogisticianSearchProviderMixin:GetCurrentSearchIndex()
+function AuctionatorSearchProviderMixin:GetCurrentSearchIndex()
   return self.index
 end
 
-function LogisticianSearchProviderMixin:GetSearchTermCount()
+function AuctionatorSearchProviderMixin:GetSearchTermCount()
   return #self.terms
 end
 
-function LogisticianSearchProviderMixin:HasMoreTerms()
-  Logistician.Debug.Message("LogisticianSearchProviderMixin:HasMoreTerms()")
+function AuctionatorSearchProviderMixin:HasMoreTerms()
+  Auctionator.Debug.Message("AuctionatorSearchProviderMixin:HasMoreTerms()")
 
   return
     self.terms ~= nil and
@@ -66,8 +66,8 @@ function LogisticianSearchProviderMixin:HasMoreTerms()
     self.index <= #self.terms
 end
 
-function LogisticianSearchProviderMixin:GetNextSearchParameter()
-  Logistician.Debug.Message("LogisticianSearchProviderMixin:GetNextSearchParameter()")
+function AuctionatorSearchProviderMixin:GetNextSearchParameter()
+  Auctionator.Debug.Message("AuctionatorSearchProviderMixin:GetNextSearchParameter()")
 
   if self:HasMoreTerms() then
     self.index = self.index + 1
@@ -78,6 +78,6 @@ function LogisticianSearchProviderMixin:GetNextSearchParameter()
   end
 end
 
-function LogisticianSearchProviderMixin:GetCurrentSearchParameter()
+function AuctionatorSearchProviderMixin:GetCurrentSearchParameter()
   return self.terms[self.index - 1]
 end

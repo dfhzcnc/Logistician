@@ -1,7 +1,7 @@
-local GroupType = Logistician.Groups.Constants.GroupType
+local GroupType = Auctionator.Groups.Constants.GroupType
 
-LogisticianGroupsViewMixin = {}
-function LogisticianGroupsViewMixin:OnLoad()
+AuctionatorGroupsViewMixin = {}
+function AuctionatorGroupsViewMixin:OnLoad()
   local view = CreateScrollBoxLinearView()
   view:SetPanExtent(50)
   ScrollUtil.InitScrollBoxWithScrollBar(self.ScrollBox, self.ScrollBar, view);
@@ -22,38 +22,38 @@ function LogisticianGroupsViewMixin:OnLoad()
   self.cachedUpdated = false
 end
 
-function LogisticianGroupsViewMixin:OnShow()
-  Logistician.Groups.CallbackRegistry:RegisterCallback("BagCacheUpdated", self.Update, self)
-  Logistician.Groups.CallbackRegistry:RegisterCallback("ViewGroupToggled", self.UpdateGroupHeights, self)
-  Logistician.Groups.CallbackRegistry:RegisterCallback("Customise.EditMade", self.UpdateCustomGroups, self)
+function AuctionatorGroupsViewMixin:OnShow()
+  Auctionator.Groups.CallbackRegistry:RegisterCallback("BagCacheUpdated", self.Update, self)
+  Auctionator.Groups.CallbackRegistry:RegisterCallback("ViewGroupToggled", self.UpdateGroupHeights, self)
+  Auctionator.Groups.CallbackRegistry:RegisterCallback("Customise.EditMade", self.UpdateCustomGroups, self)
 
   self:UpdateCustomGroups()
   self:UpdateFromExisting()
 end
 
-function LogisticianGroupsViewMixin:OnHide()
-  Logistician.Groups.CallbackRegistry:UnregisterCallback("BagCacheUpdated", self)
-  Logistician.Groups.CallbackRegistry:UnregisterCallback("ViewGroupToggled", self)
-  Logistician.Groups.CallbackRegistry:UnregisterCallback("Customise.EditMade", self.UpdateCustomGroups, self)
+function AuctionatorGroupsViewMixin:OnHide()
+  Auctionator.Groups.CallbackRegistry:UnregisterCallback("BagCacheUpdated", self)
+  Auctionator.Groups.CallbackRegistry:UnregisterCallback("ViewGroupToggled", self)
+  Auctionator.Groups.CallbackRegistry:UnregisterCallback("Customise.EditMade", self.UpdateCustomGroups, self)
 end
 
-function LogisticianGroupsViewMixin:UpdateCustomGroups()
-  self.groupDetails = CopyTable({LOGISTICIAN_SELLING_GROUPS.CustomGroups[1]})
-  for _, s in ipairs(Logistician.Groups.Constants.DefaultGroups) do
+function AuctionatorGroupsViewMixin:UpdateCustomGroups()
+  self.groupDetails = CopyTable({AUCTIONATOR_SELLING_GROUPS.CustomGroups[1]})
+  for _, s in ipairs(Auctionator.Groups.Constants.DefaultGroups) do
     table.insert(self.groupDetails, s)
   end
 
   self:CacheListLinks()
 end
 
-function LogisticianGroupsViewMixin:CacheListLinks()
+function AuctionatorGroupsViewMixin:CacheListLinks()
   self.listsCached = false
 
   local toCache = {}
   for _, s in ipairs(self.groupDetails) do
     if s.type == GroupType.List then
       for _, link in ipairs(s.list) do
-        local info = LogisticianBagCacheFrame:GetByLinkInstant(link, true)
+        local info = AuctionatorBagCacheFrame:GetByLinkInstant(link, true)
         if info == nil then
           table.insert(toCache, link)
         end
@@ -62,8 +62,8 @@ function LogisticianGroupsViewMixin:CacheListLinks()
   end
 
   if self.hideHiddenItems then
-    for _, link in ipairs(LOGISTICIAN_SELLING_GROUPS.HiddenItems) do
-      local info = LogisticianBagCacheFrame:GetByLinkInstant(link, true)
+    for _, link in ipairs(AUCTIONATOR_SELLING_GROUPS.HiddenItems) do
+      local info = AuctionatorBagCacheFrame:GetByLinkInstant(link, true)
       if info == nil then
         table.insert(toCache, link)
       end
@@ -79,7 +79,7 @@ function LogisticianGroupsViewMixin:CacheListLinks()
 
   local waiting = #toCache
   for _, itemLink in ipairs(toCache) do
-    LogisticianBagCacheFrame:CacheLinkInfo(itemLink, function()
+    AuctionatorBagCacheFrame:CacheLinkInfo(itemLink, function()
       waiting = waiting - 1
       if waiting <= 0 then
         self.listsCached = true
@@ -90,22 +90,22 @@ function LogisticianGroupsViewMixin:CacheListLinks()
   end
 end
 
-function LogisticianGroupsViewMixin:RefreshHiddenItems()
+function AuctionatorGroupsViewMixin:RefreshHiddenItems()
   self.hiddenItems = {}
   if self.hideHiddenItems then
-    for _, link in ipairs(LOGISTICIAN_SELLING_GROUPS.HiddenItems) do
-      local info = LogisticianBagCacheFrame:GetByLinkInstant(link, true)
+    for _, link in ipairs(AUCTIONATOR_SELLING_GROUPS.HiddenItems) do
+      local info = AuctionatorBagCacheFrame:GetByLinkInstant(link, true)
       self.hiddenItems[info.sortKey] = link
     end
   end
 end
 
-function LogisticianGroupsViewMixin:SetSelected(key)
+function AuctionatorGroupsViewMixin:SetSelected(key)
   self.selected = key
   self:UpdateFromExisting()
 end
 
-function LogisticianGroupsViewMixin:ScrollToSelected()
+function AuctionatorGroupsViewMixin:ScrollToSelected()
   for _, group in ipairs(self.groups) do
     for _, button in ipairs(group.buttons) do
       if button.itemInfo.selected then
@@ -123,7 +123,7 @@ function LogisticianGroupsViewMixin:ScrollToSelected()
   end
 end
 
-function LogisticianGroupsViewMixin:ScrollToGroup(index)
+function AuctionatorGroupsViewMixin:ScrollToGroup(index)
   local group = self.groups[index]
 
   local scrollOffset = self.ScrollBox:GetDerivedScrollOffset()
@@ -137,7 +137,7 @@ function LogisticianGroupsViewMixin:ScrollToGroup(index)
   self.ScrollBox:ScrollToOffset(newOffset, 0, 0)
 end
 
-function LogisticianGroupsViewMixin:UpdateGroupHeights()
+function AuctionatorGroupsViewMixin:UpdateGroupHeights()
   local offset = 0
   for index, group in ipairs(self.groups) do
     if self.forceShow or (not self.groupDetails[index].hidden and group:AnyButtons()) then
@@ -159,7 +159,7 @@ function LogisticianGroupsViewMixin:UpdateGroupHeights()
   self.ScrollBox:FullUpdate(ScrollBoxConstants.UpdateImmediately);
 end
 
-function LogisticianGroupsViewMixin:Update(cache)
+function AuctionatorGroupsViewMixin:Update(cache)
   self.cacheUpdated = true
   self.rawItems = cache:GetAllContents()
   table.sort(self.rawItems, function(a, b)
@@ -168,11 +168,11 @@ function LogisticianGroupsViewMixin:Update(cache)
   self:UpdateFromExisting()
 end
 
-function LogisticianGroupsViewMixin:UpdateFromExisting()
+function AuctionatorGroupsViewMixin:UpdateFromExisting()
   self.buttonPool:ReleaseAll()
   self.groupPool:ReleaseAll()
   self.groups = {}
-  local iconSize = Logistician.Config.Get(Logistician.Config.Options.SELLING_ICON_SIZE)
+  local iconSize = Auctionator.Config.Get(Auctionator.Config.Options.SELLING_ICON_SIZE)
 
   -- Used to ensure no key naming clashes between custom groups and raw groups
   local function GetKeyName(groupName, isCustom)
@@ -187,7 +187,7 @@ function LogisticianGroupsViewMixin:UpdateFromExisting()
     group:Reset()
     local isCustom = index == 1 -- Only the first group is custom FAVOURITES now
     group:SetName(groupDetails.name, isCustom)
-    if self.applyVisibility and (self.collapsing[index] or (self.originalOpen and Logistician.Config.Get(Logistician.Config.Options.SELLING_BAG_COLLAPSED))) then
+    if self.applyVisibility and (self.collapsing[index] or (self.originalOpen and Auctionator.Config.Get(Auctionator.Config.Options.SELLING_BAG_COLLAPSED))) then
       group:ToggleOpen(true)
     end
     table.insert(groups, group)
@@ -195,12 +195,12 @@ function LogisticianGroupsViewMixin:UpdateFromExisting()
     if self.listsCached and groupDetails.type == GroupType.List then
       local infos = {}
       for _, link in ipairs(groupDetails.list) do
-        local info = LogisticianBagCacheFrame:GetByLinkInstant(link, true)
+        local info = AuctionatorBagCacheFrame:GetByLinkInstant(link, true)
         if info ~= nil then
           table.insert(infos, info)
         end
       end
-      if self.applyVisibility and Logistician.Config.Get(Logistician.Config.Options.SELLING_FAVOURITES_SORT_OWNED) then
+      if self.applyVisibility and Auctionator.Config.Get(Auctionator.Config.Options.SELLING_FAVOURITES_SORT_OWNED) then
         table.sort(infos, function(a, b)
           if #a.locations > 0 and #b.locations == 0 then
             return true
@@ -213,7 +213,7 @@ function LogisticianGroupsViewMixin:UpdateFromExisting()
       else
         table.sort(infos, function(a, b) return a.sortKey < b.sortKey end)
       end
-      if self.applyVisibility and not Logistician.Config.Get(Logistician.Config.Options.SELLING_MISSING_FAVOURITES) then
+      if self.applyVisibility and not Auctionator.Config.Get(Auctionator.Config.Options.SELLING_MISSING_FAVOURITES) then
         infos = tFilter(infos, function(a) return #a.locations > 0 end, true)
       end
       local keyName = GetKeyName(groupDetails.name, isCustom)
@@ -240,7 +240,7 @@ function LogisticianGroupsViewMixin:UpdateFromExisting()
   end
 
   for _, item in ipairs(self.rawItems) do
-    if item.auctionable and not self.hiddenItems[item.sortKey] and (item.quality ~= Enum.ItemQuality.Poor or Logistician.Utilities.IsEquipment(item.classID))  then
+    if item.auctionable and not self.hiddenItems[item.sortKey] and (item.quality ~= Enum.ItemQuality.Poor or Auctionator.Utilities.IsEquipment(item.classID))  then
       local index = classIDMap[item.classID]
       if index ~= nil then
         local button = self.buttonPool:Acquire()
@@ -283,6 +283,6 @@ function LogisticianGroupsViewMixin:UpdateFromExisting()
   self.originalOpen = false
   self:UpdateGroupHeights()
   if self.cacheUpdated and self.listsCached then
-    Logistician.Groups.CallbackRegistry:TriggerEvent(self.completeEventName)
+    Auctionator.Groups.CallbackRegistry:TriggerEvent(self.completeEventName)
   end
 end

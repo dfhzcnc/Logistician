@@ -1,7 +1,7 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/">
   <Frame
-    name="LogisticianConfigurationFrameTemplate"
-    mixin="LogisticianConfigFrameMixin"
+    name="AuctionatorConfigurationFrameTemplate"
+    mixin="AuctionatorConfigFrameMixin"
     hidden="true"
   >
     <Scripts>

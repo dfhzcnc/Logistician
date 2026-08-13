@@ -1,9 +1,9 @@
-LogisticianConfigRadioButtonMixin = {}
+AuctionatorConfigRadioButtonMixin = {}
 
-function LogisticianConfigRadioButtonMixin:OnLoad()
+function AuctionatorConfigRadioButtonMixin:OnLoad()
   -- This field is used by the RadioButtonGroup to ensure that the UI child it is positioning
-  -- is an logistician radio button
-  self.isLogisticianRadio = true
+  -- is an auctionator radio button
+  self.isAuctionatorRadio = true
 
   if self.value == nil then
     error("A value is required for the radio button.")
@@ -14,31 +14,31 @@ function LogisticianConfigRadioButtonMixin:OnLoad()
   end
 end
 
-function LogisticianConfigRadioButtonMixin:OnMouseUp()
+function AuctionatorConfigRadioButtonMixin:OnMouseUp()
   self.RadioButton:Click()
 end
 
-function LogisticianConfigRadioButtonMixin:OnEnter()
+function AuctionatorConfigRadioButtonMixin:OnEnter()
   self.RadioButton:LockHighlight()
 end
 
-function LogisticianConfigRadioButtonMixin:OnLeave()
+function AuctionatorConfigRadioButtonMixin:OnLeave()
   self.RadioButton:UnlockHighlight()
 end
 
-function LogisticianConfigRadioButtonMixin:SetChecked(value)
+function AuctionatorConfigRadioButtonMixin:SetChecked(value)
   self.RadioButton:SetChecked(value)
 end
 
-function LogisticianConfigRadioButtonMixin:GetChecked()
+function AuctionatorConfigRadioButtonMixin:GetChecked()
   return self.RadioButton:GetChecked()
 end
 
-function LogisticianConfigRadioButtonMixin:GetValue()
+function AuctionatorConfigRadioButtonMixin:GetValue()
   return self.value
 end
 
-function LogisticianConfigRadioButtonMixin:OnClick()
+function AuctionatorConfigRadioButtonMixin:OnClick()
   if self.onSelectedCallback ~= nil then
     self.onSelectedCallback()
   end

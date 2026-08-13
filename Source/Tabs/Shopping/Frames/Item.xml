@@ -1,7 +1,7 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/">
   <Frame
-    name="LogisticianShoppingItemTemplate"
-    mixin="LogisticianShoppingItemMixin"
+    name="AuctionatorShoppingItemTemplate"
+    mixin="AuctionatorShoppingItemMixin"
     inherits="ButtonFrameTemplate"
     frameStrata="Dialog"
     enableMouse="true"
@@ -19,7 +19,7 @@
     </Scripts>
 
     <Frames>
-      <Frame inherits="LogisticianConfigurationSubHeadingFrame" parentKey="SearchStringHeading">
+      <Frame inherits="AuctionatorConfigurationSubHeadingFrame" parentKey="SearchStringHeading">
         <KeyValues>
           <KeyValue key="subHeadingText" value="Name" type="string"/>
         </KeyValues>
@@ -48,7 +48,7 @@
             </Scripts>
           </EditBox>
 
-          <Button parentKey="ResetSearchStringButton" inherits="LogisticianResetButton">
+          <Button parentKey="ResetSearchStringButton" inherits="AuctionatorResetButton">
             <Anchors>
               <Anchor point="TOPLEFT" relativeKey="$parent.SearchString" relativePoint="TOPRIGHT" x="3" y="-3"/>
             </Anchors>
@@ -61,7 +61,7 @@
             </Anchors>
             <Layers>
               <Layer level="BACKGROUND">
-                <FontString inherits="GameFontHighlight" text="LOGISTICIAN_L_EXACT_SEARCH">
+                <FontString inherits="GameFontHighlight" text="AUCTIONATOR_L_EXACT_SEARCH">
                   <Anchors>
                     <Anchor point="TOPLEFT" relativePoint="TOPLEFT" relativeKey="$parent" x="25" y="-4" />
                   </Anchors>
@@ -72,60 +72,60 @@
         </Frames>
       </Frame>
 
-      <Frame inherits="LogisticianConfigurationSubHeadingFrame" parentKey="ItemClassHeading">
+      <Frame inherits="AuctionatorConfigurationSubHeadingFrame" parentKey="ItemClassHeading">
         <KeyValues>
-          <KeyValue key="subHeadingText" value="LOGISTICIAN_L_ITEM_CLASS" type="global"/>
+          <KeyValue key="subHeadingText" value="AUCTIONATOR_L_ITEM_CLASS" type="global"/>
         </KeyValues>
         <Anchors>
           <Anchor point="TOPLEFT" relativeKey="$parent.SearchContainer" relativePoint="BOTTOMLEFT"/>
         </Anchors>
       </Frame>
 
-      <Frame name="$parent_FilterKeySelector" parentKey="FilterKeySelector" inherits="LogisticianFilterKeySelectorTemplate">
+      <Frame name="$parent_FilterKeySelector" parentKey="FilterKeySelector" inherits="AuctionatorFilterKeySelectorTemplate">
         <Anchors>
           <Anchor point="TOPLEFT" relativeKey="$parent.ItemClassHeading" relativePoint="BOTTOMLEFT"/>
         </Anchors>
       </Frame>
 
-      <Frame inherits="LogisticianConfigurationMinMaxFrame" parentKey="LevelRange">
+      <Frame inherits="AuctionatorConfigurationMinMaxFrame" parentKey="LevelRange">
         <KeyValues>
-          <KeyValue key="titleText" value="LOGISTICIAN_L_LEVEL" type="global"/>
+          <KeyValue key="titleText" value="AUCTIONATOR_L_LEVEL" type="global"/>
         </KeyValues>
         <Anchors>
           <Anchor point="TOPLEFT" relativeKey="$parent.FilterKeySelector" relativePoint="BOTTOMLEFT"/>
         </Anchors>
       </Frame>
 
-      <Frame inherits="LogisticianConfigurationMinMaxFrame" parentKey="ItemLevelRange">
+      <Frame inherits="AuctionatorConfigurationMinMaxFrame" parentKey="ItemLevelRange">
         <KeyValues>
-          <KeyValue key="titleText" value="LOGISTICIAN_L_ITEM_LEVEL" type="global"/>
+          <KeyValue key="titleText" value="AUCTIONATOR_L_ITEM_LEVEL" type="global"/>
         </KeyValues>
         <Anchors>
           <Anchor point="TOPLEFT" relativeKey="$parent.LevelRange" relativePoint="TOPRIGHT"/>
         </Anchors>
       </Frame>
 
-      <Frame inherits="LogisticianConfigurationMinMaxFrame" parentKey="PriceRange">
+      <Frame inherits="AuctionatorConfigurationMinMaxFrame" parentKey="PriceRange">
         <KeyValues>
-          <KeyValue key="titleText" value="LOGISTICIAN_L_PRICE" type="global"/>
+          <KeyValue key="titleText" value="AUCTIONATOR_L_PRICE" type="global"/>
         </KeyValues>
         <Anchors>
           <Anchor point="TOPLEFT" relativeKey="$parent.LevelRange" relativePoint="BOTTOMLEFT" y="-8"/>
         </Anchors>
       </Frame>
 
-      <Frame inherits="LogisticianConfigurationMinMaxFrame" parentKey="CraftedLevelRange">
+      <Frame inherits="AuctionatorConfigurationMinMaxFrame" parentKey="CraftedLevelRange">
         <KeyValues>
-          <KeyValue key="titleText" value="LOGISTICIAN_L_CRAFTED_LEVEL" type="global"/>
+          <KeyValue key="titleText" value="AUCTIONATOR_L_CRAFTED_LEVEL" type="global"/>
         </KeyValues>
         <Anchors>
           <Anchor point="TOPLEFT" relativeKey="$parent.PriceRange" relativePoint="TOPRIGHT"/>
         </Anchors>
       </Frame>
 
-      <Frame inherits="LogisticianConfigurationNumericInputAlternate" parentKey="PurchaseQuantity">
+      <Frame inherits="AuctionatorConfigurationNumericInputAlternate" parentKey="PurchaseQuantity">
         <KeyValues>
-          <KeyValue key="labelText" value="LOGISTICIAN_L_QUANTITY" type="global"/>
+          <KeyValue key="labelText" value="AUCTIONATOR_L_QUANTITY" type="global"/>
         </KeyValues>
         <Anchors>
           <Anchor point="TOPLEFT" relativeKey="$parent.PriceRange" relativePoint="BOTTOMLEFT" y="-22" x="30"/>
@@ -147,7 +147,7 @@
           </Layer>
         </Layers>
         <Frames>
-          <Frame inherits="LogisticianDropDown" parentKey="DropDown">
+          <Frame inherits="AuctionatorDropDown" parentKey="DropDown">
             <KeyValues>
               <KeyValue key="labelText" value="" type="string" />
             </KeyValues>
@@ -156,7 +156,7 @@
             </Anchors>
           </Frame>
 
-          <Button parentKey="ResetQualityButton" inherits="LogisticianResetButton">
+          <Button parentKey="ResetQualityButton" inherits="AuctionatorResetButton">
             <Anchors>
               <Anchor point="TOPLEFT" relativeKey="$parent.DropDown.DropDown" relativePoint="TOPRIGHT" x="5" y="-5"/>
             </Anchors>
@@ -171,7 +171,7 @@
         </Anchors>
         <Layers>
           <Layer level="BACKGROUND">
-            <FontString inherits="GameFontHighlight" parentKey="Label" text="LOGISTICIAN_L_EXPANSION">
+            <FontString inherits="GameFontHighlight" parentKey="Label" text="AUCTIONATOR_L_EXPANSION">
               <Anchors>
                 <Anchor point="TOPLEFT"/>
               </Anchors>
@@ -179,7 +179,7 @@
           </Layer>
         </Layers>
         <Frames>
-          <Frame inherits="LogisticianDropDown" parentKey="DropDown">
+          <Frame inherits="AuctionatorDropDown" parentKey="DropDown">
             <KeyValues>
               <KeyValue key="labelText" value="" type="string" />
             </KeyValues>
@@ -188,7 +188,7 @@
             </Anchors>
           </Frame>
 
-          <Button parentKey="ResetExpansionButton" inherits="LogisticianResetButton">
+          <Button parentKey="ResetExpansionButton" inherits="AuctionatorResetButton">
             <Anchors>
               <Anchor point="TOPLEFT" relativeKey="$parent.DropDown.DropDown" relativePoint="TOPRIGHT" x="5" y="-5"/>
             </Anchors>
@@ -203,7 +203,7 @@
         </Anchors>
         <Layers>
           <Layer level="BACKGROUND">
-            <FontString inherits="GameFontHighlight" parentKey="Label" text="LOGISTICIAN_L_TIER">
+            <FontString inherits="GameFontHighlight" parentKey="Label" text="AUCTIONATOR_L_TIER">
               <Anchors>
                 <Anchor point="TOPLEFT"/>
               </Anchors>
@@ -211,7 +211,7 @@
           </Layer>
         </Layers>
         <Frames>
-          <Frame inherits="LogisticianDropDown" parentKey="DropDown">
+          <Frame inherits="AuctionatorDropDown" parentKey="DropDown">
             <KeyValues>
               <KeyValue key="labelText" value="" type="string" />
             </KeyValues>
@@ -220,7 +220,7 @@
             </Anchors>
           </Frame>
 
-          <Button parentKey="ResetTierButton" inherits="LogisticianResetButton">
+          <Button parentKey="ResetTierButton" inherits="AuctionatorResetButton">
             <Anchors>
               <Anchor point="TOPLEFT" relativeKey="$parent.DropDown.DropDown" relativePoint="TOPRIGHT" x="5" y="-5"/>
             </Anchors>
@@ -239,7 +239,7 @@
         </Scripts>
       </Button>
 
-      <Button parentKey="Cancel" inherits="UIPanelDynamicResizeButtonTemplate" text="LOGISTICIAN_L_CANCEL">
+      <Button parentKey="Cancel" inherits="UIPanelDynamicResizeButtonTemplate" text="AUCTIONATOR_L_CANCEL">
         <Anchors>
           <Anchor point="TOPLEFT" relativeKey="$parent.Inset" relativePoint="BOTTOMLEFT"/>
         </Anchors>
@@ -249,7 +249,7 @@
         </Scripts>
       </Button>
 
-      <Button parentKey="ResetAllButton" inherits="UIPanelDynamicResizeButtonTemplate" text="LOGISTICIAN_L_RESET_ALL">
+      <Button parentKey="ResetAllButton" inherits="UIPanelDynamicResizeButtonTemplate" text="AUCTIONATOR_L_RESET_ALL">
         <Anchors>
           <Anchor point="TOPLEFT" relativeKey="$parent.Cancel" relativePoint="TOPRIGHT"/>
         </Anchors>

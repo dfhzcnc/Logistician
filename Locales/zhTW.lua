@@ -1,4 +1,4 @@
-LOGISTICIAN_LOCALES.zhTW = function()
+AUCTIONATOR_LOCALES.zhTW = function()
   local L = {}
 
   L["ADD_FAVOURITE"] = "加入最愛"
@@ -17,7 +17,7 @@ L["AUCTION_DURATION_12"] = "12小時"
 L["AUCTION_DURATION_24"] = "24小時"
 L["AUCTION_DURATION_48"] = "48小時"
 L["AUCTION_MEAN"] = "拍賣平均值"
-L["LOGISTICIAN"] = "拍賣小幫手"
+L["AUCTIONATOR"] = "拍賣小幫手"
 L["AUTHOR_HEADER"] = "作者"
 L["BID_EXISTING_ON_OWNED_AUCTION"] = "有人對這次拍賣進行了出價，因此取消拍賣將花費您的定金並且："
 L["BID_ONLY_AVAILABLE"] = "只競標能出價的"

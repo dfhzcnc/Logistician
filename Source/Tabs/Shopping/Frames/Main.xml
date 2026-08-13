@@ -1,9 +1,9 @@
 <Ui>
   <Frame
-    name="LogisticianShoppingTabListsContainerTemplate"
+    name="AuctionatorShoppingTabListsContainerTemplate"
     virtual="true"
     parentKey="ListsContainer"
-    mixin="LogisticianShoppingTabListsContainerMixin"
+    mixin="AuctionatorShoppingTabListsContainerMixin"
     >
     <Scripts>
       <OnLoad method="OnLoad"/>
@@ -13,10 +13,10 @@
   </Frame>
 
   <Frame
-    name="LogisticianShoppingTabRecentsContainerTemplate"
+    name="AuctionatorShoppingTabRecentsContainerTemplate"
     virtual="true"
     parentKey="RecentsContainer"
-    mixin="LogisticianShoppingTabRecentsContainerMixin"
+    mixin="AuctionatorShoppingTabRecentsContainerMixin"
     >
     <Scripts>
       <OnLoad method="OnLoad"/>
@@ -26,10 +26,10 @@
   </Frame>
 
   <Frame
-    name="LogisticianShoppingTabSearchOptionsTemplate"
+    name="AuctionatorShoppingTabSearchOptionsTemplate"
     virtual="true"
     parentKey="SearchOptions"
-    mixin="LogisticianShoppingTabSearchOptionsMixin"
+    mixin="AuctionatorShoppingTabSearchOptionsMixin"
     >
     <Scripts>
       <OnLoad method="OnLoad"/>
@@ -56,7 +56,7 @@
         </Scripts>
       </EditBox>
 
-      <Button parentKey="ResetSearchStringButton" inherits="LogisticianResetButton">
+      <Button parentKey="ResetSearchStringButton" inherits="AuctionatorResetButton">
         <Anchors>
           <Anchor point="TOPLEFT" relativeKey="$parent.SearchString" relativePoint="TOPRIGHT" x="3" y="-2"/>
         </Anchors>
@@ -64,17 +64,17 @@
           <OnClick>self:GetParent():ClearSearchTerm()</OnClick>
         </Scripts>
       </Button>
-      <Button parentKey="SearchButton" inherits="UIPanelDynamicResizeButtonTemplate" text="LOGISTICIAN_L_SEARCH">
+      <Button parentKey="SearchButton" inherits="UIPanelDynamicResizeButtonTemplate" text="AUCTIONATOR_L_SEARCH">
         <Anchors>
           <Anchor point="BOTTOMLEFT" relativeKey="$parent.ResetSearchStringButton" relativePoint="BOTTOMRIGHT" x="5" y="-3"/>
         </Anchors>
       </Button>
-      <Button parentKey="MoreButton" inherits="UIPanelDynamicResizeButtonTemplate" text="LOGISTICIAN_L_SEARCH_OPTIONS">
+      <Button parentKey="MoreButton" inherits="UIPanelDynamicResizeButtonTemplate" text="AUCTIONATOR_L_SEARCH_OPTIONS">
         <Anchors>
           <Anchor point="BOTTOMLEFT" relativeKey="$parent.SearchButton" relativePoint="BOTTOMRIGHT" x="5"/>
         </Anchors>
       </Button>
-      <Button parentKey="AddToListButton" inherits="UIPanelDynamicResizeButtonTemplate" text="LOGISTICIAN_L_ADD_TO_LIST">
+      <Button parentKey="AddToListButton" inherits="UIPanelDynamicResizeButtonTemplate" text="AUCTIONATOR_L_ADD_TO_LIST">
         <Anchors>
           <Anchor point="BOTTOMLEFT" relativeKey="$parent.MoreButton" relativePoint="BOTTOMRIGHT" x="5"/>
         </Anchors>
@@ -83,10 +83,10 @@
   </Frame>
 
   <Frame
-    name="LogisticianShoppingTabFrameTemplate"
-    mixin="LogisticianShoppingTabFrameMixin"
+    name="AuctionatorShoppingTabFrameTemplate"
+    mixin="AuctionatorShoppingTabFrameMixin"
     virtual="true"
-    parentKey="LogisticianShoppingTabFrame"
+    parentKey="AuctionatorShoppingTabFrame"
     hidden="true"
     >
     <Anchors>
@@ -102,7 +102,7 @@
       <OnEvent method="OnEvent"/>
     </Scripts>
     <Frames>
-      <Frame inherits="LogisticianShoppingTabSearchOptionsTemplate">
+      <Frame inherits="AuctionatorShoppingTabSearchOptionsTemplate">
         <Anchors>
           <Anchor point="TOP"/>
           <Anchor point="BOTTOMLEFT" relativePoint="TOPLEFT" y="-150"/>
@@ -110,7 +110,7 @@
         </Anchors>
         <Size x="280"/>
       </Frame>
-      <Frame inherits="LogisticianShoppingTabListsContainerTemplate" hidden="true">
+      <Frame inherits="AuctionatorShoppingTabListsContainerTemplate" hidden="true">
         <Anchors>
           <Anchor point="TOP" y="-50"/>
           <Anchor point="BOTTOM" y="35"/>
@@ -143,7 +143,7 @@
           </AnimationGroup>
         </Animations>
       </Frame>
-      <Frame inherits="LogisticianShoppingTabRecentsContainerTemplate">
+      <Frame inherits="AuctionatorShoppingTabRecentsContainerTemplate">
         <Anchors>
           <Anchor point="TOP" y="-50"/>
           <Anchor point="BOTTOM" y="10"/>
@@ -151,25 +151,25 @@
         </Anchors>
         <Size x="280"/>
       </Frame>
-      <Button parentKey="NewListButton" inherits="UIPanelDynamicResizeButtonTemplate" text="LOGISTICIAN_L_NEW_LIST">
+      <Button parentKey="NewListButton" inherits="UIPanelDynamicResizeButtonTemplate" text="AUCTIONATOR_L_NEW_LIST">
         <Anchors>
           <Anchor point="BOTTOMLEFT" y="10" x="5"/>
         </Anchors>
       </Button>
-      <Button parentKey="ExportButton" inherits="UIPanelDynamicResizeButtonTemplate" text="LOGISTICIAN_L_EXPORT">
+      <Button parentKey="ExportButton" inherits="UIPanelDynamicResizeButtonTemplate" text="AUCTIONATOR_L_EXPORT">
         <Anchors>
           <Anchor point="RIGHT" relativeKey="$parent.RecentsContainer" relativePoint="RIGHT" x="20"/>
           <Anchor point="BOTTOM" y="10"/>
         </Anchors>
       </Button>
-      <Button parentKey="ImportButton" inherits="UIPanelDynamicResizeButtonTemplate" text="LOGISTICIAN_L_IMPORT">
+      <Button parentKey="ImportButton" inherits="UIPanelDynamicResizeButtonTemplate" text="AUCTIONATOR_L_IMPORT">
         <Anchors>
           <Anchor point="RIGHT" relativeKey="$parent.ExportButton" relativePoint="LEFT"/>
         </Anchors>
       </Button>
     </Frames>
     <Frames>
-      <Frame parentKey="ContainerTabs" mixin="LogisticianShoppingTabContainerTabsMixin">
+      <Frame parentKey="ContainerTabs" mixin="AuctionatorShoppingTabContainerTabsMixin">
         <Size x="10" y="10"/>
         <Scripts>
           <OnLoad method="OnLoad"/>
@@ -178,12 +178,12 @@
           <Anchor point="BOTTOMLEFT" relativeKey="$parent.ListsContainer" relativePoint="TOPLEFT" x="20"/>
         </Anchors>
         <Frames>
-          <Button inherits="LogisticianShoppingMiniTabButtonTemplate" text="LOGISTICIAN_L_SHOPPING_LISTS" id="1" parentKey="ListsTab">
+          <Button inherits="AuctionatorShoppingMiniTabButtonTemplate" text="AUCTIONATOR_L_SHOPPING_LISTS" id="1" parentKey="ListsTab">
             <Anchors>
               <Anchor point="BOTTOMLEFT"/>
             </Anchors>
           </Button>
-          <Button inherits="LogisticianShoppingMiniTabButtonTemplate" text="LOGISTICIAN_L_RECENT_SEARCHES" id="2" parentKey="RecentsTab">
+          <Button inherits="AuctionatorShoppingMiniTabButtonTemplate" text="AUCTIONATOR_L_RECENT_SEARCHES" id="2" parentKey="RecentsTab">
             <Anchors>
               <Anchor point="BOTTOMLEFT" relativeKey="$parent.ListsTab" relativePoint="BOTTOMRIGHT"/>
             </Anchors>
@@ -191,7 +191,7 @@
         </Frames>
       </Frame>
 
-      <Frame parentKey="DataProvider" mixin="LogisticianShoppingTabDataProviderMixin">
+      <Frame parentKey="DataProvider" mixin="AuctionatorShoppingTabDataProviderMixin">
         <Scripts>
           <OnLoad method="OnLoad"/>
           <OnUpdate method="OnUpdate" />
@@ -199,14 +199,14 @@
       </Frame>
       <Frame
         parentKey="SearchProvider"
-        inherits="LogisticianDirectSearchProviderTemplate"
+        inherits="AuctionatorDirectSearchProviderTemplate"
       >
         <Scripts>
           <OnEvent method="OnEvent" />
         </Scripts>
       </Frame>
 
-      <Frame inherits="LogisticianResultsListingTemplate">
+      <Frame inherits="AuctionatorResultsListingTemplate">
         <Anchors>
           <!-- Use a 5px leftward extension for the empty results view. -->
           <Anchor point="TOPLEFT" relativeKey="$parent.ListsContainer.ScrollBar" relativePoint="TOPRIGHT" x="10" y="27"/>
@@ -214,14 +214,14 @@
         </Anchors>
       </Frame>
 
-      <Frame parentKey="ShoppingResultsInset" inherits="LogisticianInsetTemplate">
+      <Frame parentKey="ShoppingResultsInset" inherits="AuctionatorInsetTemplate">
         <Anchors>
           <Anchor point="TOPLEFT" relativeKey="$parent.ResultsListing" relativePoint="TOPLEFT" x="-10" y="-25"/>
           <Anchor point="BOTTOMRIGHT" relativeKey="$parent.ResultsListing" relativePoint="BOTTOMRIGHT" y="2"/>
         </Anchors>
       </Frame>
 
-      <Button inherits="UIPanelDynamicResizeButtonTemplate" text="LOGISTICIAN_L_EXPORT_RESULTS" parentKey="ExportCSV">
+      <Button inherits="UIPanelDynamicResizeButtonTemplate" text="AUCTIONATOR_L_EXPORT_RESULTS" parentKey="ExportCSV">
         <Anchors>
           <Anchor point="TOP" relativeKey="$parent.ResultsListing" relativePoint="BOTTOM"/>
           <Anchor point="RIGHT" relativePoint="RIGHT" x="-8" y="10" />

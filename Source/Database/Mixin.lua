@@ -1,7 +1,7 @@
 local LibCBOR = LibStub("LibCBOR-1.0")
 
 local function GetScanDay()
-  return (math.floor ((time() - Logistician.Constants.SCAN_DAY_0) / (86400)));
+  return (math.floor ((time() - Auctionator.Constants.SCAN_DAY_0) / (86400)));
 end
 
 local daysSinceZero = tostring(GetScanDay())
@@ -9,7 +9,7 @@ local daysSinceZero = tostring(GetScanDay())
 -- -------------------------------------------------------------------------
 -- Robust historical market average
 --
--- Logistician's price history stores, for each day:
+-- Auctionator's price history stores, for each day:
 --   l = lowest minimum auction price seen that day
 --   h = highest minimum auction price seen that day
 --
@@ -244,11 +244,11 @@ end
 -- Sale likelihood / marketability model
 --
 -- IMPORTANT:
--- Logistician does not observe verified completed sales for every listing.
+-- Auctionator does not observe verified completed sales for every listing.
 -- Therefore this is deliberately exposed as a 0-100 "Sale Likelihood" score,
 -- NOT as a calibrated probability that a specific auction will sell.
 --
--- Signals available in Logistician's own historical database:
+-- Signals available in Auctionator's own historical database:
 --   m = most recent minimum buyout price
 --   l/h = daily low/high minimum prices
 --   a = highest quantity observed that day
@@ -915,13 +915,13 @@ local function GetExpiryAwareTurnover(entry, days)
     #usable
 end
 
-Logistician.DatabaseMixin = {}
-function Logistician.DatabaseMixin:Init(db)
+Auctionator.DatabaseMixin = {}
+function Auctionator.DatabaseMixin:Init(db)
   self.db = db
-  self.cutoffDay = GetScanDay() - Logistician.Config.Get(Logistician.Config.Options.PRICE_HISTORY_DAYS)
+  self.cutoffDay = GetScanDay() - Auctionator.Config.Get(Auctionator.Config.Options.PRICE_HISTORY_DAYS)
 end
 
-function Logistician.DatabaseMixin:SetPrice(dbKey, buyoutPrice, available)
+function Auctionator.DatabaseMixin:SetPrice(dbKey, buyoutPrice, available)
   if not self.db[dbKey] then
     self.db[dbKey] = {
       l={}, -- Lowest low price on a given day
@@ -1125,7 +1125,7 @@ local function BuildCurrentMarketSnapshot(info, minimumPrice, totalQuantity)
   }
 end
 
-function Logistician.DatabaseMixin:SetMarketSnapshot(dbKey, snapshot)
+function Auctionator.DatabaseMixin:SetMarketSnapshot(dbKey, snapshot)
   local entry = self.db[dbKey]
   if not entry or not snapshot then
     return
@@ -1147,7 +1147,7 @@ function Logistician.DatabaseMixin:SetMarketSnapshot(dbKey, snapshot)
   }
 end
 
-function Logistician.DatabaseMixin:GetMarketSnapshot(dbKey)
+function Auctionator.DatabaseMixin:GetMarketSnapshot(dbKey)
   local entry = self.db[dbKey]
   local snapshot = entry and entry.x
 
@@ -1172,7 +1172,7 @@ function Logistician.DatabaseMixin:GetMarketSnapshot(dbKey)
   }
 end
 
-function Logistician.DatabaseMixin:WatchSaleExposure(dbKey)
+function Auctionator.DatabaseMixin:WatchSaleExposure(dbKey)
   local entry = self.db[dbKey]
   if not entry then
     return
@@ -1181,7 +1181,7 @@ function Logistician.DatabaseMixin:WatchSaleExposure(dbKey)
   entry.w = time()
 end
 
-function Logistician.DatabaseMixin:RecordMarketObservation(
+function Auctionator.DatabaseMixin:RecordMarketObservation(
   dbKey,
   minimumPrice,
   available,
@@ -1248,7 +1248,7 @@ end
 -- A sufficiently complete full scan can distinguish a watched item that is
 -- truly absent from one merely omitted by a partial search. Record zero supply
 -- only from that trusted context so complete depletion becomes learnable.
-function Logistician.DatabaseMixin:RecordAbsentWatchedItems(seenKeys, quality)
+function Auctionator.DatabaseMixin:RecordAbsentWatchedItems(seenKeys, quality)
   quality = tonumber(quality) or 0
   if quality < 0.98 then
     return 0
@@ -1299,7 +1299,7 @@ function Logistician.DatabaseMixin:RecordAbsentWatchedItems(seenKeys, quality)
   return recorded
 end
 
-function Logistician.DatabaseMixin:GetSaleExposureHistory(dbKey)
+function Auctionator.DatabaseMixin:GetSaleExposureHistory(dbKey)
   local entry = self.db[dbKey]
   if not entry or type(entry.o) ~= "table" then
     return {}
@@ -1308,7 +1308,7 @@ function Logistician.DatabaseMixin:GetSaleExposureHistory(dbKey)
   return entry.o
 end
 
-function Logistician.DatabaseMixin:GetPrice(dbKey)
+function Auctionator.DatabaseMixin:GetPrice(dbKey)
   if self.db[dbKey] ~= nil then
     return self.db[dbKey].m
   else
@@ -1316,7 +1316,7 @@ function Logistician.DatabaseMixin:GetPrice(dbKey)
   end
 end
 
-function Logistician.DatabaseMixin:GetFirstPrice(dbKeys)
+function Auctionator.DatabaseMixin:GetFirstPrice(dbKeys)
   for _, dbKey in ipairs(dbKeys) do
     local price = self:GetPrice(dbKey)
     if price then
@@ -1334,7 +1334,7 @@ local DATABASE_MAX_ITEMS = 500
 -- price, and records a compact current-market structure snapshot. The work is
 -- frame-budgeted so faster clients finish sooner without producing long UI
 -- stalls on slower clients.
-function Logistician.DatabaseMixin:ProcessScan(itemIndexes, callback, progressCallback)
+function Auctionator.DatabaseMixin:ProcessScan(itemIndexes, callback, progressCallback)
   -- Serialize jobs instead of letting a normal search cancel an in-progress
   -- full-scan commit and strand its completion callback.
   if self.processScanActive then
@@ -1349,7 +1349,7 @@ function Logistician.DatabaseMixin:ProcessScan(itemIndexes, callback, progressCa
 
   self.processScanActive = true
 
-  Logistician.Debug.Message("Logistician.DatabaseMixin.ProcessScan")
+  Auctionator.Debug.Message("Auctionator.DatabaseMixin.ProcessScan")
   local startTime = debugprofilestop()
 
   local count = 0
@@ -1402,7 +1402,7 @@ function Logistician.DatabaseMixin:ProcessScan(itemIndexes, callback, progressCa
           self:SetPrice(dbKey, minPrice, available)
 
           local marketSnapshot = nil
-          if Logistician.Constants.IsLegacyAH then
+          if Auctionator.Constants.IsLegacyAH then
             marketSnapshot =
               BuildCurrentMarketSnapshot(info, minPrice, available)
 
@@ -1439,8 +1439,8 @@ function Logistician.DatabaseMixin:ProcessScan(itemIndexes, callback, progressCa
       if callback then
         callback(count)
       end
-      Logistician.Debug.Message(
-        "Logistician.DatabaseMixin: Processing time: "
+      Auctionator.Debug.Message(
+        "Auctionator.DatabaseMixin: Processing time: "
           .. tostring(debugprofilestop() - startTime)
       )
       self.processScanActive = nil
@@ -1462,7 +1462,7 @@ function Logistician.DatabaseMixin:ProcessScan(itemIndexes, callback, progressCa
   ProcessDatabaseBatch()
 end
 
-function Logistician.DatabaseMixin:GetItemCount()
+function Auctionator.DatabaseMixin:GetItemCount()
   local count = 0
   for _, _ in pairs(self.db) do
     count = count + 1
@@ -1471,7 +1471,7 @@ function Logistician.DatabaseMixin:GetItemCount()
   return count
 end
 
-function Logistician.DatabaseMixin:GetPriceHistory(dbKey)
+function Auctionator.DatabaseMixin:GetPriceHistory(dbKey)
   if self.db[dbKey] == nil then
     return {}
   end
@@ -1480,13 +1480,13 @@ function Logistician.DatabaseMixin:GetPriceHistory(dbKey)
 
   local results = {}
 
-  local sortedDays = Logistician.Utilities.TableKeys(itemData.h)
+  local sortedDays = Auctionator.Utilities.TableKeys(itemData.h)
   table.sort(sortedDays, function(a, b) return b < a end)
 
   for _, day in ipairs(sortedDays) do
     table.insert(results, {
-     date = Logistician.Utilities.PrettyDate(
-        tonumber(day) * 86400 + Logistician.Constants.SCAN_DAY_0
+     date = Auctionator.Utilities.PrettyDate(
+        tonumber(day) * 86400 + Auctionator.Constants.SCAN_DAY_0
      ),
      rawDay = day,
      minSeen = itemData.l[day] or itemData.h[day],
@@ -1499,14 +1499,14 @@ function Logistician.DatabaseMixin:GetPriceHistory(dbKey)
  return results
 end
 
-function Logistician.DatabaseMixin:GetPriceAge(dbKey)
+function Auctionator.DatabaseMixin:GetPriceAge(dbKey)
   local itemData = self.db[dbKey] and self.db[dbKey]
 
   if itemData == nil then
     return
   end
 
-  local days = Logistician.Utilities.TableKeys(itemData.h)
+  local days = Auctionator.Utilities.TableKeys(itemData.h)
 
   if #days == 0 then
     return nil
@@ -1521,7 +1521,7 @@ function Logistician.DatabaseMixin:GetPriceAge(dbKey)
   return GetScanDay()-days[#days]
 end
 
-function Logistician.DatabaseMixin:GetMeanPrice(dbKey, days)
+function Auctionator.DatabaseMixin:GetMeanPrice(dbKey, days)
   local entry = self.db[dbKey] and self.db[dbKey]
 
   if entry == nil or days < 0 then
@@ -1550,7 +1550,7 @@ function Logistician.DatabaseMixin:GetMeanPrice(dbKey, days)
 end
 
 
-function Logistician.DatabaseMixin:GetRobustAveragePrice(dbKey, days)
+function Auctionator.DatabaseMixin:GetRobustAveragePrice(dbKey, days)
   local entry = self.db[dbKey]
 
   days = math.max(1, math.floor(tonumber(days) or 21))
@@ -1592,7 +1592,7 @@ function Logistician.DatabaseMixin:GetRobustAveragePrice(dbKey, days)
 end
 
 
-function Logistician.DatabaseMixin:GetSaleLikelihood(dbKey, days)
+function Auctionator.DatabaseMixin:GetSaleLikelihood(dbKey, days)
   local entry = self.db[dbKey]
 
   days = math.max(3, math.floor(tonumber(days) or 21))

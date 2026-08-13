@@ -1,23 +1,23 @@
-LogisticianMultiSearchMixin = {}
+AuctionatorMultiSearchMixin = {}
 
-function LogisticianMultiSearchMixin:InitSearch(completionCallback, incrementCallback)
-  Logistician.Debug.Message("LogisticianMultiSearchMixin:InitSearch()")
+function AuctionatorMultiSearchMixin:InitSearch(completionCallback, incrementCallback)
+  Auctionator.Debug.Message("AuctionatorMultiSearchMixin:InitSearch()")
 
   self.complete = true
   self.onSearchComplete = completionCallback or function()
-    Logistician.Debug.Message("Search completed.")
+    Auctionator.Debug.Message("Search completed.")
   end
   self.onNextSearch = incrementCallback or function()
-    Logistician.Debug.Message("Next search.")
+    Auctionator.Debug.Message("Next search.")
   end
 end
 
-function LogisticianMultiSearchMixin:OnEvent(event, ...)
+function AuctionatorMultiSearchMixin:OnEvent(event, ...)
   self:OnSearchEventReceived(event, ...)
 end
 
-function LogisticianMultiSearchMixin:Search(terms, config)
-  Logistician.Debug.Message("LogisticianMultiSearchMixin:Search()", terms)
+function AuctionatorMultiSearchMixin:Search(terms, config)
+  Auctionator.Debug.Message("AuctionatorMultiSearchMixin:Search()", terms)
 
   self.complete = false
   self.partialResults = {}
@@ -30,7 +30,7 @@ function LogisticianMultiSearchMixin:Search(terms, config)
   self:NextSearch()
 end
 
-function LogisticianMultiSearchMixin:AbortSearch()
+function AuctionatorMultiSearchMixin:AbortSearch()
   self:UnregisterProviderEvents()
   local isComplete = self.complete
   self.complete = true
@@ -39,8 +39,8 @@ function LogisticianMultiSearchMixin:AbortSearch()
   end
 end
 
-function LogisticianMultiSearchMixin:AddResults(results)
-  Logistician.Debug.Message("LogisticianSearchProviderMixin:AddResults()")
+function AuctionatorMultiSearchMixin:AddResults(results)
+  Auctionator.Debug.Message("AuctionatorSearchProviderMixin:AddResults()")
 
   if #results > 0 then
     self.anyResultsForThisTerm = true
@@ -56,11 +56,11 @@ function LogisticianMultiSearchMixin:AddResults(results)
   end
 end
 
-function LogisticianMultiSearchMixin:NoResultsForTermCheck()
+function AuctionatorMultiSearchMixin:NoResultsForTermCheck()
   if self.config and self.config.suppressMissingTerms then
     return
   end
-  if not Logistician.Config.Get(Logistician.Config.Options.SHOPPING_LIST_MISSING_TERMS) then
+  if not Auctionator.Config.Get(Auctionator.Config.Options.SHOPPING_LIST_MISSING_TERMS) then
     return
   end
 
@@ -71,7 +71,7 @@ function LogisticianMultiSearchMixin:NoResultsForTermCheck()
   end
 end
 
-function LogisticianMultiSearchMixin:NextSearch()
+function AuctionatorMultiSearchMixin:NextSearch()
   if self:HasMoreTerms() then
     self:NoResultsForTermCheck()
     self.anyResultsForThisTerm = false
@@ -84,7 +84,7 @@ function LogisticianMultiSearchMixin:NextSearch()
     self.partialResults = {}
     self:GetSearchProvider()(self:GetNextSearchParameter())
   else
-    Logistician.Debug.Message("LogisticianMultiSearchMixin:NextSearch Complete")
+    Auctionator.Debug.Message("AuctionatorMultiSearchMixin:NextSearch Complete")
 
     self:NoResultsForTermCheck()
 

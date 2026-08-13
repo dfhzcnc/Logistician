@@ -1,12 +1,12 @@
-LogisticianEventBusMixin = {}
+AuctionatorEventBusMixin = {}
 
-function LogisticianEventBusMixin:Init()
+function AuctionatorEventBusMixin:Init()
   self.registeredListeners = {}
   self.sources = {}
   self.queue = {}
 end
 
-function LogisticianEventBusMixin:Register(listener, eventNames)
+function AuctionatorEventBusMixin:Register(listener, eventNames)
   if listener.ReceiveEvent == nil then
     error("Attempted to register an invalid listener! ReceiveEvent method must be defined.")
     return self
@@ -18,57 +18,57 @@ function LogisticianEventBusMixin:Register(listener, eventNames)
     end
 
     table.insert(self.registeredListeners[eventName], listener)
-    Logistician.Debug.Message("LogisticianEventBusMixin:Register", eventName)
+    Auctionator.Debug.Message("AuctionatorEventBusMixin:Register", eventName)
   end
 
   return self
 end
 
 -- Assumes events have been registered exactly once
-function LogisticianEventBusMixin:Unregister(listener, eventNames)
+function AuctionatorEventBusMixin:Unregister(listener, eventNames)
   for _, eventName in ipairs(eventNames) do
     local index = tIndexOf(self.registeredListeners[eventName], listener)
     if index ~= nil then
       table.remove(self.registeredListeners[eventName], index, listener)
     end
-    Logistician.Debug.Message("LogisticianEventBusMixin:Unregister", eventName)
+    Auctionator.Debug.Message("AuctionatorEventBusMixin:Unregister", eventName)
   end
 
   return self
 end
 
-function LogisticianEventBusMixin:IsSourceRegistered(source)
+function AuctionatorEventBusMixin:IsSourceRegistered(source)
   return self.sources[source] ~= nil
 end
 
-function LogisticianEventBusMixin:RegisterSource(source, name)
+function AuctionatorEventBusMixin:RegisterSource(source, name)
   self.sources[source] = name
 
   return self
 end
 
-function LogisticianEventBusMixin:UnregisterSource(source)
+function AuctionatorEventBusMixin:UnregisterSource(source)
   self.sources[source] = nil
 
   return self
 end
 
-function LogisticianEventBusMixin:Fire(source, eventName, ...)
+function AuctionatorEventBusMixin:Fire(source, eventName, ...)
   if self.sources[source] == nil then
     error("All sources must be registered (" .. eventName .. ")")
   end
 
-  Logistician.Debug.Message(
-    "LogisticianEventBus:Fire()",
+  Auctionator.Debug.Message(
+    "AuctionatorEventBus:Fire()",
     self.sources[source],
     eventName,
     ...
   )
 
   if self.registeredListeners[eventName] ~= nil then
-    Logistician.Debug.Message("ReceiveEvent", #self.registeredListeners[eventName], eventName)
+    Auctionator.Debug.Message("ReceiveEvent", #self.registeredListeners[eventName], eventName)
 
-    local allListeners = Logistician.Utilities.Slice(
+    local allListeners = Auctionator.Utilities.Slice(
       self.registeredListeners[eventName],
       1,
       #self.registeredListeners[eventName]
@@ -81,4 +81,4 @@ function LogisticianEventBusMixin:Fire(source, eventName, ...)
   return self
 end
 
-Logistician.EventBus = CreateAndInitFromMixin(LogisticianEventBusMixin)
+Auctionator.EventBus = CreateAndInitFromMixin(AuctionatorEventBusMixin)

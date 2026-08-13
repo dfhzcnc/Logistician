@@ -1,55 +1,55 @@
-LogisticianConfigShoppingFrameMixin = CreateFromMixins(LogisticianPanelConfigMixin)
+AuctionatorConfigShoppingFrameMixin = CreateFromMixins(AuctionatorPanelConfigMixin)
 
-function LogisticianConfigShoppingFrameMixin:OnLoad()
-  Logistician.Debug.Message("LogisticianConfigShoppingFrameMixin:OnLoad()")
+function AuctionatorConfigShoppingFrameMixin:OnLoad()
+  Auctionator.Debug.Message("AuctionatorConfigShoppingFrameMixin:OnLoad()")
 
-  self.name = LOGISTICIAN_L_CONFIG_SHOPPING_CATEGORY
-  self.parent = "Logistician"
+  self.name = AUCTIONATOR_L_CONFIG_SHOPPING_CATEGORY
+  self.parent = "Auctionator"
 
   self:SetupPanel()
 end
 
 local function GetShoppingListNames()
-  local names = {LOGISTICIAN_L_NONE}
-  local values = {Logistician.Constants.NO_LIST}
+  local names = {AUCTIONATOR_L_NONE}
+  local values = {Auctionator.Constants.NO_LIST}
 
-  if Logistician.Shopping.ListManager == nil then
+  if Auctionator.Shopping.ListManager == nil then
     return names, values
   end
 
-  for index = 1, Logistician.Shopping.ListManager:GetCount() do
-    local list = Logistician.Shopping.ListManager:GetByIndex(index)
+  for index = 1, Auctionator.Shopping.ListManager:GetCount() do
+    local list = Auctionator.Shopping.ListManager:GetByIndex(index)
     table.insert(names, list:GetName())
     table.insert(values, list:GetName())
   end
   return names, values
 end
 
-function LogisticianConfigShoppingFrameMixin:ShowSettings()
-  self.AutoListSearch:SetChecked(Logistician.Config.Get(Logistician.Config.Options.AUTO_LIST_SEARCH))
+function AuctionatorConfigShoppingFrameMixin:ShowSettings()
+  self.AutoListSearch:SetChecked(Auctionator.Config.Get(Auctionator.Config.Options.AUTO_LIST_SEARCH))
 
   self.DefaultShoppingList:InitAgain(GetShoppingListNames())
 
-  local currentDefault = Logistician.Config.Get(Logistician.Config.Options.DEFAULT_LIST)
-  if Logistician.Shopping.ListManager and Logistician.Shopping.ListManager:GetIndexForName(currentDefault) == nil then
+  local currentDefault = Auctionator.Config.Get(Auctionator.Config.Options.DEFAULT_LIST)
+  if Auctionator.Shopping.ListManager and Auctionator.Shopping.ListManager:GetIndexForName(currentDefault) == nil then
     currentDefault = ""
   end
 
   self.DefaultShoppingList:SetValue(currentDefault)
 
-  self.ListMissingTerms:SetChecked(Logistician.Config.Get(Logistician.Config.Options.SHOPPING_LIST_MISSING_TERMS))
+  self.ListMissingTerms:SetChecked(Auctionator.Config.Get(Auctionator.Config.Options.SHOPPING_LIST_MISSING_TERMS))
 end
 
-function LogisticianConfigShoppingFrameMixin:Save()
-  Logistician.Debug.Message("LogisticianConfigShoppingFrameMixin:Save()")
+function AuctionatorConfigShoppingFrameMixin:Save()
+  Auctionator.Debug.Message("AuctionatorConfigShoppingFrameMixin:Save()")
 
-  Logistician.Config.Set(Logistician.Config.Options.AUTO_LIST_SEARCH, self.AutoListSearch:GetChecked())
+  Auctionator.Config.Set(Auctionator.Config.Options.AUTO_LIST_SEARCH, self.AutoListSearch:GetChecked())
 
-  Logistician.Config.Set(Logistician.Config.Options.DEFAULT_LIST, self.DefaultShoppingList:GetValue())
+  Auctionator.Config.Set(Auctionator.Config.Options.DEFAULT_LIST, self.DefaultShoppingList:GetValue())
 
-  Logistician.Config.Set(Logistician.Config.Options.SHOPPING_LIST_MISSING_TERMS, self.ListMissingTerms:GetChecked())
+  Auctionator.Config.Set(Auctionator.Config.Options.SHOPPING_LIST_MISSING_TERMS, self.ListMissingTerms:GetChecked())
 end
 
-function LogisticianConfigShoppingFrameMixin:Cancel()
-  Logistician.Debug.Message("LogisticianConfigShoppingFrameMixin:Cancel()")
+function AuctionatorConfigShoppingFrameMixin:Cancel()
+  Auctionator.Debug.Message("AuctionatorConfigShoppingFrameMixin:Cancel()")
 end

@@ -1,6 +1,6 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/">
   <!-- Template for a simple input box -->
-  <Frame name="LogisticianConfigurationNumericInput" mixin="LogisticianConfigNumericInputMixin"  inherits="LogisticianConfigurationTooltip" virtual="true">
+  <Frame name="AuctionatorConfigurationNumericInput" mixin="AuctionatorConfigNumericInputMixin"  inherits="AuctionatorConfigurationTooltip" virtual="true">
     <!--
       <KeyValues>
         <KeyValue key="labelText" value="" type="string"/>
@@ -18,7 +18,7 @@
       <Anchor point="RIGHT" relativeKey="$parent" relativePoint="RIGHT" />
     </Anchors>
     <Frames>
-      <EditBox autoFocus="false" inherits="LogisticianTBCImportLargeInputBoxTemplate" parentKey="InputBox" letters="10">
+      <EditBox autoFocus="false" inherits="AuctionatorRetailImportLargeInputBoxTemplate" parentKey="InputBox" letters="10">
         <Size x="70" y="20" />
         <Anchors>
           <Anchor point="TOPLEFT" x="25" />
@@ -37,9 +37,9 @@
           <OnEnter>self:GetParent():OnEnter()</OnEnter>
           <OnLeave>self:GetParent():OnLeave()</OnLeave>
           <OnEscapePressed>self:ClearFocus()</OnEscapePressed>
-          <OnEnterPressed>Logistician.Components.ReportEnterPressed()</OnEnterPressed>
-          <OnTextChanged function="Logistician_EditBox_OnTextChanged"/>
-          <OnKeyDown function="Logistician_EditBox_OnKeyDown" />
+          <OnEnterPressed>Auctionator.Components.ReportEnterPressed()</OnEnterPressed>
+          <OnTextChanged function="Auctionator_EditBox_OnTextChanged"/>
+          <OnKeyDown function="Auctionator_EditBox_OnKeyDown" />
         </Scripts>
       </EditBox>
     </Frames>

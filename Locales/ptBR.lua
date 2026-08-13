@@ -1,4 +1,4 @@
-LOGISTICIAN_LOCALES.ptBR = function()
+AUCTIONATOR_LOCALES.ptBR = function()
   local L = {}
 
   L["ADD_FAVOURITE"] = "Adicionar Favorito"
@@ -17,7 +17,7 @@ L["AUCTION_DURATION_12"] = "12 Horas"
 L["AUCTION_DURATION_24"] = "24 Horas"
 L["AUCTION_DURATION_48"] = "48 Horas"
 L["AUCTION_MEAN"] = "Média de leilão"
-L["LOGISTICIAN"] = "Logistician"
+L["AUCTIONATOR"] = "Logistician"
 L["AUTHOR_HEADER"] = "Autor"
 L["BID_EXISTING_ON_OWNED_AUCTION"] = "Alguém deu um lance neste leilão, portanto, cancelar custará seu depósito e:"
 L["BID_ONLY_AVAILABLE"] = "apenas lance disponível"

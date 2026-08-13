@@ -1,4 +1,4 @@
-function Logistician.Utilities.BasicDBKeyFromLink(itemLink)
+function Auctionator.Utilities.BasicDBKeyFromLink(itemLink)
   if itemLink ~= nil then
     local _, _, itemString = string.find(itemLink, "^|c%w+:?|H(.+)|h%[.*%]")
     if itemString == nil and string.find(itemLink, "^item") then
@@ -18,11 +18,11 @@ end
 
 local function IsGear(itemLink)
   local classType = select(6, C_Item.GetItemInfoInstant(itemLink))
-  return classType ~= nil and Logistician.Utilities.IsEquipment(classType)
+  return classType ~= nil and Auctionator.Utilities.IsEquipment(classType)
 end
 
-function Logistician.Utilities.DBKeyFromLink(itemLink, callback)
-  local basicKey = Logistician.Utilities.BasicDBKeyFromLink(itemLink)
+function Auctionator.Utilities.DBKeyFromLink(itemLink, callback)
+  local basicKey = Auctionator.Utilities.BasicDBKeyFromLink(itemLink)
 
   if basicKey == nil then
     callback({})
@@ -30,10 +30,10 @@ function Logistician.Utilities.DBKeyFromLink(itemLink, callback)
   end
 
   if IsGear(itemLink) then
-    if Logistician.Constants.IsLegacyAH then
+    if Auctionator.Constants.IsLegacyAH then
       local suffix = tonumber((itemLink:match("item:.-:.-:.-:.-:.-:.-:(.-):")))
-      local suffixStringID = Logistician.Utilities.SuffixIDToSuffixStringID[suffix]
-      local suffixString = Logistician.Utilities.SuffixStringIDTOSuffixString[suffixStringID]
+      local suffixStringID = Auctionator.Utilities.SuffixIDToSuffixStringID[suffix]
+      local suffixString = Auctionator.Utilities.SuffixStringIDTOSuffixString[suffixStringID]
       if suffixString then
         callback({"gr:" .. basicKey .. ":" .. suffixString, basicKey})
       else
@@ -48,7 +48,7 @@ function Logistician.Utilities.DBKeyFromLink(itemLink, callback)
 
       item:ContinueOnItemLoad(function()
         local itemLevel = C_Item.GetDetailedItemLevelInfo(itemLink) or 0
-        if itemLevel >= Logistician.Constants.ITEM_LEVEL_THRESHOLD then
+        if itemLevel >= Auctionator.Constants.ITEM_LEVEL_THRESHOLD then
           callback({"g:" .. basicKey .. ":" .. itemLevel, basicKey})
         else
           callback({basicKey})
@@ -60,11 +60,11 @@ function Logistician.Utilities.DBKeyFromLink(itemLink, callback)
   end
 end
 
-function Logistician.Utilities.DBKeysFromMultipleLinks(itemLinks, callback)
+function Auctionator.Utilities.DBKeysFromMultipleLinks(itemLinks, callback)
   local result = {}
 
   for index, link in ipairs(itemLinks) do
-    Logistician.Utilities.DBKeyFromLink(link, function(dbKeys)
+    Auctionator.Utilities.DBKeyFromLink(link, function(dbKeys)
       result[index] = dbKeys
 
       for i = 1, #itemLinks do

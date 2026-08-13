@@ -1,55 +1,55 @@
-local L = Logistician.Locales.Apply
+local L = Auctionator.Locales.Apply
 
 local waitingForPricing = false
--- Logistician.Config.Options.VENDOR_TOOLTIPS: true if should show vendor tips
--- Logistician.Config.Options.SHIFT_STACK_TOOLTIPS: true to show stack price when [shift] is down
--- Logistician.Config.Options.AUCTION_TOOLTIPS: true if should show auction tips
-function Logistician.Tooltip.ShowTipWithPricing(tooltipFrame, itemLink, itemCount)
-  if waitingForPricing or Logistician.Database == nil then
+-- Auctionator.Config.Options.VENDOR_TOOLTIPS: true if should show vendor tips
+-- Auctionator.Config.Options.SHIFT_STACK_TOOLTIPS: true to show stack price when [shift] is down
+-- Auctionator.Config.Options.AUCTION_TOOLTIPS: true if should show auction tips
+function Auctionator.Tooltip.ShowTipWithPricing(tooltipFrame, itemLink, itemCount)
+  if waitingForPricing or Auctionator.Database == nil then
     return
   end
   -- Keep this commented out unless testing please.
-  -- Logistician.Debug.Message("Logistician.Tooltip.ShowTipWithPricing", itemLink, itemCount)
+  -- Auctionator.Debug.Message("Auctionator.Tooltip.ShowTipWithPricing", itemLink, itemCount)
 
   waitingForPricing = true
-  Logistician.Utilities.DBKeyFromLink(itemLink, function(dbKeys)
+  Auctionator.Utilities.DBKeyFromLink(itemLink, function(dbKeys)
     waitingForPricing = false
-    Logistician.Tooltip.ShowTipWithPricingDBKey(tooltipFrame, dbKeys, itemLink, itemCount)
-    if not Logistician.Constants.IsRetail then
+    Auctionator.Tooltip.ShowTipWithPricingDBKey(tooltipFrame, dbKeys, itemLink, itemCount)
+    if not Auctionator.Constants.IsRetail then
       tooltipFrame:Show()
     end
   end)
 end
 
-function Logistician.Tooltip.ShowTipWithPricingDBKey(tooltipFrame, dbKeys, itemLink, itemCount)
-  if #dbKeys == 0 or Logistician.Utilities.IsPetDBKey(dbKeys[1]) then
+function Auctionator.Tooltip.ShowTipWithPricingDBKey(tooltipFrame, dbKeys, itemLink, itemCount)
+  if #dbKeys == 0 or Auctionator.Utilities.IsPetDBKey(dbKeys[1]) then
     return
   end
 
   local showStackPrices = IsShiftKeyDown();
 
-  if not Logistician.Config.Get(Logistician.Config.Options.SHIFT_STACK_TOOLTIPS) then
+  if not Auctionator.Config.Get(Auctionator.Config.Options.SHIFT_STACK_TOOLTIPS) then
     showStackPrices = not IsShiftKeyDown();
   end
 
   local countString = ""
   if itemCount and showStackPrices then
-    countString = Logistician.Utilities.CreateCountString(itemCount)
+    countString = Auctionator.Utilities.CreateCountString(itemCount)
   end
 
-  local auctionPrice = Logistician.Database:GetFirstPrice(dbKeys)
+  local auctionPrice = Auctionator.Database:GetFirstPrice(dbKeys)
   local auctionAge, showAgeUnknown = nil, false
   if auctionPrice ~= nil then
     auctionPrice = auctionPrice * (showStackPrices and itemCount or 1)
-    auctionAge = Logistician.Database:GetPriceAge(dbKeys[1])
+    auctionAge = Auctionator.Database:GetPriceAge(dbKeys[1])
     if auctionAge == nil and auctionPrice ~= nil then
-      showAgeUnknown = Logistician.Database:GetPrice(dbKeys[1]) ~= nil
+      showAgeUnknown = Auctionator.Database:GetPrice(dbKeys[1]) ~= nil
     end
   end
   local auctionAverageDays =
-    Logistician.Config.Get(Logistician.Config.Options.AUCTION_MEAN_DAYS_LIMIT)
+    Auctionator.Config.Get(Auctionator.Config.Options.AUCTION_MEAN_DAYS_LIMIT)
       or 21
-  local auctionMean = Logistician.Database:GetRobustAveragePrice(
+  local auctionMean = Auctionator.Database:GetRobustAveragePrice(
     dbKeys[1],
     auctionAverageDays
   )
@@ -59,12 +59,12 @@ function Logistician.Tooltip.ShowTipWithPricingDBKey(tooltipFrame, dbKeys, itemL
   end
 
   local saleLikelihood, saleLikelihoodLabel, saleLikelihoodConfidence,
-    saleLikelihoodDetails = Logistician.Database:GetSaleLikelihood(
+    saleLikelihoodDetails = Auctionator.Database:GetSaleLikelihood(
       dbKeys[1],
       auctionAverageDays
     )
 
-  local marketSnapshot = Logistician.Database:GetMarketSnapshot(dbKeys[1])
+  local marketSnapshot = Auctionator.Database:GetMarketSnapshot(dbKeys[1])
   local marketPrice = marketSnapshot and marketSnapshot.marketPrice or nil
   if marketPrice ~= nil then
     marketPrice = marketPrice * (showStackPrices and itemCount or 1)
@@ -75,15 +75,15 @@ function Logistician.Tooltip.ShowTipWithPricingDBKey(tooltipFrame, dbKeys, itemL
 
   local itemInfo = { C_Item.GetItemInfo(itemLink) };
   if (#itemInfo) ~= 0 then
-    cannotAuction = Logistician.Utilities.IsBound(itemInfo)
-    local sellPrice = itemInfo[Logistician.Constants.ITEM_INFO.SELL_PRICE]
+    cannotAuction = Auctionator.Utilities.IsBound(itemInfo)
+    local sellPrice = itemInfo[Auctionator.Constants.ITEM_INFO.SELL_PRICE]
 
-    if Logistician.Utilities.IsVendorable(itemInfo) then
+    if Auctionator.Utilities.IsVendorable(itemInfo) then
       vendorPrice = sellPrice * (showStackPrices and itemCount or 1);
     end
 
-    disenchantStatus = Logistician.Enchant.DisenchantStatus(itemInfo)
-    local disenchantPriceForOne = Logistician.Enchant.GetDisenchantAuctionPrice(itemLink, itemInfo)
+    disenchantStatus = Auctionator.Enchant.DisenchantStatus(itemInfo)
+    local disenchantPriceForOne = Auctionator.Enchant.GetDisenchantAuctionPrice(itemLink, itemInfo)
     if disenchantPriceForOne ~= nil then
       disenchantPrice = disenchantPriceForOne * (showStackPrices and itemCount or 1)
     end
@@ -91,10 +91,10 @@ function Logistician.Tooltip.ShowTipWithPricingDBKey(tooltipFrame, dbKeys, itemL
 
   local prospectStatus = false
   local prospectValue
-  if Logistician.Prospect then
+  if Auctionator.Prospect then
     local itemID = C_Item.GetItemInfoInstant(itemLink)
-    prospectStatus = Logistician.Prospect.IsProspectable(itemID)
-    local prospectForOne = Logistician.Prospect.GetProspectAuctionPrice(itemID)
+    prospectStatus = Auctionator.Prospect.IsProspectable(itemID)
+    local prospectForOne = Auctionator.Prospect.GetProspectAuctionPrice(itemID)
     if prospectForOne ~= nil then
       prospectValue = math.floor(prospectForOne * (showStackPrices and itemCount or 1))
     end
@@ -102,38 +102,38 @@ function Logistician.Tooltip.ShowTipWithPricingDBKey(tooltipFrame, dbKeys, itemL
 
   local millStatus = false
   local millValue
-  if Logistician.Mill then
+  if Auctionator.Mill then
     local itemID = C_Item.GetItemInfoInstant(itemLink)
-    millStatus = Logistician.Mill.IsMillable(itemID)
-    local millForOne = Logistician.Mill.GetMillAuctionPrice(itemID)
+    millStatus = Auctionator.Mill.IsMillable(itemID)
+    local millForOne = Auctionator.Mill.GetMillAuctionPrice(itemID)
     if millForOne ~= nil then
       millValue = math.floor(millForOne * (showStackPrices and itemCount or 1))
     end
   end
 
-  if Logistician.Debug.IsOn() then
+  if Auctionator.Debug.IsOn() then
     tooltipFrame:AddDoubleLine("DBKey", dbKeys[1])
   end
 
   if vendorPrice ~= nil then
-    Logistician.Tooltip.AddVendorTip(tooltipFrame, vendorPrice, countString)
+    Auctionator.Tooltip.AddVendorTip(tooltipFrame, vendorPrice, countString)
   end
-  Logistician.Tooltip.AddAuctionTip(tooltipFrame, auctionPrice, countString, cannotAuction)
-  Logistician.Tooltip.AddAuctionMeanTip(
+  Auctionator.Tooltip.AddAuctionTip(tooltipFrame, auctionPrice, countString, cannotAuction)
+  Auctionator.Tooltip.AddAuctionMeanTip(
     tooltipFrame,
     auctionMean,
     countString,
     cannotAuction,
     auctionAverageDays
   )
-  Logistician.Tooltip.AddMarketSnapshotTip(
+  Auctionator.Tooltip.AddMarketSnapshotTip(
     tooltipFrame,
     marketSnapshot,
     marketPrice,
     countString,
     cannotAuction
   )
-  Logistician.Tooltip.AddSaleLikelihoodTip(
+  Auctionator.Tooltip.AddSaleLikelihoodTip(
     tooltipFrame,
     saleLikelihood,
     saleLikelihoodLabel,
@@ -141,23 +141,23 @@ function Logistician.Tooltip.ShowTipWithPricingDBKey(tooltipFrame, dbKeys, itemL
     saleLikelihoodDetails,
     cannotAuction
   )
-  Logistician.Tooltip.AddAuctionAgeTip(tooltipFrame, auctionAge, auctionPrice, showAgeUnknown)
+  Auctionator.Tooltip.AddAuctionAgeTip(tooltipFrame, auctionAge, auctionPrice, showAgeUnknown)
   if disenchantStatus ~= nil then
-    Logistician.Tooltip.AddDisenchantTip(tooltipFrame, disenchantPrice, countString, disenchantStatus)
+    Auctionator.Tooltip.AddDisenchantTip(tooltipFrame, disenchantPrice, countString, disenchantStatus)
 
-    if not Logistician.Constants.IsRetail and IsShiftKeyDown() and Logistician.Config.Get(Logistician.Config.Options.ENCHANT_TOOLTIPS) then
-      for _, line in ipairs(Logistician.Enchant.GetDisenchantBreakdown(itemLink, itemInfo)) do
+    if not Auctionator.Constants.IsRetail and IsShiftKeyDown() and Auctionator.Config.Get(Auctionator.Config.Options.ENCHANT_TOOLTIPS) then
+      for _, line in ipairs(Auctionator.Enchant.GetDisenchantBreakdown(itemLink, itemInfo)) do
         tooltipFrame:AddLine(line)
       end
     end
   end
 
   if prospectStatus then
-    Logistician.Tooltip.AddProspectTip(tooltipFrame, prospectValue, countString)
+    Auctionator.Tooltip.AddProspectTip(tooltipFrame, prospectValue, countString)
   end
 
   if millStatus then
-    Logistician.Tooltip.AddMillTip(tooltipFrame, millValue, countString)
+    Auctionator.Tooltip.AddMillTip(tooltipFrame, millValue, countString)
   end
 end
 
@@ -165,8 +165,8 @@ end
 -- link
 -- count
 local isMultiplePricesPending = false
-function Logistician.Tooltip.ShowTipWithMultiplePricing(tooltipFrame, itemEntries)
-  if isMultiplePricesPending or Logistician.Database == nil then
+function Auctionator.Tooltip.ShowTipWithMultiplePricing(tooltipFrame, itemEntries)
+  if isMultiplePricesPending or Auctionator.Database == nil then
     return
   end
   isMultiplePricesPending = true
@@ -178,14 +178,14 @@ function Logistician.Tooltip.ShowTipWithMultiplePricing(tooltipFrame, itemEntrie
     table.insert(itemLinks, itemEntry.link)
   end
 
-  Logistician.Utilities.DBKeysFromMultipleLinks(itemLinks, function(allKeys)
+  Auctionator.Utilities.DBKeysFromMultipleLinks(itemLinks, function(allKeys)
     isMultiplePricesPending = false
     for index, dbKeys in ipairs(allKeys) do
       local itemEntry = itemEntries[index]
 
       tooltipFrame:AddLine(itemEntry.link)
-      Logistician.Tooltip.ShowTipWithPricingDBKey(tooltipFrame, dbKeys, itemEntry.link, itemEntry.count)
-      local auctionPrice = Logistician.Database:GetFirstPrice(dbKeys)
+      Auctionator.Tooltip.ShowTipWithPricingDBKey(tooltipFrame, dbKeys, itemEntry.link, itemEntry.count)
+      local auctionPrice = Auctionator.Database:GetFirstPrice(dbKeys)
       if auctionPrice ~= nil then
         total = total + (auctionPrice * itemEntry.count)
       end
@@ -195,9 +195,9 @@ function Logistician.Tooltip.ShowTipWithMultiplePricing(tooltipFrame, itemEntrie
     tooltipFrame:AddLine("  ")
 
     tooltipFrame:AddDoubleLine(
-      Logistician.Locales.Apply("TOTAL_ITEMS_COLORED", itemCount),
+      Auctionator.Locales.Apply("TOTAL_ITEMS_COLORED", itemCount),
       WHITE_FONT_COLOR:WrapTextInColorCode(
-        Logistician.Utilities.CreatePaddedMoneyString(total)
+        Auctionator.Utilities.CreatePaddedMoneyString(total)
       )
     )
 
@@ -205,31 +205,31 @@ function Logistician.Tooltip.ShowTipWithMultiplePricing(tooltipFrame, itemEntrie
   end)
 end
 
-function Logistician.Tooltip.AddVendorTip(tooltipFrame, vendorPrice, countString)
-  if Logistician.Config.Get(Logistician.Config.Options.VENDOR_TOOLTIPS) and vendorPrice > 0 then
-    if not Logistician.Constants.IsRetail then
+function Auctionator.Tooltip.AddVendorTip(tooltipFrame, vendorPrice, countString)
+  if Auctionator.Config.Get(Auctionator.Config.Options.VENDOR_TOOLTIPS) and vendorPrice > 0 then
+    if not Auctionator.Constants.IsRetail then
       GameTooltip_ClearMoney(tooltipFrame) -- Remove default price
     end
 
     tooltipFrame:AddDoubleLine(
       L("VENDOR") .. countString,
       WHITE_FONT_COLOR:WrapTextInColorCode(
-        Logistician.Utilities.CreatePaddedMoneyString(vendorPrice)
+        Auctionator.Utilities.CreatePaddedMoneyString(vendorPrice)
       )
     )
   end
 end
 
-function Logistician.Tooltip.AddAuctionTip (tooltipFrame, auctionPrice, countString, cannotAuction)
+function Auctionator.Tooltip.AddAuctionTip (tooltipFrame, auctionPrice, countString, cannotAuction)
   if cannotAuction then
     return
   end
-  if Logistician.Config.Get(Logistician.Config.Options.AUCTION_TOOLTIPS) then
+  if Auctionator.Config.Get(Auctionator.Config.Options.AUCTION_TOOLTIPS) then
     if (auctionPrice ~= nil) then
       tooltipFrame:AddDoubleLine(
         L("AUCTION") .. countString,
         WHITE_FONT_COLOR:WrapTextInColorCode(
-          Logistician.Utilities.CreatePaddedMoneyString(auctionPrice)
+          Auctionator.Utilities.CreatePaddedMoneyString(auctionPrice)
         )
       )
     else
@@ -243,7 +243,7 @@ function Logistician.Tooltip.AddAuctionTip (tooltipFrame, auctionPrice, countStr
   end
 end
 
-function Logistician.Tooltip.AddAuctionMeanTip(
+function Auctionator.Tooltip.AddAuctionMeanTip(
   tooltipFrame,
   auctionMean,
   countString,
@@ -254,7 +254,7 @@ function Logistician.Tooltip.AddAuctionMeanTip(
     return
   end
 
-  if not Logistician.Config.Get(Logistician.Config.Options.AUCTION_TOOLTIPS) then
+  if not Auctionator.Config.Get(Auctionator.Config.Options.AUCTION_TOOLTIPS) then
     return
   end
 
@@ -262,24 +262,24 @@ function Logistician.Tooltip.AddAuctionMeanTip(
     tooltipFrame:AddDoubleLine(
       L("AUCTION_MEAN") .. " " .. tostring(days or 21) .. "d" .. countString,
       WHITE_FONT_COLOR:WrapTextInColorCode(
-        Logistician.Utilities.CreatePaddedMoneyString(auctionMean)
+        Auctionator.Utilities.CreatePaddedMoneyString(auctionMean)
       )
     )
   end
 end
 
-function Logistician.Tooltip.AddMarketSnapshotTip(
+function Auctionator.Tooltip.AddMarketSnapshotTip(
   tooltipFrame,
   snapshot,
   marketPrice,
   countString,
   cannotAuction
 )
-  if cannotAuction or not Logistician.Constants.IsLegacyAH then
+  if cannotAuction or not Auctionator.Constants.IsLegacyAH then
     return
   end
 
-  if not Logistician.Config.Get(Logistician.Config.Options.AUCTION_TOOLTIPS) then
+  if not Auctionator.Config.Get(Auctionator.Config.Options.AUCTION_TOOLTIPS) then
     return
   end
 
@@ -297,7 +297,7 @@ function Logistician.Tooltip.AddMarketSnapshotTip(
   tooltipFrame:AddDoubleLine(
     L("MARKET_DEPTH_PRICE") .. countString,
     WHITE_FONT_COLOR:WrapTextInColorCode(
-      Logistician.Utilities.CreatePaddedMoneyString(marketPrice)
+      Auctionator.Utilities.CreatePaddedMoneyString(marketPrice)
     )
   )
 
@@ -349,7 +349,7 @@ local function SaleLikelihoodColor(score)
   end
 end
 
-function Logistician.Tooltip.AddSaleLikelihoodTip(
+function Auctionator.Tooltip.AddSaleLikelihoodTip(
   tooltipFrame,
   score,
   label,
@@ -361,7 +361,7 @@ function Logistician.Tooltip.AddSaleLikelihoodTip(
     return
   end
 
-  if not Logistician.Config.Get(Logistician.Config.Options.AUCTION_TOOLTIPS) then
+  if not Auctionator.Config.Get(Auctionator.Config.Options.AUCTION_TOOLTIPS) then
     return
   end
 
@@ -407,22 +407,22 @@ function Logistician.Tooltip.AddSaleLikelihoodTip(
   end
 end
 
-function Logistician.Tooltip.AddAuctionAgeTip(tooltipFrame, auctionAge, auctionPrice, showUnknown)
-  if not Logistician.Config.Get(Logistician.Config.Options.AUCTION_AGE_TOOLTIPS) then
+function Auctionator.Tooltip.AddAuctionAgeTip(tooltipFrame, auctionAge, auctionPrice, showUnknown)
+  if not Auctionator.Config.Get(Auctionator.Config.Options.AUCTION_AGE_TOOLTIPS) then
     return
   end
 
   if auctionAge ~= nil then
-    tooltipFrame:AddDoubleLine(LOGISTICIAN_L_AUCTION_AGE, WHITE_FONT_COLOR:WrapTextInColorCode(LOGISTICIAN_L_X_DAYS:format(tostring(auctionAge))))
+    tooltipFrame:AddDoubleLine(AUCTIONATOR_L_AUCTION_AGE, WHITE_FONT_COLOR:WrapTextInColorCode(AUCTIONATOR_L_X_DAYS:format(tostring(auctionAge))))
   elseif auctionPrice ~= nil and showUnknown then
-    tooltipFrame:AddDoubleLine(LOGISTICIAN_L_AUCTION_AGE, LOGISTICIAN_L_UNKNOWN)
+    tooltipFrame:AddDoubleLine(AUCTIONATOR_L_AUCTION_AGE, AUCTIONATOR_L_UNKNOWN)
   end
 end
 
-function Logistician.Tooltip.AddDisenchantTip (
+function Auctionator.Tooltip.AddDisenchantTip (
   tooltipFrame, disenchantPrice, countString, disenchantStatus
 )
-  if not Logistician.Config.Get(Logistician.Config.Options.ENCHANT_TOOLTIPS) then
+  if not Auctionator.Config.Get(Auctionator.Config.Options.ENCHANT_TOOLTIPS) then
     return
   end
 
@@ -430,7 +430,7 @@ function Logistician.Tooltip.AddDisenchantTip (
     tooltipFrame:AddDoubleLine(
       L("DISENCHANT") .. countString,
       WHITE_FONT_COLOR:WrapTextInColorCode(
-        Logistician.Utilities.CreatePaddedMoneyString(disenchantPrice)
+        Auctionator.Utilities.CreatePaddedMoneyString(disenchantPrice)
       )
     )
   elseif disenchantStatus.isDisenchantable and
@@ -444,10 +444,10 @@ function Logistician.Tooltip.AddDisenchantTip (
   end
 end
 
-function Logistician.Tooltip.AddProspectTip (
+function Auctionator.Tooltip.AddProspectTip (
   tooltipFrame, prospectValue, countString
 )
-  if not Logistician.Config.Get(Logistician.Config.Options.PROSPECT_TOOLTIPS) then
+  if not Auctionator.Config.Get(Auctionator.Config.Options.PROSPECT_TOOLTIPS) then
     return
   end
 
@@ -455,7 +455,7 @@ function Logistician.Tooltip.AddProspectTip (
     tooltipFrame:AddDoubleLine(
       L("PROSPECT") .. countString,
       WHITE_FONT_COLOR:WrapTextInColorCode(
-        Logistician.Utilities.CreatePaddedMoneyString(prospectValue)
+        Auctionator.Utilities.CreatePaddedMoneyString(prospectValue)
       )
     )
   else
@@ -468,10 +468,10 @@ function Logistician.Tooltip.AddProspectTip (
   end
 end
 
-function Logistician.Tooltip.AddMillTip (
+function Auctionator.Tooltip.AddMillTip (
   tooltipFrame, millValue, countString
 )
-  if not Logistician.Config.Get(Logistician.Config.Options.MILL_TOOLTIPS) then
+  if not Auctionator.Config.Get(Auctionator.Config.Options.MILL_TOOLTIPS) then
     return
   end
 
@@ -479,7 +479,7 @@ function Logistician.Tooltip.AddMillTip (
     tooltipFrame:AddDoubleLine(
       L("MILL") .. countString,
       WHITE_FONT_COLOR:WrapTextInColorCode(
-        Logistician.Utilities.CreatePaddedMoneyString(millValue)
+        Auctionator.Utilities.CreatePaddedMoneyString(millValue)
       )
     )
   else
@@ -493,33 +493,33 @@ function Logistician.Tooltip.AddMillTip (
 end
 
 local PET_TOOLTIP_SPACING = " "
-function Logistician.Tooltip.AddPetTip(
+function Auctionator.Tooltip.AddPetTip(
   speciesID
 )
-  Logistician.Debug.Message("Logistician.Tooltip.AddPetTip", speciesID)
-  if not Logistician.Config.Get(Logistician.Config.Options.AUCTION_TOOLTIPS) or
-     not Logistician.Config.Get(Logistician.Config.Options.PET_TOOLTIPS) then
+  Auctionator.Debug.Message("Auctionator.Tooltip.AddPetTip", speciesID)
+  if not Auctionator.Config.Get(Auctionator.Config.Options.AUCTION_TOOLTIPS) or
+     not Auctionator.Config.Get(Auctionator.Config.Options.PET_TOOLTIPS) then
     return
   end
 
   local LibBattlePetTooltipLine = LibStub("LibBattlePetTooltipLine-1-0")
 
   local key = "p:" .. tostring(speciesID)
-  local price = Logistician.Database:GetPrice(key)
-  local auctionAge = Logistician.Database:GetPriceAge(key)
+  local price = Auctionator.Database:GetPrice(key)
+  local auctionAge = Auctionator.Database:GetPriceAge(key)
   BattlePetTooltip:AddLine(" ")
   if price ~= nil then
     LibBattlePetTooltipLine:AddDoubleLine(BattlePetTooltip,
       L("AUCTION"),
       WHITE_FONT_COLOR:WrapTextInColorCode(
-        Logistician.Utilities.CreatePaddedMoneyString(price)
+        Auctionator.Utilities.CreatePaddedMoneyString(price)
       )
     )
-    if Logistician.Config.Get(Logistician.Config.Options.AUCTION_AGE_TOOLTIPS) then
+    if Auctionator.Config.Get(Auctionator.Config.Options.AUCTION_AGE_TOOLTIPS) then
       if auctionAge ~= nil then
-        LibBattlePetTooltipLine:AddDoubleLine(BattlePetTooltip, LOGISTICIAN_L_AUCTION_AGE, WHITE_FONT_COLOR:WrapTextInColorCode(LOGISTICIAN_L_X_DAYS:format(tostring(auctionAge))))
+        LibBattlePetTooltipLine:AddDoubleLine(BattlePetTooltip, AUCTIONATOR_L_AUCTION_AGE, WHITE_FONT_COLOR:WrapTextInColorCode(AUCTIONATOR_L_X_DAYS:format(tostring(auctionAge))))
       elseif price ~= nil then
-        LibBattlePetTooltipLine:AddDoubleLine(BattlePetTooltip, LOGISTICIAN_L_AUCTION_AGE, LOGISTICIAN_L_UNKNOWN)
+        LibBattlePetTooltipLine:AddDoubleLine(BattlePetTooltip, AUCTIONATOR_L_AUCTION_AGE, AUCTIONATOR_L_UNKNOWN)
       end
     end
   else
@@ -530,38 +530,38 @@ function Logistician.Tooltip.AddPetTip(
   end
 end
 
-function Logistician.Tooltip.AddReagentsAuctionTip(tooltipFrame, allReagents)
-  Logistician.Debug.Message("Logistician.Tooltip.AddReagentsAuctionTip", speciesID)
-  if not Logistician.Config.Get(Logistician.Config.Options.AUCTION_TOOLTIPS) then
+function Auctionator.Tooltip.AddReagentsAuctionTip(tooltipFrame, allReagents)
+  Auctionator.Debug.Message("Auctionator.Tooltip.AddReagentsAuctionTip", speciesID)
+  if not Auctionator.Config.Get(Auctionator.Config.Options.AUCTION_TOOLTIPS) then
     return
   end
 
   local showStackPrices = IsShiftKeyDown();
 
-  if not Logistician.Config.Get(Logistician.Config.Options.SHIFT_STACK_TOOLTIPS) then
+  if not Auctionator.Config.Get(Auctionator.Config.Options.SHIFT_STACK_TOOLTIPS) then
     showStackPrices = not IsShiftKeyDown();
   end
 
   for _, reagent in ipairs(allReagents) do
     local itemInfo = { C_Item.GetItemInfo(reagent.itemID) };
-    if not Logistician.Utilities.IsBound(itemInfo) then
+    if not Auctionator.Utilities.IsBound(itemInfo) then
       local key = tostring(reagent.itemID)
-      local auctionPrice = Logistician.Database:GetPrice(key)
-      local auctionAge = Logistician.Database:GetPriceAge(key)
+      local auctionPrice = Auctionator.Database:GetPrice(key)
+      local auctionAge = Auctionator.Database:GetPriceAge(key)
       local qualitySuffix = ""
       if reagent.quality then
         qualitySuffix = " " .. CreateAtlasMarkup(C_TradeSkillUI.GetItemReagentQualityInfo(reagent.itemID).iconChat, 17, 17)
       end
       local countString = ""
       if showStackPrices then
-        countString = Logistician.Utilities.CreateCountString(reagent.itemCount)
+        countString = Auctionator.Utilities.CreateCountString(reagent.itemCount)
       end
       if auctionPrice ~= nil then
         auctionPrice = auctionPrice * (showStackPrices and math.max(1, reagent.itemCount) or 1)
         tooltipFrame:AddDoubleLine(
           L("AUCTION") .. countString .. qualitySuffix,
           WHITE_FONT_COLOR:WrapTextInColorCode(
-            Logistician.Utilities.CreatePaddedMoneyString(auctionPrice)
+            Auctionator.Utilities.CreatePaddedMoneyString(auctionPrice)
           )
         )
       else

@@ -1,11 +1,11 @@
 -- Add search term information to a tooltip
-function Logistician.Shopping.Tab.ComposeSearchTermTooltip(searchTerm)
-  local tooltipDetails = Logistician.Search.ComposeTooltip(searchTerm)
+function Auctionator.Shopping.Tab.ComposeSearchTermTooltip(searchTerm)
+  local tooltipDetails = Auctionator.Search.ComposeTooltip(searchTerm)
 
   GameTooltip:SetText(tooltipDetails.title, 1, 1, 1, 1)
 
   for _, line in ipairs(tooltipDetails.lines) do
-    if line[2] == LOGISTICIAN_L_ANY_LOWER then
+    if line[2] == AUCTIONATOR_L_ANY_LOWER then
       -- Faded line when no filter set
       GameTooltip:AddDoubleLine(line[1], line[2], 0.4, 0.4, 0.4, 0.4, 0.4, 0.4)
 

@@ -1,10 +1,10 @@
 -- Extract components of an advanced search string.
 -- Assumes searchParametersString is an advanced search.
-function Logistician.Search.SplitAdvancedSearch(searchParametersString)
+function Auctionator.Search.SplitAdvancedSearch(searchParametersString)
   local queryString, categoryKey, minItemLevel, maxItemLevel, minLevel, maxLevel,
     minCraftedLevel, maxCraftedLevel, minPrice, maxPrice, quality, tier,
     expansion, quantity =
-    strsplit( Logistician.Constants.AdvancedSearchDivider, searchParametersString )
+    strsplit( Auctionator.Constants.AdvancedSearchDivider, searchParametersString )
 
   -- A nil queryString causes a disconnect if searched for, but an empty one
   -- doesn't, this ensures searchString ~= nil.
@@ -124,7 +124,7 @@ local function TooltipRangeString(min, max)
   elseif max ~= nil then
     return "<= " .. tostring(max)
   else
-    return LOGISTICIAN_L_ANY_LOWER
+    return AUCTIONATOR_L_ANY_LOWER
   end
 end
 
@@ -138,7 +138,7 @@ end
 
 local function QualityString(quality)
   if quality ~= nil and ITEM_QUALITY_COLORS[quality] ~= nil then
-    return Logistician.Utilities.CreateColoredQuality(quality)
+    return Auctionator.Utilities.CreateColoredQuality(quality)
   else
     return ""
   end
@@ -155,8 +155,8 @@ local function QualitiesString(qualities, quality)
 end
 
 local function TierString(tier)
-  if Logistician.Constants.IsRetail and tier ~= nil then
-    return Logistician.Utilities.GetCraftingQualityMarkup(tier)
+  if Auctionator.Constants.IsRetail and tier ~= nil then
+    return Auctionator.Utilities.GetCraftingQualityMarkup(tier)
   else
     return ""
   end
@@ -249,8 +249,8 @@ local function WrapExactSearch(splitSearch)
   end
 end
 
-function Logistician.Search.PrettifySearchString(searchString)
-  local splitSearch = Logistician.Search.SplitAdvancedSearch(searchString)
+function Auctionator.Search.PrettifySearchString(searchString)
+  local splitSearch = Auctionator.Search.SplitAdvancedSearch(searchString)
 
   local result = WrapExactSearch(splitSearch)
     .. " ["
@@ -279,11 +279,11 @@ local function TooltipCategory(splitSearch)
   local key = splitSearch.categoryKey
 
   if splitSearch.categoryKey == nil or splitSearch.categoryKey == "" then
-    key = LOGISTICIAN_L_ANY_LOWER
+    key = AUCTIONATOR_L_ANY_LOWER
   end
 
   return {
-    LOGISTICIAN_L_ITEM_CLASS,
+    AUCTIONATOR_L_ITEM_CLASS,
     key
   }
 end
@@ -292,13 +292,13 @@ local function TooltipExpansion(splitSearch)
   local key
 
   if splitSearch.expansion == nil then
-    key = LOGISTICIAN_L_ANY_LOWER
+    key = AUCTIONATOR_L_ANY_LOWER
   else
-    key = _G["EXPANSION_NAME" .. splitSearch.expansion] or LOGISTICIAN_L_UNKNOWN
+    key = _G["EXPANSION_NAME" .. splitSearch.expansion] or AUCTIONATOR_L_UNKNOWN
   end
 
   return {
-    LOGISTICIAN_L_EXPANSION,
+    AUCTIONATOR_L_EXPANSION,
     key
   }
 end
@@ -308,7 +308,7 @@ local function TooltipQuality(splitSearch)
 
   local labels = QualitiesString(splitSearch.qualities, splitSearch.quality)
   if labels == "" then
-    key = LOGISTICIAN_L_ANY_LOWER
+    key = AUCTIONATOR_L_ANY_LOWER
   else
     key = labels
   end
@@ -323,11 +323,11 @@ local function TooltipQuantity(splitSearch)
   local key = splitSearch.quantity
 
   if splitSearch.quantity == nil then
-    key = LOGISTICIAN_L_ANY_LOWER
+    key = AUCTIONATOR_L_ANY_LOWER
   end
 
   return {
-    LOGISTICIAN_L_QUANTITY,
+    AUCTIONATOR_L_QUANTITY,
     key
   }
 end
@@ -335,14 +335,14 @@ end
 local function TooltipTier(splitSearch)
   local key
 
-  if not Logistician.Constants.IsRetail or splitSearch.tier == nil then
-    key = LOGISTICIAN_L_ANY_LOWER
+  if not Auctionator.Constants.IsRetail or splitSearch.tier == nil then
+    key = AUCTIONATOR_L_ANY_LOWER
   else
-    key = Logistician.Utilities.GetCraftingQualityMarkup(splitSearch.tier)
+    key = Auctionator.Utilities.GetCraftingQualityMarkup(splitSearch.tier)
   end
 
   return {
-    LOGISTICIAN_L_TIER,
+    AUCTIONATOR_L_TIER,
     key
   }
 end
@@ -351,34 +351,34 @@ local function TooltipPriceRange(splitSearch)
   local minPrice, maxPrice = ConvertMoneyStrings(splitSearch)
 
   return {
-    LOGISTICIAN_L_PRICE,
+    AUCTIONATOR_L_PRICE,
     TooltipRangeString(minPrice, maxPrice)
   }
 end
 
 local function TooltipLevelRange(splitSearch)
   return {
-    LOGISTICIAN_L_LEVEL,
+    AUCTIONATOR_L_LEVEL,
     TooltipRangeString(splitSearch.minLevel, splitSearch.maxLevel)
   }
 end
 
 local function TooltipItemLevelRange(splitSearch)
   return {
-    LOGISTICIAN_L_ITEM_LEVEL,
+    AUCTIONATOR_L_ITEM_LEVEL,
     TooltipRangeString(splitSearch.minItemLevel, splitSearch.maxItemLevel)
   }
 end
 
 local function TooltipCraftedLevelRange(splitSearch)
   return {
-    LOGISTICIAN_L_CRAFTED_LEVEL,
+    AUCTIONATOR_L_CRAFTED_LEVEL,
     TooltipRangeString(splitSearch.minCraftedLevel, splitSearch.maxCraftedLevel)
   }
 end
 
-function Logistician.Search.ComposeTooltip(searchString)
-  local splitSearch = Logistician.Search.SplitAdvancedSearch(searchString)
+function Auctionator.Search.ComposeTooltip(searchString)
+  local splitSearch = Auctionator.Search.SplitAdvancedSearch(searchString)
 
   local lines = {}
 
@@ -389,7 +389,7 @@ function Logistician.Search.ComposeTooltip(searchString)
   table.insert(lines, TooltipQuantity(splitSearch))
   table.insert(lines, TooltipCraftedLevelRange(splitSearch))
   table.insert(lines, TooltipQuality(splitSearch))
-  if Logistician.Constants.IsRetail then
+  if Auctionator.Constants.IsRetail then
     table.insert(lines, TooltipExpansion(splitSearch))
     table.insert(lines, TooltipTier(splitSearch))
   end
@@ -411,7 +411,7 @@ local function GetQueryString(search)
     return search.searchString
   end
 end
-function Logistician.Search.ReconstituteAdvancedSearch(search)
+function Auctionator.Search.ReconstituteAdvancedSearch(search)
   return strjoin(";",
     GetQueryString(search),
     search.categoryKey or "",

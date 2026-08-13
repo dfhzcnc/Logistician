@@ -1,7 +1,7 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/">
   <Frame
-    name="LogisticianConfigShoppingFrameTemplate"
-    mixin="LogisticianConfigShoppingFrameMixin"
+    name="AuctionatorConfigShoppingFrameTemplate"
+    mixin="AuctionatorConfigShoppingFrameMixin"
     virtual="true">
 
     <Scripts>
@@ -11,34 +11,34 @@
     </Scripts>
 
     <Frames>
-      <Frame inherits="LogisticianConfigurationTitleFrame" parentKey="TitleArea">
+      <Frame inherits="AuctionatorConfigurationTitleFrame" parentKey="TitleArea">
         <KeyValues>
-          <KeyValue key="titleText" value="LOGISTICIAN_L_CONFIG_SHOPPING_CATEGORY" type="global" />
-          <KeyValue key="subTitleText" value="LOGISTICIAN_L_CONFIG_SHOPPING_TEXT" type="global"/>
+          <KeyValue key="titleText" value="AUCTIONATOR_L_CONFIG_SHOPPING_CATEGORY" type="global" />
+          <KeyValue key="subTitleText" value="AUCTIONATOR_L_CONFIG_SHOPPING_TEXT" type="global"/>
         </KeyValues>
       </Frame>
 
-      <Frame inherits="LogisticianConfigurationCheckbox" parentKey="AutoListSearch">
+      <Frame inherits="AuctionatorConfigurationCheckbox" parentKey="AutoListSearch">
         <KeyValues>
-          <KeyValue key="labelText" value="LOGISTICIAN_L_CONFIG_AUTO_LIST_SEARCH" type="global" />
-          <KeyValue key="tooltipTitleText" value="LOGISTICIAN_L_CONFIG_AUTO_LIST_SEARCH_TOOLTIP_HEADER" type="global" />
-          <KeyValue key="tooltipText" value="LOGISTICIAN_L_CONFIG_AUTO_LIST_SEARCH_TOOLTIP_TEXT" type="global"/>
+          <KeyValue key="labelText" value="AUCTIONATOR_L_CONFIG_AUTO_LIST_SEARCH" type="global" />
+          <KeyValue key="tooltipTitleText" value="AUCTIONATOR_L_CONFIG_AUTO_LIST_SEARCH_TOOLTIP_HEADER" type="global" />
+          <KeyValue key="tooltipText" value="AUCTIONATOR_L_CONFIG_AUTO_LIST_SEARCH_TOOLTIP_TEXT" type="global"/>
         </KeyValues>
         <Anchors>
           <Anchor point="TOPLEFT" relativeKey="$parent.TitleArea" relativePoint="BOTTOMLEFT" />
         </Anchors>
       </Frame>
 
-      <Frame inherits="LogisticianConfigurationHeadingFrame" parentKey="DefaultListHeading">
+      <Frame inherits="AuctionatorConfigurationHeadingFrame" parentKey="DefaultListHeading">
         <KeyValues>
-          <KeyValue key="headingText" value="LOGISTICIAN_L_DEFAULT_LIST_HEADER" type="global"/>
+          <KeyValue key="headingText" value="AUCTIONATOR_L_DEFAULT_LIST_HEADER" type="global"/>
         </KeyValues>
         <Anchors>
           <Anchor point="TOPLEFT" relativeKey="$parent.AutoListSearch" relativePoint="BOTTOMLEFT"/>
         </Anchors>
       </Frame>
 
-      <Frame inherits="LogisticianDropDown" parentKey="DefaultShoppingList">
+      <Frame inherits="AuctionatorDropDown" parentKey="DefaultShoppingList">
         <KeyValues>
           <KeyValue key="labelText" value="" type="string" />
         </KeyValues>
@@ -48,11 +48,11 @@
         </Anchors>
       </Frame>
 
-      <Frame inherits="LogisticianConfigurationCheckbox" parentKey="ListMissingTerms">
+      <Frame inherits="AuctionatorConfigurationCheckbox" parentKey="ListMissingTerms">
         <KeyValues>
-          <KeyValue key="labelText" value="LOGISTICIAN_L_CONFIG_SHOPPING_LIST_MISSING_TERMS" type="global" />
-          <KeyValue key="tooltipTitleText" value="LOGISTICIAN_L_CONFIG_SHOPPING_LIST_MISSING_TERMS_TOOLTIP_HEADER" type="global" />
-          <KeyValue key="tooltipText" value="LOGISTICIAN_L_CONFIG_SHOPPING_LIST_MISSING_TERMS_TOOLTIP_TEXT" type="global"/>
+          <KeyValue key="labelText" value="AUCTIONATOR_L_CONFIG_SHOPPING_LIST_MISSING_TERMS" type="global" />
+          <KeyValue key="tooltipTitleText" value="AUCTIONATOR_L_CONFIG_SHOPPING_LIST_MISSING_TERMS_TOOLTIP_HEADER" type="global" />
+          <KeyValue key="tooltipText" value="AUCTIONATOR_L_CONFIG_SHOPPING_LIST_MISSING_TERMS_TOOLTIP_TEXT" type="global"/>
         </KeyValues>
         <Anchors>
           <Anchor point="TOPLEFT" relativeKey="$parent.DefaultShoppingList" relativePoint="BOTTOMLEFT" />

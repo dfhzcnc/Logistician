@@ -1,5 +1,5 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/">
-<Frame name="LogisticianPanelTemplate" virtual="true">
+<Frame name="AuctionatorPanelTemplate" virtual="true">
   <Size x="338" y="424"/>
   <Layers>
     <Layer level="BACKGROUND" textureSubLevel="-6">
@@ -12,13 +12,13 @@
     </Layer>
   </Layers>
   <Frames>
-    <Frame parentKey="Inset" inherits="LogisticianInsetDarkTemplate">
+    <Frame parentKey="Inset" inherits="AuctionatorInsetDarkTemplate">
       <Anchors>
         <Anchor point="TOPLEFT" x="4" y="-26"/>
         <Anchor point="BOTTOMRIGHT" x="-6" y="26"/>
       </Anchors>
     </Frame>
-    <Frame parentKey="Border" inherits="LogisticianPanelBorderTemplate"/>
+    <Frame parentKey="Border" inherits="AuctionatorPanelBorderTemplate"/>
   </Frames>
 </Frame>
 </Ui>

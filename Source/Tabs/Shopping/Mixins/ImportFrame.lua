@@ -1,69 +1,69 @@
-LogisticianListImportFrameMixin = {}
+AuctionatorListImportFrameMixin = {}
 
-function LogisticianListImportFrameMixin:OnLoad()
-  Logistician.Debug.Message("LogisticianListImportFrameMixin:OnLoad()")
+function AuctionatorListImportFrameMixin:OnLoad()
+  Auctionator.Debug.Message("AuctionatorListImportFrameMixin:OnLoad()")
 
   ScrollUtil.RegisterScrollBoxWithScrollBar(self.EditBoxContainer:GetScrollBox(), self.ScrollBar)
   self.EditBoxContainer:GetScrollBox():GetView():SetPanExtent(50)
 end
 
-function LogisticianListImportFrameMixin:OnShow()
-  Logistician.Debug.Message("LogisticianListImportFrameMixin:OnShow()")
+function AuctionatorListImportFrameMixin:OnShow()
+  Auctionator.Debug.Message("AuctionatorListImportFrameMixin:OnShow()")
 
   self.EditBoxContainer:GetEditBox():SetFocus()
 
-  Logistician.EventBus
+  Auctionator.EventBus
     :RegisterSource(self, "lists import dialog")
-    :Fire(self, Logistician.Shopping.Tab.Events.DialogOpened)
+    :Fire(self, Auctionator.Shopping.Tab.Events.DialogOpened)
     :UnregisterSource(self)
 end
 
-function LogisticianListImportFrameMixin:OnHide()
+function AuctionatorListImportFrameMixin:OnHide()
   self.EditBoxContainer:GetEditBox():SetText("")
   self:Hide()
-  Logistician.EventBus
+  Auctionator.EventBus
     :RegisterSource(self, "lists import dialog")
-    :Fire(self, Logistician.Shopping.Tab.Events.DialogClosed)
+    :Fire(self, Auctionator.Shopping.Tab.Events.DialogClosed)
     :UnregisterSource(self)
 end
 
-function LogisticianListImportFrameMixin:ReceiveEvent(eventName, eventData)
-  if eventName == Logistician.Shopping.Events.ListImportFinished then
-    Logistician.EventBus:Unregister(self, { Logistician.Shopping.Events.ListImportFinished })
-    Logistician.EventBus
+function AuctionatorListImportFrameMixin:ReceiveEvent(eventName, eventData)
+  if eventName == Auctionator.Shopping.Events.ListImportFinished then
+    Auctionator.EventBus:Unregister(self, { Auctionator.Shopping.Events.ListImportFinished })
+    Auctionator.EventBus
       :RegisterSource(self, "lists import dialog")
-      :Fire(self, Logistician.Shopping.Tab.Events.ListCreated, Logistician.Shopping.ListManager:GetByName(eventData))
+      :Fire(self, Auctionator.Shopping.Tab.Events.ListCreated, Auctionator.Shopping.ListManager:GetByName(eventData))
       :UnregisterSource(self)
   end
 end
 
-function LogisticianListImportFrameMixin:OnCloseDialogClicked()
+function AuctionatorListImportFrameMixin:OnCloseDialogClicked()
   self:Hide()
 end
 
-function LogisticianListImportFrameMixin:OnImportClicked()
+function AuctionatorListImportFrameMixin:OnImportClicked()
   -- register finished event early as sometimes it fires immediately
-  Logistician.EventBus:Register(self, { Logistician.Shopping.Events.ListImportFinished })
+  Auctionator.EventBus:Register(self, { Auctionator.Shopping.Events.ListImportFinished })
 
   local importString = self.EditBoxContainer:GetEditBox():GetText()
 
   local waiting = true
   if string.match(importString, "%^") then
-    Logistician.Debug.Message("Import shopping list with 8.3+ format")
-    Logistician.Shopping.Lists.BatchImportFromString(importString)
+    Auctionator.Debug.Message("Import shopping list with 8.3+ format")
+    Auctionator.Shopping.Lists.BatchImportFromString(importString)
   elseif string.match(importString, "%*") then
-    Logistician.Debug.Message("Import shopping list from old format")
-    Logistician.Shopping.Lists.OldBatchImportFromString(importString)
+    Auctionator.Debug.Message("Import shopping list from old format")
+    Auctionator.Shopping.Lists.OldBatchImportFromString(importString)
   elseif string.match(importString, "%,") then
-    Logistician.Debug.Message("Import shopping list from TSM group")
-    Logistician.Shopping.Lists.TSMImportFromString(importString)
+    Auctionator.Debug.Message("Import shopping list from TSM group")
+    Auctionator.Shopping.Lists.TSMImportFromString(importString)
   else
     waiting = false
   end
 
   -- Only listen for the import finished event if a valid format was detected
   if not waiting then
-    Logistician.EventBus:Unregister(self, { Logistician.Shopping.Events.ListImportFinished })
+    Auctionator.EventBus:Unregister(self, { Auctionator.Shopping.Events.ListImportFinished })
   end
 
   self:Hide()

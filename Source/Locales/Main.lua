@@ -5,7 +5,7 @@ local function FixMissingTranslations(incomplete, locale)
     return
   end
 
-  local enUS = LOGISTICIAN_LOCALES["enUS"]()
+  local enUS = AUCTIONATOR_LOCALES["enUS"]()
   for key, val in pairs(enUS) do
     if incomplete[key] == nil then
       incomplete[key] = val
@@ -19,26 +19,26 @@ local function AddNewLines(full)
   end
 end
 
-if LOGISTICIAN_LOCALES_OVERRIDE ~= nil then
-  currentLocale = LOGISTICIAN_LOCALES_OVERRIDE()
+if AUCTIONATOR_LOCALES_OVERRIDE ~= nil then
+  currentLocale = AUCTIONATOR_LOCALES_OVERRIDE()
 
   FixMissingTranslations(currentLocale, "OVERRIDE")
-elseif LOGISTICIAN_LOCALES[GetLocale()] ~= nil then
-  currentLocale = LOGISTICIAN_LOCALES[GetLocale()]()
+elseif AUCTIONATOR_LOCALES[GetLocale()] ~= nil then
+  currentLocale = AUCTIONATOR_LOCALES[GetLocale()]()
 
   FixMissingTranslations(currentLocale, GetLocale())
 else
-  currentLocale = LOGISTICIAN_LOCALES["enUS"]()
+  currentLocale = AUCTIONATOR_LOCALES["enUS"]()
 end
 
 AddNewLines(currentLocale)
 
 -- Export constants into the global scope (for XML frames to use)
 for key, value in pairs(currentLocale) do
-  _G["LOGISTICIAN_L_"..key] = value
+  _G["AUCTIONATOR_L_"..key] = value
 end
 
-function Logistician.Locales.Apply(s, ...)
+function Auctionator.Locales.Apply(s, ...)
   if currentLocale[s] ~= nil then
     return string.format(currentLocale[s], ...)
   else

@@ -1,6 +1,6 @@
-LogisticianConfigurationHeadingMixin = {}
+AuctionatorConfigurationHeadingMixin = {}
 
-function LogisticianConfigurationHeadingMixin:OnLoad()
+function AuctionatorConfigurationHeadingMixin:OnLoad()
   if self.headingText ~= nil then
     self.HeadingText:SetText(self.headingText)
   end

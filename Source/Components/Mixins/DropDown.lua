@@ -1,4 +1,4 @@
-LogisticianDropDownMixin = {}
+AuctionatorDropDownMixin = {}
 
 local ARRAY_DELIMITER = ";"
 local function splitStrArray(arrayString)
@@ -7,13 +7,13 @@ end
 
 local function localizeArray(array)
   for index, itm in ipairs(array) do
-    array[index] = Logistician.Locales.Apply(itm)
+    array[index] = Auctionator.Locales.Apply(itm)
   end
 
   return array
 end
 
-function LogisticianDropDownMixin:OnLoad()
+function AuctionatorDropDownMixin:OnLoad()
   self.onValueChanged = function() end
   if self.textString ~= nil and self.valuesString ~= nil then
     self:InitAgain(
@@ -28,7 +28,7 @@ function LogisticianDropDownMixin:OnLoad()
   end
 end
 
-function LogisticianDropDownMixin:InitAgain(labels, values)
+function AuctionatorDropDownMixin:InitAgain(labels, values)
   local entries = {}
   for index = 1, #labels do
     table.insert(entries, {labels[index], values[index]})
@@ -44,10 +44,10 @@ end
 
 -- Checkbox-based variant used by fields that allow several simultaneous
 -- filters (for example Shopping rarity). Values are stored as a lookup table.
-function LogisticianDropDownMixin:InitMulti(labels, values, anyLabel)
+function AuctionatorDropDownMixin:InitMulti(labels, values, anyLabel)
   self.multiLabels = labels
   self.multiValues = values
-  self.multiAnyLabel = anyLabel or LOGISTICIAN_L_ANY_UPPER
+  self.multiAnyLabel = anyLabel or AUCTIONATOR_L_ANY_UPPER
   self.values = self.values or {}
 
   self.DropDown:SetupMenu(function(dropdown, rootDescription)
@@ -67,7 +67,7 @@ function LogisticianDropDownMixin:InitMulti(labels, values, anyLabel)
   self:RefreshMultiText()
 end
 
-function LogisticianDropDownMixin:RefreshMultiText()
+function AuctionatorDropDownMixin:RefreshMultiText()
   if not self.multiValues then return end
   local labels = {}
   for index, value in ipairs(self.multiValues) do
@@ -89,7 +89,7 @@ function LogisticianDropDownMixin:RefreshMultiText()
   self.DropDown:GenerateMenu()
 end
 
-function LogisticianDropDownMixin:SetValues(values)
+function AuctionatorDropDownMixin:SetValues(values)
   self.values = {}
   for _, value in ipairs(values or {}) do
     self.values[tostring(value)] = true
@@ -98,7 +98,7 @@ function LogisticianDropDownMixin:SetValues(values)
   self.onValueChanged()
 end
 
-function LogisticianDropDownMixin:GetValues()
+function AuctionatorDropDownMixin:GetValues()
   local result = {}
   for _, value in ipairs(self.multiValues or {}) do
     if self.values[value] then
@@ -108,16 +108,16 @@ function LogisticianDropDownMixin:GetValues()
   return result
 end
 
-function LogisticianDropDownMixin:SetValue(...)
+function AuctionatorDropDownMixin:SetValue(...)
   self.value = ...
   self.DropDown:GenerateMenu()
   self.onValueChanged()
 end
 
-function LogisticianDropDownMixin:SetOnValueChanged(callback)
+function AuctionatorDropDownMixin:SetOnValueChanged(callback)
   self.onValueChanged = callback or function() end
 end
 
-function LogisticianDropDownMixin:GetValue(...)
+function AuctionatorDropDownMixin:GetValue(...)
   return self.value
 end

@@ -13,18 +13,18 @@ local function SaveCategory(categories, prefix)
   end
 end
 
-function Logistician.Search.InitializeCategories()
-  Logistician.Search.InitializeOldCategories()
+function Auctionator.Search.InitializeCategories()
+  Auctionator.Search.InitializeOldCategories()
 
   SaveCategory(AuctionCategories)
 end
 
-function Logistician.Search.GetItemClassCategories(categoryKey)
+function Auctionator.Search.GetItemClassCategories(categoryKey)
   if categoryKey and string.find(categoryKey, "|", 1, true) then
     local combined = {}
     local seen = {}
     for key in string.gmatch(categoryKey, "[^|]+") do
-      local filters = CategoryLookup[key] or Logistician.Search.GetItemClassOldCategories(key)
+      local filters = CategoryLookup[key] or Auctionator.Search.GetItemClassOldCategories(key)
       for _, filter in ipairs(filters or {}) do
         -- Parent and child categories can overlap; avoid sending duplicate
         -- class/subclass filters to QueryAuctionItems.
@@ -44,6 +44,6 @@ function Logistician.Search.GetItemClassCategories(categoryKey)
     return lookup
   elseif categoryKey ~= "" then
     -- Compatibility with old category format
-    return Logistician.Search.GetItemClassOldCategories(categoryKey)
+    return Auctionator.Search.GetItemClassOldCategories(categoryKey)
   end
 end

@@ -1,22 +1,22 @@
-LogisticianConfigTextInputMixin = {}
+AuctionatorConfigTextInputMixin = {}
 
-function LogisticianConfigTextInputMixin:OnLoad()
-  Logistician.Debug.Message("HERE HERE HERE HERE HERE HERE HERE")
+function AuctionatorConfigTextInputMixin:OnLoad()
+  Auctionator.Debug.Message("HERE HERE HERE HERE HERE HERE HERE")
 end
 
-function LogisticianConfigTextInputMixin:OnMouseUp()
+function AuctionatorConfigTextInputMixin:OnMouseUp()
   self.InputBox:SetFocus()
 end
 
-function LogisticianConfigTextInputMixin:SetFocus()
+function AuctionatorConfigTextInputMixin:SetFocus()
   self.InputBox:SetFocus()
 end
 
-function LogisticianConfigTextInputMixin:SetText(value)
+function AuctionatorConfigTextInputMixin:SetText(value)
   self.InputBox:SetText(value)
   self.InputBox:SetCursorPosition(0)
 end
 
-function LogisticianConfigTextInputMixin:GetText()
+function AuctionatorConfigTextInputMixin:GetText()
   return self.InputBox:GetText()
 end

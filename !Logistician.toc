@@ -1,6 +1,6 @@
-## Interface: 20506
+## Interface: 120100, 120007, 50504, 38000, 20506, 11508, 11509
 ## Title: !Logistician
-## Version: 2.0.0
+## Version: 1.1.77
 ## Author: Sleepwalker9
 ## X-Category: QoL
 ## Notes: Integrated auction-house intelligence, crafting planning, production queue, and bill of materials.
@@ -16,24 +16,34 @@
 ## Category-ruRU: QoL
 ## Category-zhCN: QoL
 ## Category-zhTW: QoL
-## SavedVariables: LOGISTICIAN_CONFIG, LOGISTICIAN_SAVEDVARS, LOGISTICIAN_SHOPPING_LISTS, LOGISTICIAN_PRICE_DATABASE, LOGISTICIAN_POSTING_HISTORY, LOGISTICIAN_VENDOR_PRICE_CACHE, LOGISTICIAN_RECENT_SEARCHES, LOGISTICIAN_SELLING_GROUPS
-## SavedVariablesPerCharacter: LOGISTICIAN_CHARACTER_CONFIG, WiderProfessions_DB, WiderProfessionsPlusDB
+## SavedVariables: AUCTIONATOR_CONFIG, AUCTIONATOR_SAVEDVARS, AUCTIONATOR_SHOPPING_LISTS, AUCTIONATOR_PRICE_DATABASE, AUCTIONATOR_POSTING_HISTORY, AUCTIONATOR_VENDOR_PRICE_CACHE, AUCTIONATOR_RECENT_SEARCHES, AUCTIONATOR_SELLING_GROUPS
+## SavedVariablesPerCharacter: AUCTIONATOR_CHARACTER_CONFIG, WiderProfessions_DB, WiderProfessionsPlusDB
+## OptionalDeps: LibAHTab
 ## IconTexture: Interface\AddOns\!Logistician\Images\LogisticianIcon
 
 Libs\Manifest.xml
-Patches\TaintLess.xml
+Libs_ModernAH\Manifest.xml [AllowLoadGameType cata, mists, mainline]
+
+Patches\TaintLess.xml [AllowLoadGameType vanilla, tbc, wrath]
 
 Locales\Manifest.xml
 
-Assets_TBC.xml
-Imports_TBC\Manifest.xml
+Imports_ModernAH\Manifest.xml [AllowLoadGameType cata, mists, mainline]
+Assets_ModernAH.xml [AllowLoadGameType cata, mists, mainline]
+
+Assets_LegacyAH.xml [AllowLoadGameType vanilla, tbc, wrath]
+Imports_LegacyAH\Manifest.xml [AllowLoadGameType vanilla, tbc, wrath]
 
 Source\Manifest.xml
-Source_TBCBase\Manifest.xml
-Data_TBC\Suffixes.lua
-Source_TBCAH\Manifest.xml
+Source_Mainline\Manifest.xml [AllowLoadGameType mainline]
+Source_Classic\Manifest.xml [AllowLoadGameType classic]
+Source_ModernAH\Manifest.xml [AllowLoadGameType cata, mists, mainline]
 
-Source_TBC\Constants\Main.lua
+Source_Vanilla\Manifest.xml [AllowLoadGameType vanilla, tbc, wrath]
+Data_Vanilla\Suffixes.lua [AllowLoadGameType vanilla, tbc, wrath]
+Source_LegacyAH\Manifest.xml [AllowLoadGameType vanilla, tbc, wrath]
+
+Source_TBC\Constants\Main.lua [AllowLoadGameType tbc, wrath]
 
 # Integrated profession-planning module
 Professions\main.lua
@@ -46,5 +56,5 @@ Professions\Options.lua
 Professions\Favorites.lua
 Professions\Filters.lua
 Professions\InfoTooltip.lua
-Professions\LogisticianBridge.lua
+Professions\AuctionatorBridge.lua
 Professions\WiderProfessionsPlus.lua

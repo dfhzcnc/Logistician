@@ -1,51 +1,51 @@
-function Logistician.SlashCmd.Initialize()
-  SlashCmdList["LOGISTICIAN"] = Logistician.SlashCmd.Handler
+function Auctionator.SlashCmd.Initialize()
+  SlashCmdList["LOGISTICIAN"] = Auctionator.SlashCmd.Handler
   SLASH_LOGISTICIAN1 = "/logistician"
   SLASH_LOGISTICIAN2 = "/logi"
   -- Preserve familiar legacy aliases for existing macros.
-  SLASH_LOGISTICIAN3 = "/logistician"
+  SLASH_LOGISTICIAN3 = "/auctionator"
   SLASH_LOGISTICIAN4 = "/atr"
 end
 
 --Update SLASH_COMMAND_DESCRIPTIONS in Commands.lua for new commands
 local SLASH_COMMANDS = {
-  ["p"] = Logistician.SlashCmd.Post,
-  ["post"] = Logistician.SlashCmd.Post,
-  ["cu"] = Logistician.SlashCmd.CancelUndercut,
-  ["cancelundercut"] = Logistician.SlashCmd.CancelUndercut,
-  ["ra"] = Logistician.SlashCmd.CleanReset,
-  ["resetall"] = Logistician.SlashCmd.CleanReset,
-  ["rt"] = Logistician.SlashCmd.ResetTimer,
-  ["resettimer"] = Logistician.SlashCmd.ResetTimer,
-  ["rdb"] = Logistician.SlashCmd.ResetDatabase,
-  ["resetdatabase"] = Logistician.SlashCmd.ResetDatabase,
-  ["rc"] = Logistician.SlashCmd.ResetConfig,
-  ["resetconfig"] = Logistician.SlashCmd.ResetConfig,
-  ["d"] = Logistician.SlashCmd.ToggleDebug,
-  ["debug"] = Logistician.SlashCmd.ToggleDebug,
-  ["config"] = Logistician.SlashCmd.Config,
-  ["c"] = Logistician.SlashCmd.Config,
-  ["v"] = Logistician.SlashCmd.Version,
-  ["version"] = Logistician.SlashCmd.Version,
-  ["nopricedb"] = Logistician.SlashCmd.NoPriceDB,
-  ["npd"] = Logistician.SlashCmd.NoPriceDB,
-  ["h"] = Logistician.SlashCmd.Help,
-  ["help"] = Logistician.SlashCmd.Help,
+  ["p"] = Auctionator.SlashCmd.Post,
+  ["post"] = Auctionator.SlashCmd.Post,
+  ["cu"] = Auctionator.SlashCmd.CancelUndercut,
+  ["cancelundercut"] = Auctionator.SlashCmd.CancelUndercut,
+  ["ra"] = Auctionator.SlashCmd.CleanReset,
+  ["resetall"] = Auctionator.SlashCmd.CleanReset,
+  ["rt"] = Auctionator.SlashCmd.ResetTimer,
+  ["resettimer"] = Auctionator.SlashCmd.ResetTimer,
+  ["rdb"] = Auctionator.SlashCmd.ResetDatabase,
+  ["resetdatabase"] = Auctionator.SlashCmd.ResetDatabase,
+  ["rc"] = Auctionator.SlashCmd.ResetConfig,
+  ["resetconfig"] = Auctionator.SlashCmd.ResetConfig,
+  ["d"] = Auctionator.SlashCmd.ToggleDebug,
+  ["debug"] = Auctionator.SlashCmd.ToggleDebug,
+  ["config"] = Auctionator.SlashCmd.Config,
+  ["c"] = Auctionator.SlashCmd.Config,
+  ["v"] = Auctionator.SlashCmd.Version,
+  ["version"] = Auctionator.SlashCmd.Version,
+  ["nopricedb"] = Auctionator.SlashCmd.NoPriceDB,
+  ["npd"] = Auctionator.SlashCmd.NoPriceDB,
+  ["h"] = Auctionator.SlashCmd.Help,
+  ["help"] = Auctionator.SlashCmd.Help,
 }
 
-function Logistician.SlashCmd.Handler(input)
-  Logistician.Debug.Message( 'Logistician.SlashCmd.Handler', input )
+function Auctionator.SlashCmd.Handler(input)
+  Auctionator.Debug.Message( 'Auctionator.SlashCmd.Handler', input )
 
   if #input == 0 then
-    Logistician.SlashCmd.Help()
+    Auctionator.SlashCmd.Help()
   else
-    local command = Logistician.Utilities.SplitCommand(input);
+    local command = Auctionator.Utilities.SplitCommand(input);
     local handler = SLASH_COMMANDS[command[1]]
     if handler == nil then
-      Logistician.Utilities.Message("Unrecognized command '" .. command[1] .. "'")
-      Logistician.SlashCmd.Help()
+      Auctionator.Utilities.Message("Unrecognized command '" .. command[1] .. "'")
+      Auctionator.SlashCmd.Help()
     else
-      handler(unpack(Logistician.Utilities.Slice(command, 2, #command-1)))
+      handler(unpack(Auctionator.Utilities.Slice(command, 2, #command-1)))
     end
   end
 end

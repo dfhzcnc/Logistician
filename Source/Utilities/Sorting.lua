@@ -18,12 +18,12 @@ local compareDescending = function(left, right, leftIndex, rightIndex)
   end
 end
 
-function Logistician.Utilities.NumberComparator(order, fieldName)
+function Auctionator.Utilities.NumberComparator(order, fieldName)
   return function(left, right)
     if left == nil then left = {sortingIndex = 0} end
     if right == nil then right = {sortingIndex = 0} end
 
-    if order == Logistician.Constants.SORT.ASCENDING then
+    if order == Auctionator.Constants.SORT.ASCENDING then
       return compareAscending((left[fieldName] or 0), (right[fieldName] or 0), left.sortingIndex, right.sortingIndex)
     else
       return compareDescending((left[fieldName] or 0), (right[fieldName] or 0), left.sortingIndex, right.sortingIndex)
@@ -31,12 +31,12 @@ function Logistician.Utilities.NumberComparator(order, fieldName)
   end
 end
 
-function Logistician.Utilities.StringComparator(order, fieldName)
+function Auctionator.Utilities.StringComparator(order, fieldName)
   return function(left, right)
     if left == nil then left = {sortingIndex = 0} end
     if right == nil then right = {sortingIndex = 0} end
 
-    if order == Logistician.Constants.SORT.ASCENDING then
+    if order == Auctionator.Constants.SORT.ASCENDING then
       return compareAscending((left[fieldName] or ""), (right[fieldName] or ""), left.sortingIndex, right.sortingIndex)
     else
       return compareDescending((left[fieldName] or ""), (right[fieldName] or ""), left.sortingIndex, right.sortingIndex)

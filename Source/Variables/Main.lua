@@ -4,37 +4,37 @@ local VERSION_KEY_SERIALIZED = 8
 local POSTING_HISTORY_DB_VERSION = 1
 local VENDOR_PRICE_CACHE_DB_VERSION = 1
 
-function Logistician.Variables.Initialize()
-  Logistician.Variables.InitializeSavedState()
+function Auctionator.Variables.Initialize()
+  Auctionator.Variables.InitializeSavedState()
 
-  Logistician.Config.InitializeData()
-  Logistician.Config.InitializeFrames()
+  Auctionator.Config.InitializeData()
+  Auctionator.Config.InitializeFrames()
 
   local GetAddOnMetadata = C_AddOns and C_AddOns.GetAddOnMetadata or GetAddOnMetadata
-  Logistician.State.CurrentVersion = GetAddOnMetadata("!Logistician", "Version")
+  Auctionator.State.CurrentVersion = GetAddOnMetadata("!Logistician", "Version")
 
-  Logistician.Variables.InitializeShoppingLists()
-  Logistician.Variables.InitializePostingHistory()
-  Logistician.Variables.InitializeVendorPriceCache()
+  Auctionator.Variables.InitializeShoppingLists()
+  Auctionator.Variables.InitializePostingHistory()
+  Auctionator.Variables.InitializeVendorPriceCache()
 
-  Logistician.Groups.Initialize()
+  Auctionator.Groups.Initialize()
 end
 
-function Logistician.Variables.InitializeLate()
-  Logistician.Variables.InitializeDatabase()
+function Auctionator.Variables.InitializeLate()
+  Auctionator.Variables.InitializeDatabase()
 
-  Logistician.State.Loaded = true
+  Auctionator.State.Loaded = true
 end
 
-function Logistician.Variables.Commit()
-  Logistician.Variables.CommitDatabase()
+function Auctionator.Variables.Commit()
+  Auctionator.Variables.CommitDatabase()
 end
 
-function Logistician.Variables.InitializeSavedState()
-  if LOGISTICIAN_SAVEDVARS == nil then
-    LOGISTICIAN_SAVEDVARS = {}
+function Auctionator.Variables.InitializeSavedState()
+  if AUCTIONATOR_SAVEDVARS == nil then
+    AUCTIONATOR_SAVEDVARS = {}
   end
-  Logistician.SavedState = LOGISTICIAN_SAVEDVARS
+  Auctionator.SavedState = AUCTIONATOR_SAVEDVARS
 end
 
 -- Attempt to import from other connected realms (this may happen if another
@@ -50,11 +50,11 @@ local function ImportFromConnectedRealm(rootRealm)
 
   for _, altRealm in ipairs(connections) do
 
-    if LOGISTICIAN_PRICE_DATABASE[altRealm] ~= nil then
+    if AUCTIONATOR_PRICE_DATABASE[altRealm] ~= nil then
 
-      LOGISTICIAN_PRICE_DATABASE[rootRealm] = LOGISTICIAN_PRICE_DATABASE[altRealm]
+      AUCTIONATOR_PRICE_DATABASE[rootRealm] = AUCTIONATOR_PRICE_DATABASE[altRealm]
       -- Remove old database (no longer needed)
-      LOGISTICIAN_PRICE_DATABASE[altRealm] = nil
+      AUCTIONATOR_PRICE_DATABASE[altRealm] = nil
       return true
     end
   end
@@ -65,11 +65,11 @@ end
 local function ImportFromNotNormalizedName(target)
   local unwantedName = GetRealmName()
 
-  if LOGISTICIAN_PRICE_DATABASE[unwantedName] ~= nil then
+  if AUCTIONATOR_PRICE_DATABASE[unwantedName] ~= nil then
 
-    LOGISTICIAN_PRICE_DATABASE[target] = LOGISTICIAN_PRICE_DATABASE[unwantedName]
+    AUCTIONATOR_PRICE_DATABASE[target] = AUCTIONATOR_PRICE_DATABASE[unwantedName]
     -- Remove old database (no longer needed)
-    LOGISTICIAN_PRICE_DATABASE[unwantedName] = nil
+    AUCTIONATOR_PRICE_DATABASE[unwantedName] = nil
     return true
   end
 
@@ -80,62 +80,62 @@ end
 -- variables and serialize any other realms.
 -- We keep the current realm deserialized in the saved variables to speed up
 -- /reloads and logging in/out when only using one realm.
-function Logistician.Variables.InitializeDatabase()
-  Logistician.Debug.Message("Logistician.Database.Initialize()")
-  -- Logistician.Utilities.TablePrint(LOGISTICIAN_PRICE_DATABASE, "LOGISTICIAN_PRICE_DATABASE")
+function Auctionator.Variables.InitializeDatabase()
+  Auctionator.Debug.Message("Auctionator.Database.Initialize()")
+  -- Auctionator.Utilities.TablePrint(AUCTIONATOR_PRICE_DATABASE, "AUCTIONATOR_PRICE_DATABASE")
 
   -- First time users need the price database initialized
-  if LOGISTICIAN_PRICE_DATABASE == nil then
-    LOGISTICIAN_PRICE_DATABASE = {
+  if AUCTIONATOR_PRICE_DATABASE == nil then
+    AUCTIONATOR_PRICE_DATABASE = {
       ["__dbversion"] = VERSION_8_3
     }
   end
 
   local LibCBOR = LibStub("LibCBOR-1.0")
 
-  if LOGISTICIAN_PRICE_DATABASE["__dbversion"] == VERSION_8_3 then
-    LOGISTICIAN_PRICE_DATABASE["__dbversion"] = VERSION_SERIALIZED
+  if AUCTIONATOR_PRICE_DATABASE["__dbversion"] == VERSION_8_3 then
+    AUCTIONATOR_PRICE_DATABASE["__dbversion"] = VERSION_SERIALIZED
   end
-  if LOGISTICIAN_PRICE_DATABASE["__dbversion"] == VERSION_SERIALIZED then
-    LOGISTICIAN_PRICE_DATABASE["__dbversion"] = VERSION_KEY_SERIALIZED
+  if AUCTIONATOR_PRICE_DATABASE["__dbversion"] == VERSION_SERIALIZED then
+    AUCTIONATOR_PRICE_DATABASE["__dbversion"] = VERSION_KEY_SERIALIZED
   end
 
   -- If we changed how we record item info we need to reset the DB
-  if LOGISTICIAN_PRICE_DATABASE["__dbversion"] ~= VERSION_KEY_SERIALIZED then
-    LOGISTICIAN_PRICE_DATABASE = {
+  if AUCTIONATOR_PRICE_DATABASE["__dbversion"] ~= VERSION_KEY_SERIALIZED then
+    AUCTIONATOR_PRICE_DATABASE = {
       ["__dbversion"] = VERSION_KEY_SERIALIZED
     }
   end
 
-  local realm = Logistician.Variables.GetConnectedRealmRoot()
-  Logistician.State.CurrentRealm = realm
+  local realm = Auctionator.Variables.GetConnectedRealmRoot()
+  Auctionator.State.CurrentRealm = realm
 
   if C_EncodingUtil then
     local frame = CreateFrame("Frame")
     frame:RegisterEvent("PLAYER_LOGOUT")
     frame:SetScript("OnEvent", function()
-      local raw = LOGISTICIAN_PRICE_DATABASE[realm]
-      LOGISTICIAN_PRICE_DATABASE[realm] = C_EncodingUtil.SerializeCBOR(raw)
+      local raw = AUCTIONATOR_PRICE_DATABASE[realm]
+      AUCTIONATOR_PRICE_DATABASE[realm] = C_EncodingUtil.SerializeCBOR(raw)
     end)
   end
 
   -- Check for current realm and initialize if not present
-  if LOGISTICIAN_PRICE_DATABASE[realm] == nil then
+  if AUCTIONATOR_PRICE_DATABASE[realm] == nil then
     if not ImportFromNotNormalizedName(realm) and not ImportFromConnectedRealm(realm) then
-      LOGISTICIAN_PRICE_DATABASE[realm] = {}
+      AUCTIONATOR_PRICE_DATABASE[realm] = {}
     end
   end
 
   C_Timer.After(0, function()
     -- Serialize and other unserialized realms so their data doesn't contribute to
     -- a constant overflow when the client parses the saved variables.
-    for key, data in pairs(LOGISTICIAN_PRICE_DATABASE) do
+    for key, data in pairs(AUCTIONATOR_PRICE_DATABASE) do
       -- Convert one realm at a time, no need to hold up a login indefinitely
       if key ~= "__dbversion" and key ~= realm and type(data) == "table" then
         if C_EncodingUtil then
-          LOGISTICIAN_PRICE_DATABASE[key] = C_EncodingUtil.SerializeCBOR(data)
+          AUCTIONATOR_PRICE_DATABASE[key] = C_EncodingUtil.SerializeCBOR(data)
         else
-          LOGISTICIAN_PRICE_DATABASE[key] = LibCBOR:Serialize(data)
+          AUCTIONATOR_PRICE_DATABASE[key] = LibCBOR:Serialize(data)
         end
         break
       end
@@ -147,8 +147,8 @@ function Logistician.Variables.InitializeDatabase()
   -- realm.
   --]]
   -- Deserialize the current realm if it was left serialized by a previous
-  -- version of Logistician
-  local raw = LOGISTICIAN_PRICE_DATABASE[realm]
+  -- version of Auctionator
+  local raw = AUCTIONATOR_PRICE_DATABASE[realm]
   if type(raw) == "string" then
     local success, data
     if C_EncodingUtil then
@@ -157,20 +157,20 @@ function Logistician.Variables.InitializeDatabase()
       success, data = pcall(LibCBOR.Deserialize, LibCBOR, raw)
     end
     if not success then
-      LOGISTICIAN_PRICE_DATABASE[realm] = {}
+      AUCTIONATOR_PRICE_DATABASE[realm] = {}
     else
-      LOGISTICIAN_PRICE_DATABASE[realm] = data
+      AUCTIONATOR_PRICE_DATABASE[realm] = data
     end
   end
 
   -- Fix conversion error from old code
-  if type(LOGISTICIAN_PRICE_DATABASE[realm]) ~= "table" then
-    LOGISTICIAN_PRICE_DATABASE[realm] = {}
+  if type(AUCTIONATOR_PRICE_DATABASE[realm]) ~= "table" then
+    AUCTIONATOR_PRICE_DATABASE[realm] = {}
   end
 
-  assert(LOGISTICIAN_PRICE_DATABASE[realm], "Realm data missing somehow")
+  assert(AUCTIONATOR_PRICE_DATABASE[realm], "Realm data missing somehow")
 
-  for realm, realmData in pairs(LOGISTICIAN_PRICE_DATABASE) do
+  for realm, realmData in pairs(AUCTIONATOR_PRICE_DATABASE) do
     if type(realmData) == "table" and realmData.version ~= 2 then
       for key, itemData in pairs(realmData) do
         if type(itemData) == "table" and itemData.pending then
@@ -198,42 +198,42 @@ function Logistician.Variables.InitializeDatabase()
     end
   end
 
-  if Logistician.Config.Get(Logistician.Config.Options.NO_PRICE_DATABASE) then
-    Logistician.Database = CreateAndInitFromMixin(Logistician.DatabaseMixin, {})
+  if Auctionator.Config.Get(Auctionator.Config.Options.NO_PRICE_DATABASE) then
+    Auctionator.Database = CreateAndInitFromMixin(Auctionator.DatabaseMixin, {})
   else
-    Logistician.Database = CreateAndInitFromMixin(Logistician.DatabaseMixin, LOGISTICIAN_PRICE_DATABASE[realm])
+    Auctionator.Database = CreateAndInitFromMixin(Auctionator.DatabaseMixin, AUCTIONATOR_PRICE_DATABASE[realm])
   end
 end
 
-function Logistician.Variables.InitializePostingHistory()
-  Logistician.Debug.Message("Logistician.Variables.InitializePostingHistory()")
+function Auctionator.Variables.InitializePostingHistory()
+  Auctionator.Debug.Message("Auctionator.Variables.InitializePostingHistory()")
 
-  if LOGISTICIAN_POSTING_HISTORY == nil  or
-     LOGISTICIAN_POSTING_HISTORY["__dbversion"] ~= POSTING_HISTORY_DB_VERSION then
-    LOGISTICIAN_POSTING_HISTORY = {
+  if AUCTIONATOR_POSTING_HISTORY == nil  or
+     AUCTIONATOR_POSTING_HISTORY["__dbversion"] ~= POSTING_HISTORY_DB_VERSION then
+    AUCTIONATOR_POSTING_HISTORY = {
       ["__dbversion"] = POSTING_HISTORY_DB_VERSION
     }
   end
 
-  Logistician.PostingHistory = CreateAndInitFromMixin(Logistician.PostingHistoryMixin, LOGISTICIAN_POSTING_HISTORY)
+  Auctionator.PostingHistory = CreateAndInitFromMixin(Auctionator.PostingHistoryMixin, AUCTIONATOR_POSTING_HISTORY)
 end
 
-function Logistician.Variables.InitializeShoppingLists()
-  Logistician.Shopping.ListManager = CreateAndInitFromMixin(
-    LogisticianShoppingListManagerMixin,
-    function() return LOGISTICIAN_SHOPPING_LISTS end,
-    function(newVal) LOGISTICIAN_SHOPPING_LISTS = newVal end
+function Auctionator.Variables.InitializeShoppingLists()
+  Auctionator.Shopping.ListManager = CreateAndInitFromMixin(
+    AuctionatorShoppingListManagerMixin,
+    function() return AUCTIONATOR_SHOPPING_LISTS end,
+    function(newVal) AUCTIONATOR_SHOPPING_LISTS = newVal end
   )
 
-  LOGISTICIAN_RECENT_SEARCHES = LOGISTICIAN_RECENT_SEARCHES or {}
+  AUCTIONATOR_RECENT_SEARCHES = AUCTIONATOR_RECENT_SEARCHES or {}
 end
 
-function Logistician.Variables.InitializeVendorPriceCache()
-  Logistician.Debug.Message("Logistician.Variables.InitializeVendorPriceCache()")
+function Auctionator.Variables.InitializeVendorPriceCache()
+  Auctionator.Debug.Message("Auctionator.Variables.InitializeVendorPriceCache()")
 
-  if LOGISTICIAN_VENDOR_PRICE_CACHE == nil  or
-     LOGISTICIAN_VENDOR_PRICE_CACHE["__dbversion"] ~= VENDOR_PRICE_CACHE_DB_VERSION then
-    LOGISTICIAN_VENDOR_PRICE_CACHE = {
+  if AUCTIONATOR_VENDOR_PRICE_CACHE == nil  or
+     AUCTIONATOR_VENDOR_PRICE_CACHE["__dbversion"] ~= VENDOR_PRICE_CACHE_DB_VERSION then
+    AUCTIONATOR_VENDOR_PRICE_CACHE = {
       ["__dbversion"] = VENDOR_PRICE_CACHE_DB_VERSION
     }
   end

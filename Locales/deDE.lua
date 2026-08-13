@@ -1,4 +1,4 @@
-LOGISTICIAN_LOCALES.deDE = function()
+AUCTIONATOR_LOCALES.deDE = function()
   local L = {}
 
   L["ADD_FAVOURITE"] = "Favorit hinzufügen"
@@ -17,7 +17,7 @@ L["AUCTION_DURATION_12"] = "12 Stunden"
 L["AUCTION_DURATION_24"] = "24 Stunden"
 L["AUCTION_DURATION_48"] = "48 Stunden"
 L["AUCTION_MEAN"] = "Auktionsdurchschnitt"
-L["LOGISTICIAN"] = "Logistician"
+L["AUCTIONATOR"] = "Logistician"
 L["AUTHOR_HEADER"] = "Autor"
 L["BID_EXISTING_ON_OWNED_AUCTION"] = "Jemand hat auf diese Auktion geboten. Wenn die Auktion storniert wird, kostet das die geleistete Anzahlung und:"
 L["BID_ONLY_AVAILABLE"] = "nur bieten verfügbar"

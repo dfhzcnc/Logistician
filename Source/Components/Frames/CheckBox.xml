@@ -1,6 +1,6 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/">
   <!-- Template for a single option "box" containing a checkbox -->
-  <Frame name="LogisticianConfigurationCheckbox" mixin="LogisticianConfigCheckboxMixin" inherits="LogisticianConfigurationTooltip" virtual="true">
+  <Frame name="AuctionatorConfigurationCheckbox" mixin="AuctionatorConfigCheckboxMixin" inherits="AuctionatorConfigurationTooltip" virtual="true">
     <!--
       <KeyValues>
         <KeyValue key="labelText" value="" type="string"/>

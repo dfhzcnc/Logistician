@@ -1,4 +1,4 @@
-Logistician.Shopping.Events = {
+Auctionator.Shopping.Events = {
   -- Changes to list meta data (including renames, deletes and pruning)
   ListMetaChange = "shopping list meta change",
   -- Changes to individual items in a list (edit, delete, add, etc.)
@@ -9,7 +9,7 @@ Logistician.Shopping.Events = {
   RecentSearchesUpdate = "shopping tab recent searches update",
 }
 
-Logistician.Shopping.Tab.Events = {
+Auctionator.Shopping.Tab.Events = {
   SearchStart = "shopping tab search start",
   SearchEnd = "shopping tab search end",
   SearchIncrementalUpdate = "shopping tab search incremental update",

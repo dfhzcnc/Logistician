@@ -1,17 +1,17 @@
-LogisticianBagCacheMixin = {}
-function LogisticianBagCacheMixin:OnLoad()
+AuctionatorBagCacheMixin = {}
+function AuctionatorBagCacheMixin:OnLoad()
   self.cache = {}
   self.loaders = {}
   self.contents = {}
 
   self.cacheOn = 0
-  Logistician.Groups.CallbackRegistry:RegisterCallback("BagCacheOn", function()
+  Auctionator.Groups.CallbackRegistry:RegisterCallback("BagCacheOn", function()
     self.cacheOn = self.cacheOn + 1
     if self.cacheOn > 0 then
       self:SetScript("OnUpdate", self.DoBagRefresh)
     end
   end)
-  Logistician.Groups.CallbackRegistry:RegisterCallback("BagCacheOff", function()
+  Auctionator.Groups.CallbackRegistry:RegisterCallback("BagCacheOff", function()
     self.cacheOn = self.cacheOn - 1
     if self.cacheOn <= 0 then
       self:SetScript("OnUpdate", self.DoBagRefresh)
@@ -20,7 +20,7 @@ function LogisticianBagCacheMixin:OnLoad()
   self:RegisterEvent("BAG_UPDATE")
 end
 
-function LogisticianBagCacheMixin:OnEvent(eventName, ...)
+function AuctionatorBagCacheMixin:OnEvent(eventName, ...)
   if self.cacheOn > 0 and eventName == "BAG_UPDATE" then
     self:SetScript("OnUpdate", self.DoBagRefresh)
   end
@@ -29,12 +29,12 @@ end
 local function GetItemKey(entry)
   local itemLevel = entry.itemLevel or 0
   if entry.classID == Enum.ItemClass.Battlepet then
-    itemLevel = Logistician.Utilities.GetPetLevelFromLink(entry.itemLink)
+    itemLevel = Auctionator.Utilities.GetPetLevelFromLink(entry.itemLink)
   end
   return entry.itemID .. "_" ..  entry.itemName .. "_" .. itemLevel .. "_" .. entry.quality .. "_" ..  tostring(entry.auctionable)
 end
 
-function LogisticianBagCacheMixin:PostUpdate(bagContents)
+function AuctionatorBagCacheMixin:PostUpdate(bagContents)
   local byKey = {}
   for _, item in ipairs(bagContents) do
     if byKey[item.key] == nil then
@@ -48,11 +48,11 @@ function LogisticianBagCacheMixin:PostUpdate(bagContents)
     table.insert(existingEntry.entries, item)
   end
   self.contents = byKey
-  Logistician.Groups.CallbackRegistry:TriggerEvent("BagCacheUpdated", self)
+  Auctionator.Groups.CallbackRegistry:TriggerEvent("BagCacheUpdated", self)
 end
 
 local linkInstantCache = {}
-function LogisticianBagCacheMixin:GetByLinkInstant(suppliedItemLink, auctionable)
+function AuctionatorBagCacheMixin:GetByLinkInstant(suppliedItemLink, auctionable)
   local entry = linkInstantCache[suppliedItemLink]
 
   if entry == nil then
@@ -91,7 +91,7 @@ function LogisticianBagCacheMixin:GetByLinkInstant(suppliedItemLink, auctionable
   }
 end
 
-function LogisticianBagCacheMixin:GetByKey(key)
+function AuctionatorBagCacheMixin:GetByKey(key)
   local value = self.contents[key]
   if value ~= nil then
     local entry = value.entries[1]
@@ -116,7 +116,7 @@ function LogisticianBagCacheMixin:GetByKey(key)
   end
 end
 
-function LogisticianBagCacheMixin:CacheLinkInfo(suppliedItemLink, callback)
+function AuctionatorBagCacheMixin:CacheLinkInfo(suppliedItemLink, callback)
   local existingEntry = linkInstantCache[suppliedItemLink]
   if existingEntry then
     callback()
@@ -132,7 +132,7 @@ function LogisticianBagCacheMixin:CacheLinkInfo(suppliedItemLink, callback)
 
     local entry = {
       itemLink = suppliedItemLink,
-      itemID = Logistician.Constants.PET_CAGE_ID,
+      itemID = Auctionator.Constants.PET_CAGE_ID,
       itemName = itemName,
       iconTexture = iconTexture,
       itemCount = 0,
@@ -164,9 +164,9 @@ function LogisticianBagCacheMixin:CacheLinkInfo(suppliedItemLink, callback)
         classID = select(6, C_Item.GetItemInfoInstant(itemLink)),
         quality = item:GetItemQuality(),
       }
-      if Logistician.Utilities.IsEquipment(entry.classID) then
-        if Logistician.Constants.IsRetail then
-          entry.itemLevel = Logistician.Groups.Utilities.ExtractItemLevel(entry.itemLink)
+      if Auctionator.Utilities.IsEquipment(entry.classID) then
+        if Auctionator.Constants.IsRetail then
+          entry.itemLevel = Auctionator.Groups.Utilities.ExtractItemLevel(entry.itemLink)
         else
           entry.itemLevel = C_Item.GetDetailedItemLevelInfo(entry.itemLink)
         end
@@ -177,7 +177,7 @@ function LogisticianBagCacheMixin:CacheLinkInfo(suppliedItemLink, callback)
   end
 end
 
-function LogisticianBagCacheMixin:GetAllContents()
+function AuctionatorBagCacheMixin:GetAllContents()
   local result = {}
   for key in pairs(self.contents) do
     table.insert(result, self:GetByKey(key))
@@ -185,7 +185,7 @@ function LogisticianBagCacheMixin:GetAllContents()
   return result
 end
 
-function LogisticianBagCacheMixin:DoBagRefresh()
+function AuctionatorBagCacheMixin:DoBagRefresh()
   self:SetScript("OnUpdate", nil)
   if self.waiting then
     for _, l in pairs(self.loaders) do
@@ -201,7 +201,7 @@ function LogisticianBagCacheMixin:DoBagRefresh()
 
   local loopFinished = false
   local loaderIndex = 0
-  for _, bagID in ipairs(Logistician.Groups.Constants.BagIDs) do
+  for _, bagID in ipairs(Auctionator.Groups.Constants.BagIDs) do
     for slotID = 1, C_Container.GetContainerNumSlots(bagID) do
       local location = ItemLocation:CreateFromBagAndSlot(bagID, slotID)
       local slotInfo = C_Container.GetContainerItemInfo(bagID, slotID)
@@ -226,7 +226,7 @@ function LogisticianBagCacheMixin:DoBagRefresh()
 
         -- Load item data to determine whether it can be auctioned, its quality,
         -- item level, etc.
-        if Logistician.Groups.Constants.IsTBC then
+        if Auctionator.Groups.Constants.IsVanilla then
           local classID = select(6, C_Item.GetItemInfoInstant(slotInfo.itemID))
           local _, spellID = C_Item.GetItemSpell(slotInfo.itemID)
           -- Classic: Special case to load spell data for item charge info for
@@ -271,7 +271,7 @@ end
 
 local detailsCache = {}
 
-function LogisticianBagCacheMixin:AddToCache(location, slotInfo)
+function AuctionatorBagCacheMixin:AddToCache(location, slotInfo)
   local entry = {}
 
   entry.itemID = slotInfo.itemID
@@ -303,9 +303,9 @@ function LogisticianBagCacheMixin:AddToCache(location, slotInfo)
       entry.stackCount = stackCount
       entry.quality = quality
     end
-    if Logistician.Utilities.IsEquipment(entry.classID) then
-      if Logistician.Constants.IsRetail then
-        entry.itemLevel = Logistician.Groups.Utilities.ExtractItemLevel(entry.itemLink)
+    if Auctionator.Utilities.IsEquipment(entry.classID) then
+      if Auctionator.Constants.IsRetail then
+        entry.itemLevel = Auctionator.Groups.Utilities.ExtractItemLevel(entry.itemLink)
       else
         entry.itemLevel = C_Item.GetDetailedItemLevelInfo(entry.itemLink)
       end
@@ -325,7 +325,7 @@ function LogisticianBagCacheMixin:AddToCache(location, slotInfo)
     entry.auctionable = not C_Item.IsBound(location) and currentDurability == maxDurability
 
     if entry.auctionable and entry.classID == Enum.ItemClass.Consumable and location:IsBagAndSlot() then
-      entry.auctionable = Logistician.Utilities.IsAtMaxCharges(location)
+      entry.auctionable = Auctionator.Utilities.IsAtMaxCharges(location)
     end
   else
     entry.auctionable = C_AuctionHouse.IsSellItemValid(location, false)

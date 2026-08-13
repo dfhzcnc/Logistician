@@ -91,10 +91,10 @@ local function MoneyText(value)
     return GetCoinTextureString(math.floor(value + 0.5))
 end
 
-local function LogisticianPrice(itemID)
+local function AuctionatorPrice(itemID)
     if type(itemID) ~= "number" then return nil end
 
-    local bridge = _G.WiderProfessionsLogisticianBridge
+    local bridge = _G.WiderProfessionsAuctionatorBridge
     if bridge and type(bridge.GetAuctionPriceByItemID) == "function" then
         return bridge:GetAuctionPriceByItemID(itemID)
     end
@@ -104,10 +104,10 @@ end
 
 local function MarketPrice(link, itemID)
     itemID = itemID or ItemIDFromLink(link)
-    return LogisticianPrice(itemID)
+    return AuctionatorPrice(itemID)
 end
 
--- TBC profession supplies that are purchased from NPC vendors. Logistician's
+-- TBC profession supplies that are purchased from NPC vendors. Auctionator's
 -- vendor-price API reports the sell-to-vendor value for arbitrary items, so it
 -- cannot by itself tell us whether an NPC sells an item. Keep this whitelist
 -- deliberately conservative to avoid removing legitimate AH materials.
@@ -661,28 +661,28 @@ end
 
 local marketSummary
 
-local function HideLogisticianCraftingBlock()
-    -- Logistician's native Classic crafting-info block is two lines tall and
+local function HideAuctionatorCraftingBlock()
+    -- Auctionator's native Classic crafting-info block is two lines tall and
     -- Wider Professions historically anchors it at a fixed footer position.
     -- With 5+ reagents that can overlap the last reagent row, so WPP replaces
     -- it with a compact single-line summary below.
-    if LogisticianCraftingInfo then
-        LogisticianCraftingInfo:Hide()
+    if AuctionatorCraftingInfo then
+        AuctionatorCraftingInfo:Hide()
     end
 end
 
 local function UpdateRecipeMarketSummary(skill)
-    HideLogisticianCraftingBlock()
+    HideAuctionatorCraftingBlock()
 
     if not marketSummary then return end
 
-    local logisticianBridge = _G.WiderProfessionsLogisticianBridge
+    local auctionatorBridge = _G.WiderProfessionsAuctionatorBridge
     if not skill
         or main.windowType ~= "TradeSkill"
         or CraftIsEnchanting()
-        or not logisticianBridge
-        or not logisticianBridge:IsAvailable()
-        or not logisticianBridge:Has("GetAuctionPriceByItemID") then
+        or not auctionatorBridge
+        or not auctionatorBridge:IsAvailable()
+        or not auctionatorBridge:Has("GetAuctionPriceByItemID") then
         marketSummary:Hide()
         return
     end
@@ -1813,13 +1813,13 @@ local function BuildShoppingList()
 end
 
 ------------------------------------------------------------------------
--- Logistician Shopping integration
+-- Auctionator Shopping integration
 --
--- Logistician exposes list creation through its public API, which is wrapped
--- by LogisticianBridge.lua. Replace its generic Import/Export controls with a
+-- Auctionator exposes list creation through its public API, which is wrapped
+-- by AuctionatorBridge.lua. Replace its generic Import/Export controls with a
 -- single WPP import action when its legacy Shopping panel is available.
 ------------------------------------------------------------------------
-local logisticianImportButton
+local auctionatorImportButton
 
 local function ShoppingListNameFromQueue()
     local products = {}
@@ -1844,14 +1844,14 @@ local function ShoppingListNameFromQueue()
     return table.concat(products, " + ")
 end
 
-local function ImportShoppingListToLogistician()
+local function ImportShoppingListToAuctionator()
     local rows = BuildShoppingList()
     if #rows == 0 then
         Print("The bill of materials is empty. Add recipes to the crafting queue first.")
         return
     end
 
-    local bridge = _G.WiderProfessionsLogisticianBridge
+    local bridge = _G.WiderProfessionsAuctionatorBridge
     if not bridge or not bridge:IsAvailable() then
         Print("Auction-house module is not available.")
         return
@@ -1907,8 +1907,8 @@ local function KeepHidden(frame)
     frame:Hide()
 end
 
-local function SetupLogisticianShoppingImport()
-    if logisticianImportButton then return true end
+local function SetupAuctionatorShoppingImport()
+    if auctionatorImportButton then return true end
     if not EnumerateFrames then return false end
 
     local imports = {}
@@ -1927,23 +1927,23 @@ local function SetupLogisticianShoppingImport()
         frame = EnumerateFrames(frame)
     end
 
-    -- The two legacy controls shown in Logistician Shopping share a parent.
+    -- The two legacy controls shown in Auctionator Shopping share a parent.
     -- Matching the pair avoids touching unrelated Import/Export buttons.
     for _, importButton in ipairs(imports) do
         for _, exportButton in ipairs(exports) do
             local parent = importButton:GetParent()
             if parent and parent == exportButton:GetParent() then
-                logisticianImportButton = CreateFrame(
+                auctionatorImportButton = CreateFrame(
                     "Button",
-                    "WiderProfessionsLogisticianImportButton",
+                    "WiderProfessionsAuctionatorImportButton",
                     parent,
                     "UIPanelButtonTemplate"
                 )
-                logisticianImportButton:SetPoint("TOPLEFT", importButton, "TOPLEFT", 0, 0)
-                logisticianImportButton:SetPoint("BOTTOMRIGHT", exportButton, "BOTTOMRIGHT", 0, 0)
-                logisticianImportButton:SetText("Import")
-                logisticianImportButton:SetScript("OnClick", ImportShoppingListToLogistician)
-                logisticianImportButton:SetScript("OnEnter", function(self)
+                auctionatorImportButton:SetPoint("TOPLEFT", importButton, "TOPLEFT", 0, 0)
+                auctionatorImportButton:SetPoint("BOTTOMRIGHT", exportButton, "BOTTOMRIGHT", 0, 0)
+                auctionatorImportButton:SetText("Import")
+                auctionatorImportButton:SetScript("OnClick", ImportShoppingListToAuctionator)
+                auctionatorImportButton:SetScript("OnEnter", function(self)
                     GameTooltip:SetOwner(self, "ANCHOR_TOP")
                     GameTooltip:AddLine("Import Bill of Materials", 1, 1, 1)
                     GameTooltip:AddLine(
@@ -1952,13 +1952,13 @@ local function SetupLogisticianShoppingImport()
                     )
                     GameTooltip:Show()
                 end)
-                logisticianImportButton:SetScript("OnLeave", function()
+                auctionatorImportButton:SetScript("OnLeave", function()
                     GameTooltip:Hide()
                 end)
 
                 KeepHidden(importButton)
                 KeepHidden(exportButton)
-                logisticianImportButton:Show()
+                auctionatorImportButton:Show()
                 return true
             end
         end
@@ -1967,20 +1967,20 @@ local function SetupLogisticianShoppingImport()
     return false
 end
 
-local function TrySetupLogisticianShoppingImport(attempt)
-    if SetupLogisticianShoppingImport() then return end
+local function TrySetupAuctionatorShoppingImport(attempt)
+    if SetupAuctionatorShoppingImport() then return end
     attempt = (attempt or 0) + 1
     if attempt < 10 then
         C_Timer.After(0.25, function()
-            TrySetupLogisticianShoppingImport(attempt)
+            TrySetupAuctionatorShoppingImport(attempt)
         end)
     end
 end
 
 ------------------------------------------------------------------------
--- Logistician market-tooltip wording
+-- Auctionator market-tooltip wording
 --
--- Keep the label intentionally simple. Logistician may refresh this line
+-- Keep the label intentionally simple. Auctionator may refresh this line
 -- repeatedly, so correct each write immediately instead of adding overlays.
 ------------------------------------------------------------------------
 local MARKET_TOOLTIP_LABEL = "Market (10" .. string.char(37) .. " depth)"
@@ -2650,8 +2650,8 @@ local function SetupUI()
 
     queueAddButton:Hide()
 
-    -- Compact Logistician-backed recipe value footer. This replaces the
-    -- two-line LogisticianCraftingInfo block that can collide with reagent rows.
+    -- Compact Auctionator-backed recipe value footer. This replaces the
+    -- two-line AuctionatorCraftingInfo block that can collide with reagent rows.
     marketSummary = CraftTradeReagentsInset:CreateFontString(
         "WiderProfessionsPlusMarketSummary",
         "OVERLAY",
@@ -2666,9 +2666,9 @@ local function SetupUI()
     marketSummary:SetJustifyH("RIGHT")
     marketSummary:Hide()
 
-    if LogisticianCraftingInfo and type(LogisticianCraftingInfo.AdjustPosition) == "function" then
-        hooksecurefunc(LogisticianCraftingInfo, "AdjustPosition", function(self)
-            -- Let Logistician update its internal values, then suppress its
+    if AuctionatorCraftingInfo and type(AuctionatorCraftingInfo.AdjustPosition) == "function" then
+        hooksecurefunc(AuctionatorCraftingInfo, "AdjustPosition", function(self)
+            -- Let Auctionator update its internal values, then suppress its
             -- large frame and refresh our compact footer from the same API.
             C_Timer.After(0, function()
                 self:Hide()
@@ -2745,7 +2745,7 @@ local function SetupUI()
         EnhanceReagentClicks(main.selectedSkill)
         UpdateRecipeMarketSummary(main.selectedSkill)
     else
-        HideLogisticianCraftingBlock()
+        HideAuctionatorCraftingBlock()
     end
 
     UpdateQueueAddButton()
@@ -2819,7 +2819,7 @@ WPP:SetScript("OnEvent", function(self, event, ...)
         return
     elseif event == "AUCTION_HOUSE_SHOW" then
         C_Timer.After(0, function()
-            TrySetupLogisticianShoppingImport(0)
+            TrySetupAuctionatorShoppingImport(0)
         end)
         return
     end
@@ -2976,12 +2976,12 @@ SlashCmdList.WIDERPROFESSIONSPLUS = function(msg)
             .. "; frame: " .. tostring(_G.WiderProfessionsAddon ~= nil)
             .. "; profession UI: " .. tostring(CraftTradeSkillFrame ~= nil)
             .. "; auction module bridge: " .. tostring(
-                _G.WiderProfessionsLogisticianBridge
-                and _G.WiderProfessionsLogisticianBridge:IsAvailable()
+                _G.WiderProfessionsAuctionatorBridge
+                and _G.WiderProfessionsAuctionatorBridge:IsAvailable()
             )
             .. "; Logistician version: " .. tostring(
-                _G.WiderProfessionsLogisticianBridge
-                and _G.WiderProfessionsLogisticianBridge:GetVersion()
+                _G.WiderProfessionsAuctionatorBridge
+                and _G.WiderProfessionsAuctionatorBridge:GetVersion()
                 or "not loaded"
             ))
         return

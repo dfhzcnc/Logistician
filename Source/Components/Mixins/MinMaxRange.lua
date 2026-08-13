@@ -1,6 +1,6 @@
-LogisticianConfigMinMaxMixin = {}
+AuctionatorConfigMinMaxMixin = {}
 
-function LogisticianConfigMinMaxMixin:OnLoad()
+function AuctionatorConfigMinMaxMixin:OnLoad()
   self.onTabOut = function() end
   self.onEnter = function() end
 
@@ -13,36 +13,36 @@ function LogisticianConfigMinMaxMixin:OnLoad()
   end)
 end
 
-function LogisticianConfigMinMaxMixin:SetFocus()
+function AuctionatorConfigMinMaxMixin:SetFocus()
   self.MinBox:SetFocus()
 end
 
-function LogisticianConfigMinMaxMixin:SetCallbacks(callbacks)
+function AuctionatorConfigMinMaxMixin:SetCallbacks(callbacks)
   self.onTabOut = callbacks.OnTab or function() end
   self.onEnter = callbacks.OnEnter or function() end
 end
 
-function LogisticianConfigMinMaxMixin:OnEnterPressed()
+function AuctionatorConfigMinMaxMixin:OnEnterPressed()
   self.onEnter()
 end
 
-function LogisticianConfigMinMaxMixin:MinTabPressed()
+function AuctionatorConfigMinMaxMixin:MinTabPressed()
   self.MaxBox:SetFocus()
 end
 
-function LogisticianConfigMinMaxMixin:MaxTabPressed()
+function AuctionatorConfigMinMaxMixin:MaxTabPressed()
   self.onTabOut()
 end
 
-function LogisticianConfigMinMaxMixin:GetMin()
+function AuctionatorConfigMinMaxMixin:GetMin()
   return self.MinBox:GetNumber()
 end
 
-function LogisticianConfigMinMaxMixin:GetMax()
+function AuctionatorConfigMinMaxMixin:GetMax()
   return self.MaxBox:GetNumber()
 end
 
-function LogisticianConfigMinMaxMixin:SetMin(value)
+function AuctionatorConfigMinMaxMixin:SetMin(value)
   if value == nil then
     self.MinBox:SetText("")
   else
@@ -50,7 +50,7 @@ function LogisticianConfigMinMaxMixin:SetMin(value)
   end
 end
 
-function LogisticianConfigMinMaxMixin:SetMax(value)
+function AuctionatorConfigMinMaxMixin:SetMax(value)
   if value == nil then
     self.MaxBox:SetText("")
   else
@@ -58,7 +58,7 @@ function LogisticianConfigMinMaxMixin:SetMax(value)
   end
 end
 
-function LogisticianConfigMinMaxMixin:Reset()
+function AuctionatorConfigMinMaxMixin:Reset()
   self.MinBox:SetText("")
   self.MaxBox:SetText("")
 end

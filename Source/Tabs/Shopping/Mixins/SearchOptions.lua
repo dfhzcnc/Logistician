@@ -1,6 +1,6 @@
-LogisticianShoppingTabSearchOptionsMixin = {}
+AuctionatorShoppingTabSearchOptionsMixin = {}
 
-function LogisticianShoppingTabSearchOptionsMixin:OnLoad()
+function AuctionatorShoppingTabSearchOptionsMixin:OnLoad()
   self.lastSearchTerm = ""
 
   self.AddToListButton:Disable()
@@ -23,7 +23,7 @@ function LogisticianShoppingTabSearchOptionsMixin:OnLoad()
     end
   end)
 
-  self.OptionsClearButton = CreateFrame("Button", nil, self.MoreButton, "LogisticianResetButton")
+  self.OptionsClearButton = CreateFrame("Button", nil, self.MoreButton, "AuctionatorResetButton")
   self.OptionsClearButton:SetPoint("LEFT", 7, 0)
   self.OptionsClearButton:SetFrameLevel(self.MoreButton:GetFrameLevel() + 5)
   self.OptionsClearButton:SetScript("OnClick", function(button)
@@ -33,9 +33,9 @@ function LogisticianShoppingTabSearchOptionsMixin:OnLoad()
 
   self:UpdateOptionsButton(false)
 
-  Logistician.EventBus:Register(self, {
-    Logistician.Shopping.Tab.Events.SearchStart,
-    Logistician.Shopping.Tab.Events.SearchEnd,
+  Auctionator.EventBus:Register(self, {
+    Auctionator.Shopping.Tab.Events.SearchStart,
+    Auctionator.Shopping.Tab.Events.SearchEnd,
   })
 
   -- Autocompletion with recents and shopping list terms for the search box
@@ -52,7 +52,7 @@ function LogisticianShoppingTabSearchOptionsMixin:OnLoad()
 
       local function CompareSearch(toCompare)
         if toCompare:lower():sub(1, #current) == current then
-          local split = Logistician.Search.SplitAdvancedSearch(toCompare)
+          local split = Auctionator.Search.SplitAdvancedSearch(toCompare)
           local searchString = split.searchString
           if split.isExact then
             searchString = "\"" .. searchString .. "\""
@@ -66,14 +66,14 @@ function LogisticianShoppingTabSearchOptionsMixin:OnLoad()
         end
       end
 
-      for _, recent in ipairs(Logistician.Shopping.Recents.GetAll()) do
+      for _, recent in ipairs(Auctionator.Shopping.Recents.GetAll()) do
         if CompareSearch(recent) then
           return
         end
       end
 
-      for i = 1, Logistician.Shopping.ListManager:GetCount() do
-        local list = Logistician.Shopping.ListManager:GetByIndex(i)
+      for i = 1, Auctionator.Shopping.ListManager:GetCount() do
+        local list = Auctionator.Shopping.ListManager:GetByIndex(i)
         for j = 1, list:GetItemCount() do
           local search = list:GetItemByIndex(j)
           if CompareSearch(search) then
@@ -86,7 +86,7 @@ function LogisticianShoppingTabSearchOptionsMixin:OnLoad()
   self:UpdateNameClearButton()
 end
 
-function LogisticianShoppingTabSearchOptionsMixin:UpdateNameClearButton()
+function AuctionatorShoppingTabSearchOptionsMixin:UpdateNameClearButton()
   local enabled = not self.extendedOptionsActive and self.SearchString:GetText() ~= ""
   if enabled then
     self.ResetSearchStringButton:Enable()
@@ -97,7 +97,7 @@ function LogisticianShoppingTabSearchOptionsMixin:UpdateNameClearButton()
   end
 end
 
-function LogisticianShoppingTabSearchOptionsMixin:UpdateAddToListButton()
+function AuctionatorShoppingTabSearchOptionsMixin:UpdateAddToListButton()
   local parent = self:GetParent()
   local hasList = parent and parent.ListsContainer
     and parent.ListsContainer:GetExpandedList() ~= nil
@@ -116,7 +116,7 @@ local function TintButtonArtwork(frame, active)
       region:SetDesaturated(active)
       if active then
         -- A rich emerald metal tint: recognizable as an enabled/ready state
-        -- in TBC without carrying the urgency of red or orange.
+        -- in Vanilla WoW without carrying the urgency of red or orange.
         region:SetVertexColor(0.42, 1, 0.5)
       else
         region:SetVertexColor(1, 1, 1)
@@ -130,16 +130,16 @@ local function TintButtonArtwork(frame, active)
   end
 end
 
-function LogisticianShoppingTabSearchOptionsMixin:UpdateOptionsButton(active)
+function AuctionatorShoppingTabSearchOptionsMixin:UpdateOptionsButton(active)
   self.extendedOptionsActive = active
-  self.MoreButton:SetText(active and "Edit Options" or LOGISTICIAN_L_SEARCH_OPTIONS)
+  self.MoreButton:SetText(active and "Edit Options" or AUCTIONATOR_L_SEARCH_OPTIONS)
   DynamicResizeButton_Resize(self.MoreButton)
 
   self.OptionsClearButton:SetShown(active)
   if active then
     self.SearchButton:SetText("Refresh")
   else
-    self.SearchButton:SetText(LOGISTICIAN_L_SEARCH)
+    self.SearchButton:SetText(AUCTIONATOR_L_SEARCH)
   end
   self:UpdateNameClearButton()
   DynamicResizeButton_Resize(self.SearchButton)
@@ -162,46 +162,46 @@ function LogisticianShoppingTabSearchOptionsMixin:UpdateOptionsButton(active)
   TintButtonArtwork(self.OptionsClearButton, false)
 end
 
-function LogisticianShoppingTabSearchOptionsMixin:ClearSearchTerm()
+function AuctionatorShoppingTabSearchOptionsMixin:ClearSearchTerm()
   self.lastSearchTerm = ""
   self.SearchString:Enable()
   self.SearchString:SetText("")
   self:UpdateOptionsButton(false)
 end
 
-function LogisticianShoppingTabSearchOptionsMixin:ReceiveEvent(eventName, ...)
+function AuctionatorShoppingTabSearchOptionsMixin:ReceiveEvent(eventName, ...)
   -- Change text to Cancel when a list search is ongoing and swap back to Search
   -- when the search is over
-  if eventName == Logistician.Shopping.Tab.Events.SearchStart then
-    self.SearchButton:SetText(LOGISTICIAN_L_CANCEL)
-  elseif eventName == Logistician.Shopping.Tab.Events.SearchEnd then
-    self.SearchButton:SetText(self.extendedOptionsActive and "Refresh" or LOGISTICIAN_L_SEARCH)
+  if eventName == Auctionator.Shopping.Tab.Events.SearchStart then
+    self.SearchButton:SetText(AUCTIONATOR_L_CANCEL)
+  elseif eventName == Auctionator.Shopping.Tab.Events.SearchEnd then
+    self.SearchButton:SetText(self.extendedOptionsActive and "Refresh" or AUCTIONATOR_L_SEARCH)
   end
   DynamicResizeButton_Resize(self.SearchButton)
 end
 
-function LogisticianShoppingTabSearchOptionsMixin:OnListExpanded()
+function AuctionatorShoppingTabSearchOptionsMixin:OnListExpanded()
   self:UpdateAddToListButton()
 end
 
-function LogisticianShoppingTabSearchOptionsMixin:OnListCollapsed()
+function AuctionatorShoppingTabSearchOptionsMixin:OnListCollapsed()
   self.AddToListButton:Disable()
 end
 
-function LogisticianShoppingTabSearchOptionsMixin:SetOnAddToList(func)
+function AuctionatorShoppingTabSearchOptionsMixin:SetOnAddToList(func)
   self.onAddToList = func
 end
 
-function LogisticianShoppingTabSearchOptionsMixin:SetOnSearch(func)
+function AuctionatorShoppingTabSearchOptionsMixin:SetOnSearch(func)
   self.onSearch = func
 end
 
-function LogisticianShoppingTabSearchOptionsMixin:SetOnMore(func)
+function AuctionatorShoppingTabSearchOptionsMixin:SetOnMore(func)
   self.onMore = func
 end
 
 local function GetAppropriateText(searchTerm)
-  local search = Logistician.Search.SplitAdvancedSearch(searchTerm)
+  local search = Auctionator.Search.SplitAdvancedSearch(searchTerm)
   local newSearch = search.searchString
   for key, value in pairs(search) do
     if key == "isExact" then
@@ -210,19 +210,19 @@ local function GetAppropriateText(searchTerm)
       end
     elseif key == "categoryKey" then
       if value ~= "" then
-        return LOGISTICIAN_L_EXTENDED_SEARCH_ACTIVE_TEXT
+        return AUCTIONATOR_L_EXTENDED_SEARCH_ACTIVE_TEXT
       end
     elseif key ~= "searchString" then
-      return LOGISTICIAN_L_EXTENDED_SEARCH_ACTIVE_TEXT
+      return AUCTIONATOR_L_EXTENDED_SEARCH_ACTIVE_TEXT
     end
   end
   return newSearch
 end
 
-function LogisticianShoppingTabSearchOptionsMixin:SetSearchTerm(searchTerm)
+function AuctionatorShoppingTabSearchOptionsMixin:SetSearchTerm(searchTerm)
   self.lastSearchTerm = searchTerm
   local displayText = GetAppropriateText(searchTerm)
-  local extendedActive = displayText == LOGISTICIAN_L_EXTENDED_SEARCH_ACTIVE_TEXT
+  local extendedActive = displayText == AUCTIONATOR_L_EXTENDED_SEARCH_ACTIVE_TEXT
 
   if extendedActive then
     self.SearchString:ClearFocus()
@@ -237,7 +237,7 @@ end
 
 -- Used by modified item clicks. Bag links should behave like typing an item
 -- name into the main Shopping field, never like loading an advanced query.
-function LogisticianShoppingTabSearchOptionsMixin:SetPlainSearchText(text)
+function AuctionatorShoppingTabSearchOptionsMixin:SetPlainSearchText(text)
   self.lastSearchTerm = text or ""
   self.SearchString:Enable()
   self.SearchString:SetText(text or "")
@@ -247,14 +247,14 @@ function LogisticianShoppingTabSearchOptionsMixin:SetPlainSearchText(text)
   self:UpdateAddToListButton()
 end
 
-function LogisticianShoppingTabSearchOptionsMixin:GetSearchTerm()
+function AuctionatorShoppingTabSearchOptionsMixin:GetSearchTerm()
   if self.extendedOptionsActive then
     return self.lastSearchTerm
   end
   return self.SearchString:GetText()
 end
 
-function LogisticianShoppingTabSearchOptionsMixin:FocusSearchBox()
+function AuctionatorShoppingTabSearchOptionsMixin:FocusSearchBox()
   if not self.extendedOptionsActive then
     self.SearchString:SetFocus()
   end

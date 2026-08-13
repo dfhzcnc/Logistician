@@ -1,21 +1,21 @@
-Logistician.PostingHistoryMixin = {}
+Auctionator.PostingHistoryMixin = {}
 
-function Logistician.PostingHistoryMixin:Init(db)
+function Auctionator.PostingHistoryMixin:Init(db)
   self.db = db
-  Logistician.EventBus:Register(self, {
-    Logistician.Selling.Events.AuctionCreated
+  Auctionator.EventBus:Register(self, {
+    Auctionator.Selling.Events.AuctionCreated
   })
 end
 
-function Logistician.PostingHistoryMixin:AddEntry(key, price, quantity, bidPrice)
-  Logistician.Debug.Message("Logistician.PostingHistoryMixin:AddEntry", key, price, quantity)
+function Auctionator.PostingHistoryMixin:AddEntry(key, price, quantity, bidPrice)
+  Auctionator.Debug.Message("Auctionator.PostingHistoryMixin:AddEntry", key, price, quantity)
   if not self.db[key] then
     self.db[key] = {}
   end
 
   -- Remove bid price because the wrong value is reported for multiple stacks
   -- posted
-  if Logistician.Constants.IsLegacyAH then
+  if Auctionator.Constants.IsLegacyAH then
     bidPrice = nil
   end
 
@@ -30,7 +30,7 @@ local function IsSameDay(time1, time2)
   return time1.day == time2.day and time1.month == time2.month and time1.year == time2.year
 end
 
-function Logistician.PostingHistoryMixin:PruneKey(key)
+function Auctionator.PostingHistoryMixin:PruneKey(key)
   local itemInfo = self.db[key]
 
   local currentTime = date("*t", itemInfo[#itemInfo].time)
@@ -49,14 +49,14 @@ function Logistician.PostingHistoryMixin:PruneKey(key)
     index = index - 1
   end
 
-  while #itemInfo > Logistician.Config.Get(Logistician.Config.Options.POSTING_HISTORY_LENGTH) do
+  while #itemInfo > Auctionator.Config.Get(Auctionator.Config.Options.POSTING_HISTORY_LENGTH) do
     table.remove(itemInfo, 1)
   end
 end
 
-function Logistician.PostingHistoryMixin:ReceiveEvent(eventName, eventData)
-  if eventName == Logistician.Selling.Events.AuctionCreated then
-    Logistician.Utilities.DBKeyFromLink(eventData.itemLink, function(keys)
+function Auctionator.PostingHistoryMixin:ReceiveEvent(eventName, eventData)
+  if eventName == Auctionator.Selling.Events.AuctionCreated then
+    Auctionator.Utilities.DBKeyFromLink(eventData.itemLink, function(keys)
       for _, key in ipairs(keys) do
         self:AddEntry(key, eventData.buyoutAmount, eventData.quantity, eventData.bidAmount)
       end
@@ -64,7 +64,7 @@ function Logistician.PostingHistoryMixin:ReceiveEvent(eventName, eventData)
   end
 end
 
-function Logistician.PostingHistoryMixin:GetPriceHistory(dbKey)
+function Auctionator.PostingHistoryMixin:GetPriceHistory(dbKey)
   if self.db[dbKey] == nil then
     return {}
   end
@@ -73,7 +73,7 @@ function Logistician.PostingHistoryMixin:GetPriceHistory(dbKey)
 
   for _, entry in ipairs(self.db[dbKey]) do
     table.insert(results, {
-     date = Logistician.Utilities.PrettyDate(entry.time),
+     date = Auctionator.Utilities.PrettyDate(entry.time),
      rawDay = entry.time,
      price = entry.price,
      bidPrice = entry.bidPrice,

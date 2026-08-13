@@ -1,4 +1,4 @@
--- Modified by Logistician contributors for World of Warcraft addons
+-- Modified by plusmouse for World of Warcraft addons
 --
 -- Concise Binary Object Representation (CBOR)
 -- RFC 7049

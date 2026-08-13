@@ -1,74 +1,74 @@
 local POSTING_HISTORY_PROVIDER_LAYOUT ={
   {
-    headerTemplate = "LogisticianStringColumnHeaderTemplate",
-    headerText = LOGISTICIAN_L_UNIT_PRICE,
+    headerTemplate = "AuctionatorStringColumnHeaderTemplate",
+    headerText = AUCTIONATOR_L_UNIT_PRICE,
     headerParameters = { "price" },
-    cellTemplate = "LogisticianPriceCellTemplate",
+    cellTemplate = "AuctionatorPriceCellTemplate",
     cellParameters = { "price" }
   },
   {
-    headerTemplate = "LogisticianStringColumnHeaderTemplate",
-    headerText = LOGISTICIAN_L_BID_PRICE,
+    headerTemplate = "AuctionatorStringColumnHeaderTemplate",
+    headerText = AUCTIONATOR_L_BID_PRICE,
     headerParameters = { "bidPrice" },
-    cellTemplate = "LogisticianPriceCellTemplate",
+    cellTemplate = "AuctionatorPriceCellTemplate",
     cellParameters = { "bidPrice" },
-    defaultHide = Logistician.Constants.IsLegacyAH,
+    defaultHide = Auctionator.Constants.IsLegacyAH,
   },
   {
-    headerTemplate = "LogisticianStringColumnHeaderTemplate",
-    headerText = LOGISTICIAN_L_QUANTITY,
+    headerTemplate = "AuctionatorStringColumnHeaderTemplate",
+    headerText = AUCTIONATOR_L_QUANTITY,
     headerParameters = { "quantity" },
-    cellTemplate = "LogisticianStringCellTemplate",
+    cellTemplate = "AuctionatorStringCellTemplate",
     cellParameters = { "quantity" },
     width = 100
   },
   {
-    headerTemplate = "LogisticianStringColumnHeaderTemplate",
-    headerText = LOGISTICIAN_L_DATE,
+    headerTemplate = "AuctionatorStringColumnHeaderTemplate",
+    headerText = AUCTIONATOR_L_DATE,
     headerParameters = { "rawDay" },
-    cellTemplate = "LogisticianStringCellTemplate",
+    cellTemplate = "AuctionatorStringCellTemplate",
     cellParameters = { "date" }
   },
 }
 
-LogisticianPostingHistoryProviderMixin = CreateFromMixins(LogisticianDataProviderMixin)
+AuctionatorPostingHistoryProviderMixin = CreateFromMixins(AuctionatorDataProviderMixin)
 
-function LogisticianPostingHistoryProviderMixin:OnLoad()
-  LogisticianDataProviderMixin.OnLoad(self)
+function AuctionatorPostingHistoryProviderMixin:OnLoad()
+  AuctionatorDataProviderMixin.OnLoad(self)
 end
 
-function LogisticianPostingHistoryProviderMixin:OnShow()
+function AuctionatorPostingHistoryProviderMixin:OnShow()
   self:Reset()
 end
 
-function LogisticianPostingHistoryProviderMixin:SetItem(dbKey)
+function AuctionatorPostingHistoryProviderMixin:SetItem(dbKey)
   self:Reset()
 
   -- Reset columns
   self.onSearchStarted()
 
-  local entries = Logistician.PostingHistory:GetPriceHistory(dbKey)
+  local entries = Auctionator.PostingHistory:GetPriceHistory(dbKey)
   table.sort(entries, function(a, b) return b.rawDay < a.rawDay end)
 
   self:AppendEntries(entries, true)
 end
 
-function LogisticianPostingHistoryProviderMixin:GetTableLayout()
+function AuctionatorPostingHistoryProviderMixin:GetTableLayout()
   return POSTING_HISTORY_PROVIDER_LAYOUT
 end
 
-function LogisticianPostingHistoryProviderMixin:UniqueKey(entry)
+function AuctionatorPostingHistoryProviderMixin:UniqueKey(entry)
   return tostring(tostring(entry.price) .. tostring(entry.rawDay))
 end
 
 local COMPARATORS = {
-  price = Logistician.Utilities.NumberComparator,
-  bidPrice = Logistician.Utilities.NumberComparator,
-  quantity = Logistician.Utilities.NumberComparator,
-  rawDay = Logistician.Utilities.StringComparator
+  price = Auctionator.Utilities.NumberComparator,
+  bidPrice = Auctionator.Utilities.NumberComparator,
+  quantity = Auctionator.Utilities.NumberComparator,
+  rawDay = Auctionator.Utilities.StringComparator
 }
 
-function LogisticianPostingHistoryProviderMixin:Sort(fieldName, sortDirection)
+function AuctionatorPostingHistoryProviderMixin:Sort(fieldName, sortDirection)
   local comparator = COMPARATORS[fieldName](sortDirection, fieldName)
 
   table.sort(self.results, function(left, right)

@@ -1,37 +1,37 @@
-LogisticianItemHistoryFrameMixin = CreateFromMixins(LogisticianEscapeToCloseMixin)
+AuctionatorItemHistoryFrameMixin = CreateFromMixins(AuctionatorEscapeToCloseMixin)
 
-function LogisticianItemHistoryFrameMixin:Init()
+function AuctionatorItemHistoryFrameMixin:Init()
   self.ResultsListing:Init(self.DataProvider)
 
-  Logistician.EventBus:Register(self, { Logistician.Shopping.Tab.Events.ShowHistoricalPrices })
+  Auctionator.EventBus:Register(self, { Auctionator.Shopping.Tab.Events.ShowHistoricalPrices })
   self.isDocked = false
 end
 
-function LogisticianItemHistoryFrameMixin:OnShow()
-  Logistician.Debug.Message("LogisticianItemHistoryFrameMixin:OnShow()")
+function AuctionatorItemHistoryFrameMixin:OnShow()
+  Auctionator.Debug.Message("AuctionatorItemHistoryFrameMixin:OnShow()")
 
-  Logistician.EventBus
+  Auctionator.EventBus
     :RegisterSource(self, "lists item history dialog")
-    :Fire(self, Logistician.Shopping.Tab.Events.DialogOpened)
+    :Fire(self, Auctionator.Shopping.Tab.Events.DialogOpened)
     :UnregisterSource(self)
 end
 
-function LogisticianItemHistoryFrameMixin:OnHide()
+function AuctionatorItemHistoryFrameMixin:OnHide()
   self:Hide()
 
-  Logistician.EventBus
+  Auctionator.EventBus
     :RegisterSource(self, "lists item history 1")
-    :Fire(self, Logistician.Shopping.Tab.Events.DialogClosed)
+    :Fire(self, Auctionator.Shopping.Tab.Events.DialogClosed)
     :UnregisterSource(self)
 end
 
-function LogisticianItemHistoryFrameMixin:ReceiveEvent(event, itemInfo)
-  if event == Logistician.Shopping.Tab.Events.ShowHistoricalPrices then
-    self.Title:SetText(LOGISTICIAN_L_X_PRICE_HISTORY:format(itemInfo.name))
+function AuctionatorItemHistoryFrameMixin:ReceiveEvent(event, itemInfo)
+  if event == Auctionator.Shopping.Tab.Events.ShowHistoricalPrices then
+    self.Title:SetText(AUCTIONATOR_L_X_PRICE_HISTORY:format(itemInfo.name))
   end
 end
 
-function LogisticianItemHistoryFrameMixin:OnDockDialogClicked()
+function AuctionatorItemHistoryFrameMixin:OnDockDialogClicked()
   self:ClearAllPoints()
   if self.isDocked then
     self:SetPoint("CENTER", self:GetParent(), "CENTER")
@@ -46,6 +46,6 @@ function LogisticianItemHistoryFrameMixin:OnDockDialogClicked()
   self.isDocked = not self.isDocked
 end
 
-function LogisticianItemHistoryFrameMixin:OnCloseDialogClicked()
+function AuctionatorItemHistoryFrameMixin:OnCloseDialogClicked()
   self:Hide()
 end

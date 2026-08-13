@@ -4,7 +4,7 @@ This is a self-contained build using:
 - Wider Professions 1.11.4 (user-provided files)
 - WiderProfessionsPlus 0.1.3
 - Interface 20506
-- Logistician pricing API (optional)
+- Auctionator pricing API (optional)
 
 IMPORTANT INSTALL
 1. Fully exit WoW.
@@ -69,22 +69,22 @@ WPP 0.1.7 recipe-pane control rail
       Info
 - Recipe descriptions reserve that rail and wrap before the buttons.
 - Requirement text reserves the same rail.
-- Favorite button is slightly smaller (24px) to match the compact TBC
+- Favorite button is slightly smaller (24px) to match the compact vanilla
   utility-button treatment.
 - No queue, shopping, pricing, navigation, or progress behavior changed.
 
 
 WPP 0.1.8 compact recipe pricing footer
 ----------------------------------------
-- Fixes Logistician's native two-line "To Craft / Profit" frame overlapping
+- Fixes Auctionator's native two-line "To Craft / Profit" frame overlapping
   the third reagent row on recipes with many materials.
-- Hides that large Logistician frame and renders the same pricing as one compact
+- Hides that large Auctionator frame and renders the same pricing as one compact
   line:
       Cost: ...  •  Profit: ...
 - Positive profit is green; negative profit is red.
 - Footer is hidden on recipes with more than 6 reagents rather than ever
   covering a fourth reagent row.
-- Logistician remains the pricing source.
+- Auctionator remains the pricing source.
 - All WPP 0.1.7 layout/navigation/queue/shopping behavior is preserved.
 
 
@@ -96,11 +96,11 @@ WPP 0.1.9 recipe-pane cleanup
   materials or Create controls.
 - Removes the visible Information button.
 - WPP and Favorite now sit side-by-side in the top-right.
-- Restores nearly the full profession description width.
+- Restores nearly the full vanilla description width.
 - Requirement text also regains nearly the full width.
 - Slightly narrows only the recipe-name field to protect the two top-right
   utility buttons.
-- Queue, Shopping, Logistician pricing, cross-profession reagent navigation,
+- Queue, Shopping, Auctionator pricing, cross-profession reagent navigation,
   and Classic-style progress bar are unchanged.
 
 
@@ -164,7 +164,7 @@ WPP 0.1.13 Add Selected replaces Create All
   opens Wider Professions+, and switches to the Queue tab.
 - Blizzard/Wider Professions attempts to re-show Create All are suppressed.
 - Shared cross-profession queue, Craft All queue processing, drag/drop
-  reordering, Shopping, and Logistician pricing are unchanged.
+  reordering, Shopping, and Auctionator pricing are unchanged.
 
 WPP 0.1.14 Add Selected hotfix
 -------------------------------
@@ -178,7 +178,7 @@ WPP 0.1.14 Add Selected hotfix
 - Keeps the exact native Create All RIGHT edge, so the larger button grows
   leftward and does not shift/overlap the quantity controls.
 - All shared-queue, Craft All, cross-profession, Shopping, drag/drop, and
-  Logistician behavior remains unchanged.
+  Auctionator behavior remains unchanged.
 
 WPP 0.1.15 button label cleanup
 --------------------------------
@@ -199,7 +199,7 @@ WPP 0.1.16 profession-switch hotfix
 - Falls back to CastSpellByName from the user's button click.
 - Failure messages now include the resolved opener name for easier debugging.
 - Shared queue, cross-profession Craft All progress, drag/drop, Shopping,
-  Logistician pricing, and Add button behavior are unchanged.
+  Auctionator pricing, and Add button behavior are unchanged.
 
 WPP 0.1.17 queue footer cleanup
 --------------------------------
@@ -211,7 +211,7 @@ WPP 0.1.17 queue footer cleanup
       Open <Profession>
       Continue All
 - Whole-queue progress, shared cross-profession queue, drag/drop ordering,
-  Shopping, Logistician pricing, and native Add button are unchanged.
+  Shopping, Auctionator pricing, and native Add button are unchanged.
 
 WPP 0.1.18 net Shopping planner
 --------------------------------
@@ -247,9 +247,9 @@ WPP 0.1.19 automatic prerequisite queue expansion
 - Automatically inserted rows remain normal shared-queue rows and can still be
   dragged/reordered by the user.
 - Shared Craft All, profession-boundary switching, Shopping net-material
-  calculation, Logistician pricing, and Add button behavior are preserved.
+  calculation, Auctionator pricing, and Add button behavior are preserved.
 
-WPP 0.1.20 Logistician integration baseline + ! folder
+WPP 0.1.20 Auctionator integration baseline + ! folder
 -------------------------------------------------------
 - Custom addon folder is now:
       Interface\AddOns\!WiderProfessions\
@@ -258,13 +258,13 @@ WPP 0.1.20 Logistician integration baseline + ! folder
 - Addon title also begins with ! so it sorts at/near the top of the AddOns UI.
 - ADDON_LOADED handling is dynamic, so the leading ! folder name is supported
   without breaking Wider Professions initialization.
-- Logistician v334 (the user's supplied build, TBC Anniversary 20506 compatible)
+- Auctionator v334 (the user's supplied build, TBC Anniversary 20506 compatible)
   is included alongside WPP in this combined development package as the normal:
-      Interface\AddOns\Logistician\
-- Logistician itself is not renamed because its assets use the Logistician
+      Interface\AddOns\Auctionator\
+- Auctionator itself is not renamed because its assets use the Auctionator
   folder path.
-- Adds LogisticianBridge.lua, a central compatibility layer based on
-  Logistician.API.v1.
+- Adds AuctionatorBridge.lua, a central compatibility layer based on
+  Auctionator.API.v1.
 - Existing Cost/Profit pricing now reads through the bridge.
 - Bridge foundations are available for future WPP features:
       * auction price by item ID/link;
@@ -272,35 +272,35 @@ WPP 0.1.20 Logistician integration baseline + ! folder
       * exact-price status;
       * vendor value;
       * disenchant value;
-      * create/read Logistician Shopping Lists;
-      * convert WPP Shopping rows to Logistician advanced search terms;
-      * launch Logistician MultiSearchAdvanced while the AH is open.
-- No Logistician UI behavior has been changed yet; 0.1.20 establishes the
+      * create/read Auctionator Shopping Lists;
+      * convert WPP Shopping rows to Auctionator advanced search terms;
+      * launch Auctionator MultiSearchAdvanced while the AH is open.
+- No Auctionator UI behavior has been changed yet; 0.1.20 establishes the
   shared integration foundation for later interactive features.
 
-WPP 0.1.21 !Logistician folder integration
+WPP 0.1.21 !Auctionator folder integration
 -------------------------------------------
-- Logistician folder is now:
-      Interface\AddOns\!Logistician\
+- Auctionator folder is now:
+      Interface\AddOns\!Auctionator\
 - Matching TOC is:
-      !Logistician.toc
-- Logistician title also starts with !.
-- Patched Logistician's ADDON_LOADED name check for !Logistician.
-- Patched Logistician version metadata lookups for !Logistician.
-- Patched all hardcoded Interface\AddOns\Logistician\ asset paths to
-  Interface\AddOns\!Logistician\ so icons/textures still load.
-- WPP OptionalDeps now targets !Logistician.
-- WPP LogisticianBridge version lookup now targets !Logistician.
-- Logistician public globals/API remain Logistician / Logistician.API.v1;
+      !Auctionator.toc
+- Auctionator title also starts with !.
+- Patched Auctionator's ADDON_LOADED name check for !Auctionator.
+- Patched Auctionator version metadata lookups for !Auctionator.
+- Patched all hardcoded Interface\AddOns\Auctionator\ asset paths to
+  Interface\AddOns\!Auctionator\ so icons/textures still load.
+- WPP OptionalDeps now targets !Auctionator.
+- WPP AuctionatorBridge version lookup now targets !Auctionator.
+- Auctionator public globals/API remain Auctionator / Auctionator.API.v1;
   future WPP integration code should continue using those public API globals.
 
-WPP 0.1.22 / !Logistician robust historical average
+WPP 0.1.22 / !Auctionator robust historical average
 -----------------------------------------------------
-- Logistician tooltip keeps:
+- Auctionator tooltip keeps:
       Auction    = latest stored scan price
 - Adds:
       Avg 21d    = robust historical market average
-- The new average uses Logistician's own stored daily scan history.
+- The new average uses Auctionator's own stored daily scan history.
 - Model:
       * daily low/high minimum-price observations are combined as a
         geometric midpoint in log-price space;
@@ -309,21 +309,21 @@ WPP 0.1.22 / !Logistician robust historical average
       * Tukey biweight refinement gives severe isolated outliers zero final
         influence;
       * weighted MAD supplies the robust scale.
-- The existing 21-day Logistician history window/config is reused.
-- Adds Logistician.API.v1.GetAuctionAverageByItemID / ByItemLink.
-- WPP's LogisticianBridge exposes the new robust average API for future
+- The existing 21-day Auctionator history window/config is reused.
+- Adds Auctionator.API.v1.GetAuctionAverageByItemID / ByItemLink.
+- WPP's AuctionatorBridge exposes the new robust average API for future
   crafting-cost, shopping, buying, and pricing features.
-- Existing WPP Cost/Profit still uses the latest Logistician price for now;
+- Existing WPP Cost/Profit still uses the latest Auctionator price for now;
   this release only adds the historical average and API foundation.
 
-WPP 0.1.23 / !Logistician Sale Likelihood model
+WPP 0.1.23 / !Auctionator Sale Likelihood model
 ------------------------------------------------
 - Item tooltips now add:
       Sale likelihood   High · 71/100
       Model confidence  Medium · 12d history
-- The score uses ONLY data already stored by Logistician.
+- The score uses ONLY data already stored by Auctionator.
 - It is intentionally a 0-100 marketability score, NOT a claimed calibrated
-  probability of completed sale, because Logistician does not observe verified
+  probability of completed sale, because Auctionator does not observe verified
   outcomes for every listing.
 - Signals:
       * Bayesian Beta-shrunk directional stock depletion from daily quantity;
@@ -334,18 +334,18 @@ WPP 0.1.23 / !Logistician Sale Likelihood model
 - Static daily stock is treated as uninformative instead of automatically
   meaning "no demand".
 - Sparse history shrinks the result toward neutral 50.
-- Adds public Logistician API:
+- Adds public Auctionator API:
       GetSaleLikelihoodByItemID
       GetSaleLikelihoodByItemLink
-- WPP LogisticianBridge exposes the same methods for future crafting,
+- WPP AuctionatorBridge exposes the same methods for future crafting,
   shopping, profitability, and deal-selection features.
 
-WPP 0.1.24 / !Logistician expiration-aware Sale Likelihood
+WPP 0.1.24 / !Auctionator expiration-aware Sale Likelihood
 ------------------------------------------------------------
 - Fixes the largest limitation in 0.1.23: market inventory disappearance is
   no longer automatically treated as sale-like without accounting for auction
   expiration.
-- TBC legacy AH time-left bands are captured on Logistician scans:
+- TBC legacy AH time-left bands are captured on Auctionator scans:
       <30m
       30m-2h
       2h-12h

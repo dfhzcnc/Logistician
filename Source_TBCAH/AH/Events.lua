@@ -1,5 +1,0 @@
-Logistician.AH.Events.ScanResultsUpdate = "ah_scan_results_update"
-Logistician.AH.Events.ScanPageStart = "ah_scan_page_start"
-Logistician.AH.Events.ScanAborted = "ah_scan_aborted"
-Logistician.AH.Events.CurrentThrottleTimeout = "ah_current_throttle_timeout"
-Logistician.AH.Events.ThrottleAbort = "ah_throttle_abort"

@@ -1,8 +1,8 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/">
   <Frame
-    name="LogisticianExportListTemplate"
-    mixin="LogisticianListExportFrameMixin"
-    inherits="LogisticianSimplePanelTemplate"
+    name="AuctionatorExportListTemplate"
+    mixin="AuctionatorListExportFrameMixin"
+    inherits="AuctionatorSimplePanelTemplate"
     frameStrata="Dialog"
     enableMouse="true"
     virtual="true"
@@ -17,7 +17,7 @@
     </Scripts>
 
     <Frames>
-      <Frame parentKey="Inset" inherits="LogisticianInsetDarkTemplate">
+      <Frame parentKey="Inset" inherits="AuctionatorInsetDarkTemplate">
         <Anchors>
           <Anchor point="TOPLEFT" x="4" y="-30"/>
           <Anchor point="BOTTOMRIGHT" x="-6" y="32"/>
@@ -47,31 +47,31 @@
 
       <!-- Export options -->
       <!-- TODO: Uncomment this to continue working on export via whisper -->
-      <!-- <Frame inherits="LogisticianConfigurationRadioButtonGroup" parentKey="ExportOption">
+      <!-- <Frame inherits="AuctionatorConfigurationRadioButtonGroup" parentKey="ExportOption">
         <KeyValues>
-          <KeyValue key="groupHeadingText" value="LOGISTICIAN_L_EXPORT_AS" type="global"/>
+          <KeyValue key="groupHeadingText" value="AUCTIONATOR_L_EXPORT_AS" type="global"/>
         </KeyValues>
         <Anchors>
           <Anchor point="BOTTOMLEFT" relativeKey="$parent" relativePoint="BOTTOMLEFT" y="32" x="4" />
           <Anchor point="RIGHT" relativeKey="$parent" relativePoint="CENTER" />
         </Anchors>
         <Frames>
-          <Frame inherits="LogisticianConfigurationRadioButton">
+          <Frame inherits="AuctionatorConfigurationRadioButton">
             <KeyValues>
-              <KeyValue key="labelText" value="LOGISTICIAN_L_EXPORT_STRING" type="global"/>
+              <KeyValue key="labelText" value="AUCTIONATOR_L_EXPORT_STRING" type="global"/>
               <KeyValue key="value" value="0" type="number"/>
             </KeyValues>
           </Frame>
-          <Frame inherits="LogisticianConfigurationRadioButton">
+          <Frame inherits="AuctionatorConfigurationRadioButton">
             <KeyValues>
-              <KeyValue key="labelText" value="LOGISTICIAN_L_EXPORT_WHISPER" type="global"/>
+              <KeyValue key="labelText" value="AUCTIONATOR_L_EXPORT_WHISPER" type="global"/>
               <KeyValue key="value" value="1" type="number"/>
             </KeyValues>
           </Frame>
         </Frames>
       </Frame>
 
-      <Frame parentKey="Recipient" inherits="LogisticianConfigurationTextInput" hidden="true">
+      <Frame parentKey="Recipient" inherits="AuctionatorConfigurationTextInput" hidden="true">
         <Anchors>
           <Anchor point="LEFT" relativeKey="$parent" relativePoint="CENTER" />
           <Anchor point="BOTTOMRIGHT" relativeKey="$parent.Inset" relativePoint="BOTTOMRIGHT" />
@@ -89,7 +89,7 @@
         </Scripts>
       </Button>
 
-      <Button parentKey="Export" inherits="UIPanelDynamicResizeButtonTemplate" text="LOGISTICIAN_L_EXPORT">
+      <Button parentKey="Export" inherits="UIPanelDynamicResizeButtonTemplate" text="AUCTIONATOR_L_EXPORT">
         <Anchors>
           <Anchor point="TOPRIGHT" relativeKey="$parent.Inset" relativePoint="BOTTOMRIGHT" y="-3"/>
         </Anchors>
@@ -98,7 +98,7 @@
         </Scripts>
       </Button>
 
-      <Button parentKey="SelectAll" inherits="UIPanelDynamicResizeButtonTemplate" text="LOGISTICIAN_L_SELECT_ALL">
+      <Button parentKey="SelectAll" inherits="UIPanelDynamicResizeButtonTemplate" text="AUCTIONATOR_L_SELECT_ALL">
         <Anchors>
           <Anchor point="TOPLEFT" relativeKey="$parent.Inset" relativePoint="BOTTOMLEFT" y="-3"/>
         </Anchors>
@@ -107,7 +107,7 @@
         </Scripts>
       </Button>
 
-      <Button parentKey="UnselectAll" inherits="UIPanelDynamicResizeButtonTemplate" text="LOGISTICIAN_L_UNSELECT_ALL">
+      <Button parentKey="UnselectAll" inherits="UIPanelDynamicResizeButtonTemplate" text="AUCTIONATOR_L_UNSELECT_ALL">
         <Anchors>
           <Anchor point="TOPLEFT" relativeKey="$parent.SelectAll" relativePoint="TOPRIGHT"/>
         </Anchors>
@@ -119,7 +119,7 @@
 
     <Layers>
       <Layer>
-        <FontString text="LOGISTICIAN_L_LIST_EXPORT_HEADER" inherits="GameFontHighlight">
+        <FontString text="AUCTIONATOR_L_LIST_EXPORT_HEADER" inherits="GameFontHighlight">
           <Anchors>
             <Anchor point="TOP" relativePoint="TOP" y="-10"/>
           </Anchors>

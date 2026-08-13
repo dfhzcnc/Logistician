@@ -4,12 +4,12 @@
 -- This is the original mapping of category strings to a class id, subclass id,
 -- and optionally inventory id.
 --
---  Logistician.Search.OldCategories is an empty table on load, need to populate
+--  Auctionator.Search.OldCategories is an empty table on load, need to populate
 --  with the possible categories
 --
 --  Here's what one entry looks like:
 --  {
---    classID    = integer (corresponding to Logistician.Constants.ValidItemClassIDs )
+--    classID    = integer (corresponding to Auctionator.Constants.ValidItemClassIDs )
 --    name       = string  (resolved by GetItemClassInfo( classID ))
 --    category     = table   (new QueryAuctionItems categoryData format, { classID, subClassID (nil), inventoryType (nil) } )
 --    subClasses = {
@@ -19,21 +19,21 @@
 --    }
 --  }
 
-local INVENTORY_TYPE_IDS = Logistician.Constants.INVENTORY_TYPE_IDS
+local INVENTORY_TYPE_IDS = Auctionator.Constants.INVENTORY_TYPE_IDS
 
 local OldCategories = {}
 local OldCategoryLookup = {}
 
-Logistician.Search.OldCategory = {
+Auctionator.Search.OldCategory = {
   classID = 0,
-  name = Logistician.Constants.CategoryDefault,
+  name = Auctionator.Constants.CategoryDefault,
   key = 0,
   parentKey = nil,
   category = {},
   subClasses = {}
 }
 
-function Logistician.Search.OldCategory:new( options )
+function Auctionator.Search.OldCategory:new( options )
   options = options or {}
   setmetatable( options, self )
   self.__index = self
@@ -54,7 +54,7 @@ local function GenerateArmorInventorySlots(parentKey, parentCategory)
       subClassID = parentCategory.subClassID,
       inventoryType = INVENTORY_TYPE_IDS[index],
     }
-    local subSubClass = Logistician.Search.OldCategory:new({
+    local subSubClass = Auctionator.Search.OldCategory:new({
       classID = INVENTORY_TYPE_IDS[index],
       name = name,
       key = parentKey .. [[/]] .. name,
@@ -68,7 +68,7 @@ local function GenerateArmorInventorySlots(parentKey, parentCategory)
 end
 
 local function GenerateSubClasses( classID, parentKey )
-  local subClassesTable = Logistician.AH.GetAuctionItemSubClasses( classID )
+  local subClassesTable = Auctionator.AH.GetAuctionItemSubClasses( classID )
   local subClasses = {}
 
   for index = 1, #subClassesTable do
@@ -77,7 +77,7 @@ local function GenerateSubClasses( classID, parentKey )
 
     if name then
       local category = { classID = classID, subClassID = subClassID }
-      local subClass = Logistician.Search.OldCategory:new({
+      local subClass = Auctionator.Search.OldCategory:new({
         classID = subClassID,
         name = name,
         key = parentKey .. [[/]] .. name,
@@ -100,13 +100,13 @@ local function GenerateSubClasses( classID, parentKey )
   return subClasses
 end
 
-function Logistician.Search.InitializeOldCategories()
-  for _, classID in ipairs( Logistician.Groups.Constants.ValidItemClassIDs ) do
+function Auctionator.Search.InitializeOldCategories()
+  for _, classID in ipairs( Auctionator.Groups.Constants.ValidItemClassIDs ) do
     local key = C_Item.GetItemClassInfo( classID )
     local subClasses = GenerateSubClasses( classID, key )
     local category = {classID = classID}
 
-    local categoryCategory = Logistician.Search.OldCategory:new({
+    local categoryCategory = Auctionator.Search.OldCategory:new({
       classID = classID,
       name = name,
       key = key,
@@ -128,7 +128,7 @@ function Logistician.Search.InitializeOldCategories()
   end
 end
 
-function Logistician.Search.GetItemClassOldCategories(categoryKey)
+function Auctionator.Search.GetItemClassOldCategories(categoryKey)
   local lookup = OldCategoryLookup[categoryKey]
   if lookup ~= nil then
     return lookup.category

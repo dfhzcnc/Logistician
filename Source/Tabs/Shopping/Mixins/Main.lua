@@ -1,14 +1,14 @@
-LogisticianShoppingTabFrameMixin = {}
+AuctionatorShoppingTabFrameMixin = {}
 
 local EVENTBUS_EVENTS = {
-  Logistician.Shopping.Events.ListImportFinished,
-  Logistician.Shopping.Tab.Events.ListSearchRequested,
-  Logistician.Shopping.Tab.Events.ShowHistoricalPrices,
-  Logistician.Shopping.Tab.Events.UpdateSearchTerm,
-  Logistician.Shopping.Tab.Events.BuyScreenShown,
+  Auctionator.Shopping.Events.ListImportFinished,
+  Auctionator.Shopping.Tab.Events.ListSearchRequested,
+  Auctionator.Shopping.Tab.Events.ShowHistoricalPrices,
+  Auctionator.Shopping.Tab.Events.UpdateSearchTerm,
+  Auctionator.Shopping.Tab.Events.BuyScreenShown,
 }
 
-function LogisticianShoppingTabFrameMixin:DoSearch(terms, options)
+function AuctionatorShoppingTabFrameMixin:DoSearch(terms, options)
   if #terms == 0 then
     return
   end
@@ -17,18 +17,18 @@ function LogisticianShoppingTabFrameMixin:DoSearch(terms, options)
   -- requesting every quality and filtering locally (which can produce an
   -- empty/fallback row), expand a multi-quality advanced search into one
   -- server-side query per selected quality and merge the normal results.
-  if Logistician.Constants.IsLegacyAH then
+  if Auctionator.Constants.IsLegacyAH then
     local expanded = {}
     local didExpand = false
     for _, term in ipairs(terms) do
-      local parsed = Logistician.Search.SplitAdvancedSearch(term)
+      local parsed = Auctionator.Search.SplitAdvancedSearch(term)
       if #(parsed.qualities or {}) > 1 then
         didExpand = true
         for _, quality in ipairs(parsed.qualities) do
           local variant = CopyTable(parsed)
           variant.qualities = {quality}
           variant.quality = quality
-          table.insert(expanded, Logistician.Search.ReconstituteAdvancedSearch(variant))
+          table.insert(expanded, Auctionator.Search.ReconstituteAdvancedSearch(variant))
         end
       else
         table.insert(expanded, term)
@@ -41,7 +41,7 @@ function LogisticianShoppingTabFrameMixin:DoSearch(terms, options)
     end
   end
 
-  if options == nil and Logistician.Constants.IsLegacyAH and IsShiftKeyDown() then
+  if options == nil and Auctionator.Constants.IsLegacyAH and IsShiftKeyDown() then
     options = { searchAllPages = true }
   end
 
@@ -50,13 +50,13 @@ function LogisticianShoppingTabFrameMixin:DoSearch(terms, options)
   self.singleResultAutoOpened = false
   self.searchRunning = true
   self:SetSearchPanelsLocked(true)
-  Logistician.EventBus:Fire(self, Logistician.Shopping.Tab.Events.SearchStart, terms)
+  Auctionator.EventBus:Fire(self, Auctionator.Shopping.Tab.Events.SearchStart, terms)
   self.SearchProvider:Search(terms, options or {})
   self:StartSpinner()
 end
 
-function LogisticianShoppingTabFrameMixin:TryOpenSingleResult()
-  if not Logistician.Constants.IsLegacyAH
+function AuctionatorShoppingTabFrameMixin:TryOpenSingleResult()
+  if not Auctionator.Constants.IsLegacyAH
     or self.singleResultAutoOpened
     or self.searchRunning
     or not self.DataProvider.searchCompleted
@@ -73,18 +73,18 @@ function LogisticianShoppingTabFrameMixin:TryOpenSingleResult()
   end
 
   self.singleResultAutoOpened = true
-  Logistician.EventBus:Fire(self, Logistician.Buying.Events.ShowForShopping, result)
-  Logistician.EventBus:Fire(self, Logistician.Shopping.Tab.Events.BuyScreenShown)
+  Auctionator.EventBus:Fire(self, Auctionator.Buying.Events.ShowForShopping, result)
+  Auctionator.EventBus:Fire(self, Auctionator.Shopping.Tab.Events.BuyScreenShown)
 end
 
-function LogisticianShoppingTabFrameMixin:StopSearch()
+function AuctionatorShoppingTabFrameMixin:StopSearch()
   self.searchRunning = false
   self:StopLoadingTextAnimation()
   self.SearchProvider:AbortSearch()
   self:SetSearchPanelsLocked(false)
 end
 
-function LogisticianShoppingTabFrameMixin:SetSearchPanelsLocked(locked)
+function AuctionatorShoppingTabFrameMixin:SetSearchPanelsLocked(locked)
   local alpha = locked and 0.35 or 1
   self.ListsContainer.ScrollBox:SetAlpha(alpha)
   self.ResultsListing.HeaderContainer:SetAlpha(alpha)
@@ -98,7 +98,7 @@ function LogisticianShoppingTabFrameMixin:SetSearchPanelsLocked(locked)
   end
 end
 
-function LogisticianShoppingTabFrameMixin:StartLoadingTextAnimation()
+function AuctionatorShoppingTabFrameMixin:StartLoadingTextAnimation()
   self:ResetLoadingTextCycle()
   self:SetScript("OnUpdate", function(frame, elapsed)
     frame.loadingTextElapsed = frame.loadingTextElapsed + elapsed
@@ -110,23 +110,23 @@ function LogisticianShoppingTabFrameMixin:StartLoadingTextAnimation()
   end)
 end
 
-function LogisticianShoppingTabFrameMixin:ResetLoadingTextCycle()
+function AuctionatorShoppingTabFrameMixin:ResetLoadingTextCycle()
   self.loadingTextElapsed = 0
   self.loadingTextDots = 0
   self.ResultsListing.ScrollArea.ResultsText:SetText("Fetching item info")
 end
 
-function LogisticianShoppingTabFrameMixin:StopLoadingTextAnimation()
+function AuctionatorShoppingTabFrameMixin:StopLoadingTextAnimation()
   self:SetScript("OnUpdate", nil)
 end
 
-function LogisticianShoppingTabFrameMixin:StartSpinner()
+function AuctionatorShoppingTabFrameMixin:StartSpinner()
   self.ListsContainer.LoadingSpinner:Hide()
   self.ListsContainer.ResultsText:Hide()
   self:StartLoadingTextAnimation()
 end
 
-function LogisticianShoppingTabFrameMixin:CloseAnyDialogs()
+function AuctionatorShoppingTabFrameMixin:CloseAnyDialogs()
   for _, d in ipairs(self.dialogs) do
     if d:IsShown() then
       d:Hide()
@@ -134,8 +134,8 @@ function LogisticianShoppingTabFrameMixin:CloseAnyDialogs()
   end
 end
 
-function LogisticianShoppingTabFrameMixin:OnLoad()
-  Logistician.EventBus:RegisterSource(self, "LogisticianShoppingTabFrameMixin")
+function AuctionatorShoppingTabFrameMixin:OnLoad()
+  Auctionator.EventBus:RegisterSource(self, "AuctionatorShoppingTabFrameMixin")
 
   self.ResultsListing:SetScrollBarOffsetX(2)
   self.ResultsListing:Init(self.DataProvider)
@@ -170,20 +170,20 @@ function LogisticianShoppingTabFrameMixin:OnLoad()
 
   self.dialogs = {}
 
-  self.itemDialog = CreateFrame("Frame", "LogisticianShoppingTabItemFrame", self, "LogisticianShoppingItemTemplate")
+  self.itemDialog = CreateFrame("Frame", "AuctionatorShoppingTabItemFrame", self, "AuctionatorShoppingItemTemplate")
   self.itemDialog:ClearAllPoints()
   self.itemDialog:SetPoint("CENTER")
   table.insert(self.dialogs, self.itemDialog)
 
-  self.exportDialog = CreateFrame("Frame", "LogisticianExportListFrame", self, "LogisticianExportListTemplate")
+  self.exportDialog = CreateFrame("Frame", "AuctionatorExportListFrame", self, "AuctionatorExportListTemplate")
   self.exportDialog:SetPoint("CENTER")
   table.insert(self.dialogs, self.exportDialog)
 
-  self.importDialog = CreateFrame("Frame", "LogisticianImportListFrame", self, "LogisticianImportListTemplate")
+  self.importDialog = CreateFrame("Frame", "AuctionatorImportListFrame", self, "AuctionatorImportListTemplate")
   self.importDialog:SetPoint("CENTER")
   table.insert(self.dialogs, self.importDialog)
 
-  self.exportCSVDialog = CreateFrame("Frame", nil, self, "LogisticianExportTextFrame")
+  self.exportCSVDialog = CreateFrame("Frame", nil, self, "AuctionatorExportTextFrame")
   self.exportCSVDialog:SetPoint("CENTER")
   table.insert(self.dialogs, self.exportCSVDialog)
 
@@ -196,7 +196,7 @@ function LogisticianShoppingTabFrameMixin:OnLoad()
     self.importDialog:Show()
   end)
 
-  self.itemHistoryDialog = CreateFrame("Frame", "LogisticianItemHistoryFrame", self, "LogisticianItemHistoryTemplate")
+  self.itemHistoryDialog = CreateFrame("Frame", "AuctionatorItemHistoryFrame", self, "AuctionatorItemHistoryTemplate")
   self.itemHistoryDialog:SetPoint("CENTER")
   self.itemHistoryDialog:Init()
 
@@ -207,26 +207,26 @@ function LogisticianShoppingTabFrameMixin:OnLoad()
   self:SetupTopSearch()
 
   self.NewListButton:SetScript("OnClick", function()
-    Logistician.Dialogs.ShowEditBox(LOGISTICIAN_L_CREATE_LIST_DIALOG, ACCEPT, CANCEL, function(text)
-      local name = Logistician.Shopping.ListManager:GetUnusedName(text)
-      Logistician.Shopping.ListManager:Create(name)
-      self.ListsContainer:ExpandList(Logistician.Shopping.ListManager:GetByName(name))
+    Auctionator.Dialogs.ShowEditBox(AUCTIONATOR_L_CREATE_LIST_DIALOG, ACCEPT, CANCEL, function(text)
+      local name = Auctionator.Shopping.ListManager:GetUnusedName(text)
+      Auctionator.Shopping.ListManager:Create(name)
+      self.ListsContainer:ExpandList(Auctionator.Shopping.ListManager:GetByName(name))
     end)
   end)
 
-  self.ContainerTabs:SetView(Logistician.Config.Get(Logistician.Config.Options.SHOPPING_LAST_CONTAINER_VIEW))
+  self.ContainerTabs:SetView(Auctionator.Config.Get(Auctionator.Config.Options.SHOPPING_LAST_CONTAINER_VIEW))
 
   self.shouldDefaultOpenOnShow = true
-  if Logistician.Constants.IsTBC then
+  if Auctionator.Constants.IsVanilla then
     self:RegisterEvent("AUCTION_HOUSE_CLOSED")
   else
     self:RegisterEvent("PLAYER_INTERACTION_MANAGER_FRAME_HIDE")
   end
 end
 
-function LogisticianShoppingTabFrameMixin:SetupSearchProvider()
+function AuctionatorShoppingTabFrameMixin:SetupSearchProvider()
   local function CacheResultIcons(results)
-    Logistician.Shopping.ListIconCache = Logistician.Shopping.ListIconCache or {}
+    Auctionator.Shopping.ListIconCache = Auctionator.Shopping.ListIconCache or {}
     local changed = false
     for _, result in ipairs(results or {}) do
       local link = result.itemLink
@@ -236,12 +236,12 @@ function LogisticianShoppingTabFrameMixin:SetupSearchProvider()
       -- GetItemInfo. Auction links already contain the localized name, while
       -- GetItemInfoInstant can provide the icon immediately from the item ID.
       if link and (not name or not texture) then
-        name = name or Logistician.Utilities.GetNameFromLink(link)
+        name = name or Auctionator.Utilities.GetNameFromLink(link)
         local _, _, _, _, instantTexture = C_Item.GetItemInfoInstant(link)
         texture = texture or instantTexture
       end
       if name and texture then
-        Logistician.Shopping.ListIconCache[string.lower(name)] = texture
+        Auctionator.Shopping.ListIconCache[string.lower(name)] = texture
         changed = true
       end
     end
@@ -254,23 +254,23 @@ function LogisticianShoppingTabFrameMixin:SetupSearchProvider()
       self.searchRunning = false
       self:StopLoadingTextAnimation()
       self:SetSearchPanelsLocked(false)
-      Logistician.EventBus:Fire(self, Logistician.Shopping.Tab.Events.SearchEnd, results)
+      Auctionator.EventBus:Fire(self, Auctionator.Shopping.Tab.Events.SearchEnd, results)
       self.ListsContainer.LoadingSpinner:Hide()
       self.ListsContainer.ResultsText:Hide()
 
     end,
     function(current, total, partialResults)
       CacheResultIcons(partialResults)
-      Logistician.EventBus:Fire(self, Logistician.Shopping.Tab.Events.SearchIncrementalUpdate, partialResults, total, current)
+      Auctionator.EventBus:Fire(self, Auctionator.Shopping.Tab.Events.SearchIncrementalUpdate, partialResults, total, current)
       -- Multi-item searches begin a fresh visual cycle for every query.
       self:ResetLoadingTextCycle()
     end
   )
 end
 
-function LogisticianShoppingTabFrameMixin:SetupListsContainer()
+function AuctionatorShoppingTabFrameMixin:SetupListsContainer()
   self.ListsContainer:SetOnListExpanded(function()
-    if Logistician.Config.Get(Logistician.Config.Options.AUTO_LIST_SEARCH) then
+    if Auctionator.Config.Get(Auctionator.Config.Options.AUTO_LIST_SEARCH) then
       self.singleSearch = false
       self:DoSearch(self.ListsContainer:GetExpandedList():GetAllItems())
     end
@@ -291,7 +291,7 @@ function LogisticianShoppingTabFrameMixin:SetupListsContainer()
   end)
   self.ListsContainer:SetOnSearchTermEdit(function(list, searchTerm, index)
     self:CloseAnyDialogs()
-    self.itemDialog:Init(LOGISTICIAN_L_LIST_EDIT_ITEM_HEADER, "Save", true)
+    self.itemDialog:Init(AUCTIONATOR_L_LIST_EDIT_ITEM_HEADER, "Save", true)
     self.itemDialog:SetOnFinishedClicked(function(newItemString)
       list:AlterItem(index, newItemString)
     end)
@@ -304,22 +304,22 @@ function LogisticianShoppingTabFrameMixin:SetupListsContainer()
   end)
   self.ListsContainer:SetOnListEdit(function(list)
     if list:IsTemporary() then
-      Logistician.Dialogs.ShowEditBox(LOGISTICIAN_L_MAKE_PERMANENT_CONFIRM:format(list:GetName()), ACCEPT, CANCEL, function(text)
+      Auctionator.Dialogs.ShowEditBox(AUCTIONATOR_L_MAKE_PERMANENT_CONFIRM:format(list:GetName()), ACCEPT, CANCEL, function(text)
         list:Rename(text)
         list:MakePermanent()
         self.ListsContainer:ScrollToList(list)
       end)
     else
-      Logistician.Dialogs.ShowEditBox(LOGISTICIAN_L_RENAME_LIST_CONFIRM:format(list:GetName()), ACCEPT, CANCEL, function(text)
+      Auctionator.Dialogs.ShowEditBox(AUCTIONATOR_L_RENAME_LIST_CONFIRM:format(list:GetName()), ACCEPT, CANCEL, function(text)
         list:Rename(text)
         self.ListsContainer:ScrollToList(list)
       end)
     end
   end)
   self.ListsContainer:SetOnListDelete(function(list)
-    Logistician.Dialogs.ShowConfirm(LOGISTICIAN_L_DELETE_LIST_CONFIRM:format(list:GetName()):gsub("%%", "%%%%"), ACCEPT, CANCEL, function()
-      if Logistician.Shopping.ListManager:GetIndexForName(list:GetName()) ~= nil then
-        Logistician.Shopping.ListManager:Delete(list:GetName())
+    Auctionator.Dialogs.ShowConfirm(AUCTIONATOR_L_DELETE_LIST_CONFIRM:format(list:GetName()):gsub("%%", "%%%%"), ACCEPT, CANCEL, function()
+      if Auctionator.Shopping.ListManager:GetIndexForName(list:GetName()) ~= nil then
+        Auctionator.Shopping.ListManager:Delete(list:GetName())
       end
     end)
   end)
@@ -332,7 +332,7 @@ function LogisticianShoppingTabFrameMixin:SetupListsContainer()
     end
   end)
   self.ListsContainer:SetOnListDrag(function(oldIndex, newIndex)
-    Logistician.Shopping.ListManager:Move(oldIndex, newIndex)
+    Auctionator.Shopping.ListManager:Move(oldIndex, newIndex)
   end)
   self.ListsContainer:SetOnListItemMove(function(sourceList, sourceIndex, targetList)
     if sourceList:GetName() == targetList:GetName() then return end
@@ -343,7 +343,7 @@ function LogisticianShoppingTabFrameMixin:SetupListsContainer()
   end)
 end
 
-function LogisticianShoppingTabFrameMixin:SetupRecentsContainer()
+function AuctionatorShoppingTabFrameMixin:SetupRecentsContainer()
   self.RecentsContainer:SetOnSearchRecent(function(searchTerm)
     self.singleSearch = true
     self:DoSearch({searchTerm})
@@ -351,23 +351,23 @@ function LogisticianShoppingTabFrameMixin:SetupRecentsContainer()
     self.RecentsContainer:TemporarilySelectSearchTerm(searchTerm)
   end)
   self.RecentsContainer:SetOnDeleteRecent(function(searchTerm)
-    Logistician.Shopping.Recents.DeleteEntry(searchTerm)
+    Auctionator.Shopping.Recents.DeleteEntry(searchTerm)
   end)
   self.RecentsContainer:SetOnCopyRecent(function(searchTerm)
     local list = self.ListsContainer:GetExpandedList()
     if list == nil then
-      Logistician.Utilities.Message(LOGISTICIAN_L_COPY_NO_LIST_SELECTED)
+      Auctionator.Utilities.Message(AUCTIONATOR_L_COPY_NO_LIST_SELECTED)
     else
       list:InsertItem(searchTerm)
-      Logistician.Utilities.Message(LOGISTICIAN_L_COPY_ITEM_ADDED:format(
-        GREEN_FONT_COLOR:WrapTextInColorCode(Logistician.Search.PrettifySearchString(searchTerm)),
+      Auctionator.Utilities.Message(AUCTIONATOR_L_COPY_ITEM_ADDED:format(
+        GREEN_FONT_COLOR:WrapTextInColorCode(Auctionator.Search.PrettifySearchString(searchTerm)),
         GREEN_FONT_COLOR:WrapTextInColorCode(list:GetName())
       ))
     end
   end)
 end
 
-function LogisticianShoppingTabFrameMixin:SetupTopSearch()
+function AuctionatorShoppingTabFrameMixin:SetupTopSearch()
   self.SearchOptions:SetOnSearch(function(searchTerm)
     if self.searchRunning then
       self:StopSearch()
@@ -376,17 +376,17 @@ function LogisticianShoppingTabFrameMixin:SetupTopSearch()
     else
       self.singleSearch = true
       self:DoSearch({searchTerm})
-      Logistician.Shopping.Recents.Save(searchTerm)
+      Auctionator.Shopping.Recents.Save(searchTerm)
     end
   end)
   self.SearchOptions:SetOnMore(function(searchTerm)
     self:CloseAnyDialogs()
-    self.itemDialog:Init(LOGISTICIAN_L_LIST_EXTENDED_SEARCH_HEADER, LOGISTICIAN_L_SEARCH)
+    self.itemDialog:Init(AUCTIONATOR_L_LIST_EXTENDED_SEARCH_HEADER, AUCTIONATOR_L_SEARCH)
     self.itemDialog:SetOnFinishedClicked(function(searchTerm)
       self.SearchOptions:SetSearchTerm(searchTerm)
       self.singleSearch = true
       self:DoSearch({searchTerm})
-      Logistician.Shopping.Recents.Save(searchTerm)
+      Auctionator.Shopping.Recents.Save(searchTerm)
     end)
 
     self.itemDialog:Show()
@@ -398,39 +398,39 @@ function LogisticianShoppingTabFrameMixin:SetupTopSearch()
   end)
 end
 
-function LogisticianShoppingTabFrameMixin:GetAppropriateListSearchName()
+function AuctionatorShoppingTabFrameMixin:GetAppropriateListSearchName()
   if self.singleSearch or not self.ListsContainer:GetExpandedList() then
-    return LOGISTICIAN_L_NO_LIST
+    return AUCTIONATOR_L_NO_LIST
   else
     return self.ListsContainer:GetExpandedList():GetName()
   end
 end
 
-function LogisticianShoppingTabFrameMixin:ReceiveEvent(eventName, eventData)
-  if eventName == Logistician.Shopping.Events.ListImportFinished then
-    self.ListsContainer:ExpandList(Logistician.Shopping.ListManager:GetByName(eventData))
+function AuctionatorShoppingTabFrameMixin:ReceiveEvent(eventName, eventData)
+  if eventName == Auctionator.Shopping.Events.ListImportFinished then
+    self.ListsContainer:ExpandList(Auctionator.Shopping.ListManager:GetByName(eventData))
 
-  elseif eventName == Logistician.Shopping.Tab.Events.ListSearchRequested then
-    self.ContainerTabs:SetView(Logistician.Constants.ShoppingListViews.Lists)
+  elseif eventName == Auctionator.Shopping.Tab.Events.ListSearchRequested then
+    self.ContainerTabs:SetView(Auctionator.Constants.ShoppingListViews.Lists)
     self.ListsContainer:ExpandList(eventData)
-    if not Logistician.Config.Get(Logistician.Config.Options.AUTO_LIST_SEARCH) then
+    if not Auctionator.Config.Get(Auctionator.Config.Options.AUTO_LIST_SEARCH) then
       self.singleSearch = false
       self:DoSearch(eventData:GetAllItems())
     end
 
-  elseif eventName == Logistician.Shopping.Tab.Events.ShowHistoricalPrices then
+  elseif eventName == Auctionator.Shopping.Tab.Events.ShowHistoricalPrices then
     self:CloseAnyDialogs()
     self.itemHistoryDialog:Show()
 
-  elseif eventName == Logistician.Shopping.Tab.Events.UpdateSearchTerm then
+  elseif eventName == Auctionator.Shopping.Tab.Events.UpdateSearchTerm then
     self.SearchOptions:SetSearchTerm(eventData)
 
-  elseif eventName == Logistician.Shopping.Tab.Events.BuyScreenShown then
+  elseif eventName == Auctionator.Shopping.Tab.Events.BuyScreenShown then
     self:StopSearch()
   end
 end
 
-function LogisticianShoppingTabFrameMixin:OnEvent(eventName, ...)
+function AuctionatorShoppingTabFrameMixin:OnEvent(eventName, ...)
   if eventName == "PLAYER_INTERACTION_MANAGER_FRAME_HIDE" then
     local showType = ...
     if showType == Enum.PlayerInteractionType.Auctioneer then
@@ -441,9 +441,9 @@ function LogisticianShoppingTabFrameMixin:OnEvent(eventName, ...)
   end
 end
 
-function LogisticianShoppingTabFrameMixin:OnShow()
+function AuctionatorShoppingTabFrameMixin:OnShow()
   self.SearchOptions:FocusSearchBox()
-  Logistician.EventBus:Register(self, EVENTBUS_EVENTS)
+  Auctionator.EventBus:Register(self, EVENTBUS_EVENTS)
 
   if self.shouldDefaultOpenOnShow then
     self:OpenDefaultList()
@@ -451,14 +451,14 @@ function LogisticianShoppingTabFrameMixin:OnShow()
   end
 end
 
-function LogisticianShoppingTabFrameMixin:OnHide()
+function AuctionatorShoppingTabFrameMixin:OnHide()
   if self.searchRunning then
     self:StopSearch()
   end
-  Logistician.EventBus:Unregister(self, EVENTBUS_EVENTS)
+  Auctionator.EventBus:Unregister(self, EVENTBUS_EVENTS)
 end
 
-function LogisticianShoppingTabFrameMixin:ExportCSVClicked()
+function AuctionatorShoppingTabFrameMixin:ExportCSVClicked()
   self:CloseAnyDialogs()
   self.DataProvider:GetCSV(function(result)
     self.exportCSVDialog:SetExportString(result)
@@ -466,18 +466,18 @@ function LogisticianShoppingTabFrameMixin:ExportCSVClicked()
   end)
 end
 
-function LogisticianShoppingTabFrameMixin:OpenDefaultList()
-  local listName = Logistician.Config.Get(Logistician.Config.Options.DEFAULT_LIST)
+function AuctionatorShoppingTabFrameMixin:OpenDefaultList()
+  local listName = Auctionator.Config.Get(Auctionator.Config.Options.DEFAULT_LIST)
 
-  if listName == Logistician.Constants.NO_LIST then
+  if listName == Auctionator.Constants.NO_LIST then
     return
   end
 
-  local listIndex = Logistician.Shopping.ListManager:GetIndexForName(listName)
+  local listIndex = Auctionator.Shopping.ListManager:GetIndexForName(listName)
 
   if listIndex ~= nil then
     self.ListsContainer:CollapseList()
-    self.ContainerTabs:SetView(Logistician.Constants.ShoppingListViews.Lists)
-    self.ListsContainer:ExpandList(Logistician.Shopping.ListManager:GetByIndex(listIndex))
+    self.ContainerTabs:SetView(Auctionator.Constants.ShoppingListViews.Lists)
+    self.ListsContainer:ExpandList(Auctionator.Shopping.ListManager:GetByIndex(listIndex))
   end
 end

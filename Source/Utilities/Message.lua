@@ -1,6 +1,6 @@
-function Logistician.Utilities.Message(message)
+function Auctionator.Utilities.Message(message)
   print(
-    LIGHTBLUE_FONT_COLOR:WrapTextInColorCode("Logistician: ")
+    LIGHTBLUE_FONT_COLOR:WrapTextInColorCode("Auctionator: ")
     .. message
   )
 end

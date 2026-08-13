@@ -1,4 +1,4 @@
-Logistician.Constants.ITEM_INFO = {
+Auctionator.Constants.ITEM_INFO = {
   NAME = 1,
   LINK = 2,
   RARITY = 3,

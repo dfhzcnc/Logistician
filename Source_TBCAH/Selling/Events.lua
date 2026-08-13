@@ -1,7 +1,0 @@
-Logistician.Selling.Events.RefreshBuying = "selling_refresh_buying"
-Logistician.Selling.Events.RefreshHistoryOnly = "selling_refresh_history_only"
-Logistician.Selling.Events.StartFakeBuyLoading = "selling_start_fake_buy_loading"
-Logistician.Selling.Events.StopFakeBuyLoading = "selling_stop_fake_buy_loading"
-Logistician.Selling.Events.PostAttempt = "selling_post_attempt"
-Logistician.Selling.Events.PostSuccessful = "selling_post_successful"
-Logistician.Selling.Events.PostFailed = "selling_post_failed"

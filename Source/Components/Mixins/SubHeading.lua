@@ -1,14 +1,14 @@
-LogisticianConfigurationSubHeadingMixin = {}
+AuctionatorConfigurationSubHeadingMixin = {}
 
-function LogisticianConfigurationSubHeadingMixin:InitializeSubHeading()
-  Logistician.Debug.Message("LogisticianConfigurationSubHeadingMixin:InitializeSubHeading()")
+function AuctionatorConfigurationSubHeadingMixin:InitializeSubHeading()
+  Auctionator.Debug.Message("AuctionatorConfigurationSubHeadingMixin:InitializeSubHeading()")
 
   if self.subHeadingText ~= nil then
     self.HeadingText:SetText(self.subHeadingText)
   end
 end
 
-function LogisticianConfigurationSubHeadingMixin:SetText(newHeading)
+function AuctionatorConfigurationSubHeadingMixin:SetText(newHeading)
   self.subHeadingText = newHeading
   self:OnLoad()
 end

@@ -1,7 +1,7 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/">
   <Frame
-    name="LogisticianItemKeyCellTemplate"
-    mixin="LogisticianItemKeyCellTemplateMixin"
+    name="AuctionatorItemKeyCellTemplate"
+    mixin="AuctionatorItemKeyCellTemplateMixin"
     parentKey="cell"
     enableMouse="true"
     virtual="true"

@@ -1,16 +1,16 @@
-LogisticianShoppingListMixin = {}
+AuctionatorShoppingListMixin = {}
 
-function LogisticianShoppingListMixin:Init(data, manager)
+function AuctionatorShoppingListMixin:Init(data, manager)
   assert(data)
   self.data = data
   self.manager = manager
 end
 
-function LogisticianShoppingListMixin:GetName()
+function AuctionatorShoppingListMixin:GetName()
   return self.data.name
 end
 
-function LogisticianShoppingListMixin:Rename(newName)
+function AuctionatorShoppingListMixin:Rename(newName)
   assert(type(newName) == "string")
   assert(self.manager:GetIndexForName(newName) == nil, "New name already in use")
 
@@ -19,40 +19,40 @@ function LogisticianShoppingListMixin:Rename(newName)
   self.manager:FireMetaChangeEvent(self:GetName())
 end
 
-function LogisticianShoppingListMixin:IsTemporary()
+function AuctionatorShoppingListMixin:IsTemporary()
   return self.data.isTemporary
 end
 
-function LogisticianShoppingListMixin:MakePermanent()
+function AuctionatorShoppingListMixin:MakePermanent()
   self.data.isTemporary = false
 
   self.manager:FireMetaChangeEvent(self:GetName())
 end
 
-function LogisticianShoppingListMixin:GetItemCount()
+function AuctionatorShoppingListMixin:GetItemCount()
   return #self.data.items
 end
 
-function LogisticianShoppingListMixin:GetItemByIndex(index)
+function AuctionatorShoppingListMixin:GetItemByIndex(index)
   return self.data.items[index]
 end
 
-function LogisticianShoppingListMixin:GetIndexForItem(item)
+function AuctionatorShoppingListMixin:GetIndexForItem(item)
   return tIndexOf(self.data.items, item)
 end
 
-function LogisticianShoppingListMixin:GetAllItems()
+function AuctionatorShoppingListMixin:GetAllItems()
   return CopyTable(self.data.items)
 end
 
-function LogisticianShoppingListMixin:DeleteItem(index)
+function AuctionatorShoppingListMixin:DeleteItem(index)
   assert(self.data.items[index], "Nonexistent item")
   table.remove(self.data.items, index)
 
   self.manager:FireItemChangeEvent(self:GetName())
 end
 
-function LogisticianShoppingListMixin:AlterItem(index, newItem)
+function AuctionatorShoppingListMixin:AlterItem(index, newItem)
   assert(self.data.items[index], "Nonexistent item")
   assert(type(newItem) == "string")
 
@@ -61,7 +61,7 @@ function LogisticianShoppingListMixin:AlterItem(index, newItem)
   self.manager:FireItemChangeEvent(self:GetName())
 end
 
-function LogisticianShoppingListMixin:InsertItem(newItem, index)
+function AuctionatorShoppingListMixin:InsertItem(newItem, index)
   assert(type(newItem) == "string")
   if index ~= nil then
     table.insert(self.data.items, index, newItem)
@@ -72,11 +72,11 @@ function LogisticianShoppingListMixin:InsertItem(newItem, index)
   self.manager:FireItemChangeEvent(self:GetName())
 end
 
-function LogisticianShoppingListMixin:ClearItems()
+function AuctionatorShoppingListMixin:ClearItems()
   self.data.items = {}
 end
 
-function LogisticianShoppingListMixin:AppendItems(newItems)
+function AuctionatorShoppingListMixin:AppendItems(newItems)
   for _, i in ipairs(newItems) do
     assert(type(i) == "string")
     table.insert(self.data.items, i)
@@ -85,7 +85,7 @@ function LogisticianShoppingListMixin:AppendItems(newItems)
   self.manager:FireItemChangeEvent(self:GetName())
 end
 
-function LogisticianShoppingListMixin:Sort()
+function AuctionatorShoppingListMixin:Sort()
   table.sort(self.data.items, function(a, b)
     return a:lower():gsub("\"", "") < b:lower():gsub("\"", "")
   end)

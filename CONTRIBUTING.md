@@ -23,7 +23,7 @@ Logistician follows Semantic Versioning:
 - Major (`1.1.77` to `2.0.0`): breaking behavior or incompatible data changes.
 
 The version in `!Logistician.toc`, Git tag, GitHub release, and package name
-must match. Git tags use a `v` prefix, such as `v2.0.0`.
+must match. Git tags use a `v` prefix, such as `v1.1.77`.
 
 ## Release checklist
 
@@ -31,7 +31,7 @@ must match. Git tags use a `v` prefix, such as `v2.0.0`.
 2. Move changelog entries from `Unreleased` into a dated version section.
 3. Update `## Version:` in `!Logistician.toc`.
 4. Merge the release commit into `main`.
-5. Create and push an annotated matching tag, such as `v2.0.0`.
+5. Create and push an annotated matching tag, such as `v1.1.77`.
 
 The release workflow validates the tag against the TOC, packages the addon as
 `Logistician-vX.Y.Z.zip`, and publishes a GitHub release. Do not manually edit

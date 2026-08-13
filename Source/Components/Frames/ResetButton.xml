@@ -1,9 +1,9 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/">
   <Button
-    name="LogisticianResetButton"
+    name="AuctionatorResetButton"
     virtual="true"
     inherits="UIPanelButtonTemplate"
-    mixin="LogisticianResetButtonMixin"
+    mixin="AuctionatorResetButtonMixin"
   >
     <Size x="15" y="15" />
 

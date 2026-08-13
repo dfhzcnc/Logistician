@@ -11,11 +11,11 @@ bills of materials.
    `Interface/AddOns` directory.
 3. Restart World of Warcraft or run `/reload` after updating addon files.
 
-## Supported client
+## Supported clients
 
-Logistician is built exclusively for World of Warcraft: The Burning Crusade
-Anniversary (`Interface 20506`). Release packages retain the required top-level
-`!Logistician` directory.
+The supported interface versions are declared in `!Logistician.toc`. Release
+packages are built directly from the repository and retain the required
+top-level `!Logistician` directory.
 
 ## Development
 

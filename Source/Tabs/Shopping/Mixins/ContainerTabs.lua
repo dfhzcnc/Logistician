@@ -1,23 +1,23 @@
-LogisticianShoppingTabContainerTabsMixin = {}
+AuctionatorShoppingTabContainerTabsMixin = {}
 
-function LogisticianShoppingTabContainerTabsMixin:OnLoad()
+function AuctionatorShoppingTabContainerTabsMixin:OnLoad()
   self.Tabs = {self.ListsTab, self.RecentsTab}
   self.numTabs = #self.Tabs
 end
 
-function LogisticianShoppingTabContainerTabsMixin:SetView(viewIndex)
+function AuctionatorShoppingTabContainerTabsMixin:SetView(viewIndex)
   PanelTemplates_SetTab(self, viewIndex)
-  Logistician.Config.Set(Logistician.Config.Options.SHOPPING_LAST_CONTAINER_VIEW, viewIndex)
+  Auctionator.Config.Set(Auctionator.Config.Options.SHOPPING_LAST_CONTAINER_VIEW, viewIndex)
 
   self:GetParent().NewListButton:Hide()
   self:GetParent().ImportButton:Hide()
   self:GetParent().ExportButton:Hide()
 
-  if viewIndex == Logistician.Constants.ShoppingListViews.Recents then
+  if viewIndex == Auctionator.Constants.ShoppingListViews.Recents then
     self:GetParent().ListsContainer:Hide()
     self:GetParent().RecentsContainer:Show()
 
-  elseif viewIndex == Logistician.Constants.ShoppingListViews.Lists then
+  elseif viewIndex == Auctionator.Constants.ShoppingListViews.Lists then
     self:GetParent().RecentsContainer:Hide()
     self:GetParent().ListsContainer:Show()
     self:GetParent().NewListButton:Show()

@@ -1,12 +1,12 @@
-LogisticianKeyBindingConfigMixin = CreateFromMixins(LogisticianConfigTooltipMixin)
+AuctionatorKeyBindingConfigMixin = CreateFromMixins(AuctionatorConfigTooltipMixin)
 
-function LogisticianKeyBindingConfigMixin:OnLoad()
+function AuctionatorKeyBindingConfigMixin:OnLoad()
   self.isListening = false
   self.Description:SetText(self.labelText)
   self.shortcut = ""
 end
 
-function LogisticianKeyBindingConfigMixin:SetShortcut(shortcut)
+function AuctionatorKeyBindingConfigMixin:SetShortcut(shortcut)
   self.shortcut = shortcut
   if self.shortcut == "" then
     self.Button:SetText(GRAY_FONT_COLOR:WrapTextInColorCode(NOT_BOUND))
@@ -15,15 +15,15 @@ function LogisticianKeyBindingConfigMixin:SetShortcut(shortcut)
   end
 end
 
-function LogisticianKeyBindingConfigMixin:GetShortcut(shortcut)
+function AuctionatorKeyBindingConfigMixin:GetShortcut(shortcut)
   return self.shortcut
 end
 
-function LogisticianKeyBindingConfigMixin:OnHide()
+function AuctionatorKeyBindingConfigMixin:OnHide()
   self:StopListening()
 end
 
-function LogisticianKeyBindingConfigMixin:StartListening()
+function AuctionatorKeyBindingConfigMixin:StartListening()
   self.isListening = true
   self:SetScript("OnMouseWheel", self.OnMouseWheel)
   self:SetScript("OnKeyDown", self.OnKeyDown)
@@ -32,7 +32,7 @@ function LogisticianKeyBindingConfigMixin:StartListening()
   end)
   self.Button.selectedHighlight:Show()
 end
-function LogisticianKeyBindingConfigMixin:StopListening()
+function AuctionatorKeyBindingConfigMixin:StopListening()
   self.isListening = false
   self:SetScript("OnMouseWheel", nil)
   self:SetScript("OnKeyDown", nil)
@@ -40,7 +40,7 @@ function LogisticianKeyBindingConfigMixin:StopListening()
   self.Button.selectedHighlight:Hide()
 end
 
-function LogisticianKeyBindingConfigMixin:OnClick(button)
+function AuctionatorKeyBindingConfigMixin:OnClick(button)
   if button == "LeftButton" or button == "RightButton" then
     if self.isListening then
       self:StopListening()
@@ -52,16 +52,16 @@ function LogisticianKeyBindingConfigMixin:OnClick(button)
   end
 end
 
-function LogisticianKeyBindingConfigMixin:OnEnter()
-  LogisticianConfigTooltipMixin.OnEnter(self)
+function AuctionatorKeyBindingConfigMixin:OnEnter()
+  AuctionatorConfigTooltipMixin.OnEnter(self)
   self.Button:LockHighlight()
 end
-function LogisticianKeyBindingConfigMixin:OnLeave()
-  LogisticianConfigTooltipMixin.OnLeave(self)
+function AuctionatorKeyBindingConfigMixin:OnLeave()
+  AuctionatorConfigTooltipMixin.OnLeave(self)
   self.Button:UnlockHighlight()
 end
 
-function LogisticianKeyBindingConfigMixin:OnMouseWheel(delta)
+function AuctionatorKeyBindingConfigMixin:OnMouseWheel(delta)
   if delta > 0 then
     self:OnKeyDown("MOUSEWHEELUP")
   else
@@ -69,7 +69,7 @@ function LogisticianKeyBindingConfigMixin:OnMouseWheel(delta)
   end
 end
 
-function LogisticianKeyBindingConfigMixin:OnKeyDown(keyOrButton)
+function AuctionatorKeyBindingConfigMixin:OnKeyDown(keyOrButton)
   if GetBindingFromClick(keyOrButton) == "SCREENSHOT" then
     self:SetPropagateKeyboardInput(true)
     return
@@ -84,7 +84,7 @@ function LogisticianKeyBindingConfigMixin:OnKeyDown(keyOrButton)
   if not IsKeyPressIgnoredForBinding(keyPressed) then
     if CreateKeyChordStringUsingMetaKeyState then
       keyPressed = CreateKeyChordStringUsingMetaKeyState(keyPressed)
-    else --if Logistician.Constants.IsClassic
+    else --if Auctionator.Constants.IsClassic
       keyPressed = CreateKeyChordString(keyPressed)
     end
     self:SetShortcut(keyPressed)

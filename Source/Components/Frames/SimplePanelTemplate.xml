@@ -1,5 +1,5 @@
 <Ui>
-  <Frame name="LogisticianSimplePanelTemplate" virtual="true">
+  <Frame name="AuctionatorSimplePanelTemplate" virtual="true">
     <Size x="338" y="424"/>
     <Layers>
       <Layer level="BACKGROUND" textureSubLevel="-6">
@@ -12,7 +12,7 @@
       </Layer>
     </Layers>
     <Frames>
-    <Frame parentKey="Border" inherits="LogisticianPanelBorderTemplate"/>
+    <Frame parentKey="Border" inherits="AuctionatorPanelBorderTemplate"/>
     </Frames>
   </Frame>
 </Ui>

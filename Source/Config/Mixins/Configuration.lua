@@ -1,7 +1,7 @@
-LogisticianConfigFrameMixin = CreateFromMixins(LogisticianPanelConfigMixin)
+AuctionatorConfigFrameMixin = CreateFromMixins(AuctionatorPanelConfigMixin)
 
-function LogisticianConfigFrameMixin:OnLoad()
-  Logistician.Debug.Message("LogisticianConfigFrameMixin:OnLoad()")
+function AuctionatorConfigFrameMixin:OnLoad()
+  Auctionator.Debug.Message("AuctionatorConfigFrameMixin:OnLoad()")
 
   -- Classic's Settings list does not consistently resolve a TOC IconTexture
   -- when the visible category name differs from the addon folder (!Logistician).
@@ -12,14 +12,14 @@ function LogisticianConfigFrameMixin:OnLoad()
   self:SetupPanel()
 end
 
-function LogisticianConfigFrameMixin:Show()
+function AuctionatorConfigFrameMixin:Show()
 
 end
 
-function LogisticianConfigFrameMixin:Save()
-  Logistician.Debug.Message("LogisticianConfigFrameMixin:Save()")
+function AuctionatorConfigFrameMixin:Save()
+  Auctionator.Debug.Message("AuctionatorConfigFrameMixin:Save()")
 end
 
-function LogisticianConfigFrameMixin:Cancel()
-  Logistician.Debug.Message("LogisticianConfigFrameMixin:Cancel()")
+function AuctionatorConfigFrameMixin:Cancel()
+  Auctionator.Debug.Message("AuctionatorConfigFrameMixin:Cancel()")
 end

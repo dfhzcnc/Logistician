@@ -1,8 +1,8 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/">
   <Frame
-    name="LogisticianBagListResultsRowTemplate"
-    mixin="LogisticianBagListResultsRowMixin"
-    inherits="LogisticianResultsRowTemplate"
+    name="AuctionatorBagListResultsRowTemplate"
+    mixin="AuctionatorBagListResultsRowMixin"
+    inherits="AuctionatorResultsRowTemplate"
     virtual="true"
     enableMouse="true"
   >

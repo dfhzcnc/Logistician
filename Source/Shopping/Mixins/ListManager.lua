@@ -1,9 +1,9 @@
-LogisticianShoppingListManagerMixin = {}
+AuctionatorShoppingListManagerMixin = {}
 
 -- getData: function() -> table. Returns raw shopping list data storage
 -- setData: function(newVal) newVal: table -> nil. Used to overwrite the
 --  shopping list data storage with new data
-function LogisticianShoppingListManagerMixin:Init(getData, setData)
+function AuctionatorShoppingListManagerMixin:Init(getData, setData)
   assert(type(getData) == "function" and type(setData) == "function")
   self.getData = getData
   self.setData = setData
@@ -12,12 +12,12 @@ function LogisticianShoppingListManagerMixin:Init(getData, setData)
     self.setData({})
   end
 
-  Logistician.EventBus:RegisterSource(self, "shopping list manager")
+  Auctionator.EventBus:RegisterSource(self, "shopping list manager")
 
   self:Prune()
 end
 
-function LogisticianShoppingListManagerMixin:Create(listName, isTemporary)
+function AuctionatorShoppingListManagerMixin:Create(listName, isTemporary)
   isTemporary = isTemporary or false
 
   assert(type(listName) == "string")
@@ -32,7 +32,7 @@ function LogisticianShoppingListManagerMixin:Create(listName, isTemporary)
   self:FireMetaChangeEvent(listName)
 end
 
-function LogisticianShoppingListManagerMixin:Sort()
+function AuctionatorShoppingListManagerMixin:Sort()
   table.sort(self.getData(), function(left, right)
     local lowerLeft = string.lower(left.name)
     local lowerRight = string.lower(right.name)
@@ -48,7 +48,7 @@ function LogisticianShoppingListManagerMixin:Sort()
   self:FireMetaChangeEvent()
 end
 
-function LogisticianShoppingListManagerMixin:Prune()
+function AuctionatorShoppingListManagerMixin:Prune()
   local lists = {}
 
   for _, list in ipairs(self.getData()) do
@@ -62,7 +62,7 @@ function LogisticianShoppingListManagerMixin:Prune()
   self:FireMetaChangeEvent()
 end
 
-function LogisticianShoppingListManagerMixin:GetIndexForName(listName)
+function AuctionatorShoppingListManagerMixin:GetIndexForName(listName)
   for index, list in ipairs(self.getData()) do
     if list.name == listName then
       return index
@@ -72,22 +72,22 @@ function LogisticianShoppingListManagerMixin:GetIndexForName(listName)
   return nil
 end
 
-function LogisticianShoppingListManagerMixin:GetCount()
+function AuctionatorShoppingListManagerMixin:GetCount()
   return #self.getData()
 end
 
-function LogisticianShoppingListManagerMixin:GetByIndex(listIndex)
+function AuctionatorShoppingListManagerMixin:GetByIndex(listIndex)
   local data =  self.getData()[listIndex]
   assert(data, "List index doesn't exist")
 
-  return CreateAndInitFromMixin(LogisticianShoppingListMixin, data, self)
+  return CreateAndInitFromMixin(AuctionatorShoppingListMixin, data, self)
 end
 
-function LogisticianShoppingListManagerMixin:GetByName(listName)
+function AuctionatorShoppingListManagerMixin:GetByName(listName)
   return self:GetByIndex(self:GetIndexForName(listName))
 end
 
-function LogisticianShoppingListManagerMixin:Delete(listName)
+function AuctionatorShoppingListManagerMixin:Delete(listName)
   local listIndex = self:GetIndexForName(listName)
   assert(listIndex ~= nil, "List doesn't exist")
 
@@ -96,7 +96,7 @@ function LogisticianShoppingListManagerMixin:Delete(listName)
   self:FireMetaChangeEvent(listName)
 end
 
-function LogisticianShoppingListManagerMixin:Move(oldIndex, newIndex)
+function AuctionatorShoppingListManagerMixin:Move(oldIndex, newIndex)
   local data = self.getData()
   if oldIndex == newIndex or not data[oldIndex] or not data[newIndex] then return end
   local moved = table.remove(data, oldIndex)
@@ -104,7 +104,7 @@ function LogisticianShoppingListManagerMixin:Move(oldIndex, newIndex)
   self:FireMetaChangeEvent(moved.name)
 end
 
-function LogisticianShoppingListManagerMixin:GetUnusedName(prefix)
+function AuctionatorShoppingListManagerMixin:GetUnusedName(prefix)
   local currentIndex = 1
   local newName = prefix
 
@@ -116,10 +116,10 @@ function LogisticianShoppingListManagerMixin:GetUnusedName(prefix)
   return newName
 end
 
-function LogisticianShoppingListManagerMixin:FireItemChangeEvent(listName)
-  Logistician.EventBus:Fire(self, Logistician.Shopping.Events.ListItemChange, listName)
+function AuctionatorShoppingListManagerMixin:FireItemChangeEvent(listName)
+  Auctionator.EventBus:Fire(self, Auctionator.Shopping.Events.ListItemChange, listName)
 end
 
-function LogisticianShoppingListManagerMixin:FireMetaChangeEvent(listName)
-  Logistician.EventBus:Fire(self, Logistician.Shopping.Events.ListMetaChange, listName)
+function AuctionatorShoppingListManagerMixin:FireMetaChangeEvent(listName)
+  Auctionator.EventBus:Fire(self, Auctionator.Shopping.Events.ListMetaChange, listName)
 end

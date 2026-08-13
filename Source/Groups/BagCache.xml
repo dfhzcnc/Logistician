@@ -1,5 +1,5 @@
 <Ui>
-  <Frame name="LogisticianBagCacheTemplate" virtual="true"  mixin="LogisticianBagCacheMixin">
+  <Frame name="AuctionatorBagCacheTemplate" virtual="true"  mixin="AuctionatorBagCacheMixin">
     <Scripts>
       <OnLoad method="OnLoad"/>
       <OnEvent method="OnEvent"/>

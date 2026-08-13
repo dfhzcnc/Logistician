@@ -1,4 +1,4 @@
-LOGISTICIAN_LOCALES.zhCN = function()
+AUCTIONATOR_LOCALES.zhCN = function()
   local L = {}
 
   L["ADD_FAVOURITE"] = "添加到收藏"
@@ -17,7 +17,7 @@ L["AUCTION_DURATION_12"] = "12小时"
 L["AUCTION_DURATION_24"] = "24小时"
 L["AUCTION_DURATION_48"] = "48小时"
 L["AUCTION_MEAN"] = "平均拍卖价"
-L["LOGISTICIAN"] = "Logistician"
+L["AUCTIONATOR"] = "Logistician"
 L["AUTHOR_HEADER"] = "作者"
 L["BID_EXISTING_ON_OWNED_AUCTION"] = "已有买家对你的拍卖出价，取消将损失你的保证金以及："
 L["BID_ONLY_AVAILABLE"] = "仅可竞标"

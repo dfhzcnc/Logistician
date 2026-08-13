@@ -1,4 +1,4 @@
-function Logistician.Utilities.PriceWarningThreshold(unitPrice)
+function Auctionator.Utilities.PriceWarningThreshold(unitPrice)
   if unitPrice == 0 then
     return 0
   end
