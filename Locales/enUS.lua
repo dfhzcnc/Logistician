@@ -512,8 +512,8 @@ AUCTIONATOR_LOCALES.enUS = function()
   L["REMOVE_FROM_X"] = "Remove from %s"
 
   L["CONTRIBUTE_HEADER"] = "|cff04cca4Development is time consuming. Consider supporting|r"
-  L["CONTRIBUTE_TOOLTIP_HEADER"] = "About donating"
-  L["CONTRIBUTE_TOOLTIP_TEXT"] = "Logistician has had thousands of hours spent on development and support to get it to its current state in just the last few years. Donating is one way of supporting this indefinitely."
+  L["CONTRIBUTE_TOOLTIP_HEADER"] = "Support my work"
+  L["CONTRIBUTE_TOOLTIP_TEXT"] = "Contributions are optional and help me dedicate more time to maintaining Logistician and creating future projects."
   L["DONATE"] = "Donate"
 
   return L
