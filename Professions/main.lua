@@ -583,6 +583,13 @@ function main:CraftTradeSkillFrame()
         reagent.icon:SetTexture("")
         reagent.icon:SetVertexColor(0.5, 0.5, 0.5)
 
+        reagent.favoriteIcon = reagent:CreateTexture(nil, "OVERLAY", nil, 7)
+        reagent.favoriteIcon:SetSize(26, 26)
+        reagent.favoriteIcon:SetPoint("BOTTOMLEFT", reagent.icon, "BOTTOMLEFT", -6, -5)
+        reagent.favoriteIcon:SetTexture("Interface\\Common\\FavoritesIcon")
+        reagent.favoriteIcon:SetVertexColor(1, 1, 1, 1)
+        reagent.favoriteIcon:Hide()
+
         reagent.count = reagent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         reagent.count:SetPoint("BOTTOMRIGHT", reagent.icon, "BOTTOMRIGHT", -3, 2)
         reagent.count:SetText("0/0")
@@ -720,7 +727,9 @@ function main:CraftTradeSkillFrame()
         skillButton.newHighlight = skillButton:CreateTexture("CraftTradeSkillButtonNewHighlight"..i, "OVERLAY")
         skillButton.newHighlight:SetTexture("interface/glues/common/glues-bigbutton-glow")
         skillButton.newHighlight:SetSize(305, 30)
-        skillButton.newHighlight:SetPoint("TOPLEFT", 11, 4.5)
+        -- Follow the recipe-name font string rather than the old fixed row
+        -- offset. The compact item icon shifts recipe text to the right.
+        skillButton.newHighlight:SetPoint("LEFT", skillButton:GetFontString(), "LEFT", -15, 0)
         skillButton.newHighlight:SetBlendMode("ADD")
         skillButton.newHighlight:SetVertexColor(1, 1, 0, 0.8)
         skillButton.newHighlight:SetTexCoord(0.17, 0.83, 0, 1)
@@ -818,9 +827,6 @@ function main:CraftTradeSkillFrame()
             else
                 self:SetText(skill.displayName.. " [".. skill.numAvailable.. "]")
             end
-            local textWidth = self:GetFontString():GetStringWidth()
-            self.newHighlight:SetSize(textWidth +25, 30)
-
             self:GetFontString():ClearAllPoints()
             self:GetFontString():SetPoint("LEFT", 40, 0)
             self:GetFontString():SetPoint("RIGHT", -4, 0)
@@ -830,6 +836,12 @@ function main:CraftTradeSkillFrame()
                 self.normalFont:SetTextColor(0.5, 0.5, 0.5)
             end
             self:SetNormalFontObject(self.normalFont)
+            -- Measure after applying the final font and anchors. Extra space
+            -- on both ends keeps the glow's faded caps beyond the full name.
+            local textWidth = self:GetFontString():GetStringWidth()
+            local availableWidth = math.max(30, self:GetWidth() - 25)
+            self.newHighlight:SetWidth(math.min(textWidth + 30, availableWidth))
+            self.newHighlight:SetHeight(30)
             self.type = "skill"
             self:SetSelected(main.selectedSkill ~= nil and main.selectedSkill.skillId == skill.skillId)
             if WiderProfessions_DB.skillColorMode ~= 0 then
@@ -1182,6 +1194,7 @@ function main:SetSkillDetails(skill)
         reagent.icon:SetTexture(_reagent.icon)
         reagent.name:SetText(_reagent.name)
         reagent.count:SetText(_reagent.playerCount.. "/".. _reagent.count)
+        reagent.favoriteIcon:SetShown(main:IsMaterialFavorite(_reagent))
         if _reagent.playerCount < _reagent.count then
             reagent.icon:SetVertexColor(0.5, 0.5, 0.5)
             reagent.name:SetTextColor(0.5, 0.5, 0.5)
@@ -1194,6 +1207,11 @@ function main:SetSkillDetails(skill)
         reagent:SetScript("OnEnter", function(self)
             GameTooltip:SetOwner(reagent.icon, "ANCHOR_RIGHT")
             GameTooltip:SetHyperlink(_reagent.link)
+            if main:IsMaterialFavorite(_reagent) then
+                GameTooltip:AddLine("Right-click to remove this favorite material.", 0.2, 1, 0.2, true)
+            else
+                GameTooltip:AddLine("Right-click to mark this crafting material as a favorite.", 0.65, 0.65, 0.65, true)
+            end
             GameTooltip:Show()
         end)
 
@@ -1205,6 +1223,20 @@ function main:SetSkillDetails(skill)
         reagent:SetScript("OnMouseDown", function(self, button)
             if IsModifiedClick("CHATLINK") then
                 linkItemInTextBar(_reagent.name, _reagent.link)
+            elseif button == "RightButton" then
+                local isFavorite = main:ToggleMaterialFavorite(_reagent)
+                reagent.favoriteIcon:SetShown(isFavorite)
+                PlaySound(SOUNDKIT and SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON or 856)
+
+                GameTooltip:Hide()
+                GameTooltip:SetOwner(reagent.icon, "ANCHOR_RIGHT")
+                GameTooltip:SetHyperlink(_reagent.link)
+                if isFavorite then
+                    GameTooltip:AddLine("Right-click to remove this favorite material.", 0.2, 1, 0.2, true)
+                else
+                    GameTooltip:AddLine("Right-click to mark this crafting material as a favorite.", 0.65, 0.65, 0.65, true)
+                end
+                GameTooltip:Show()
             end
         end)
     end
@@ -1212,6 +1244,7 @@ function main:SetSkillDetails(skill)
     for i = #skill.reagents +1, MAX_CRAFT_REAGENTS do
         local reagent = _G["CraftTradeReagent"..i]
         reagent:Hide()
+        reagent.favoriteIcon:Hide()
 
         reagent:SetScript("OnEnter", function(self)
             GameTooltip:Hide()

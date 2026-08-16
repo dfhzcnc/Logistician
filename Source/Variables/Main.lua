@@ -226,6 +226,14 @@ function Auctionator.Variables.InitializeShoppingLists()
   )
 
   AUCTIONATOR_RECENT_SEARCHES = AUCTIONATOR_RECENT_SEARCHES or {}
+
+  -- Item names in shopping lists do not include an item ID, so their icons
+  -- may not be available from WoW's item cache immediately after login. Keep
+  -- icons learned from completed searches across sessions.
+  if type(Auctionator.SavedState.shoppingListIconCache) ~= "table" then
+    Auctionator.SavedState.shoppingListIconCache = {}
+  end
+  Auctionator.Shopping.ListIconCache = Auctionator.SavedState.shoppingListIconCache
 end
 
 function Auctionator.Variables.InitializeVendorPriceCache()

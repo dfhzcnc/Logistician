@@ -4,6 +4,7 @@ local main = _G.WiderProfessionsAddon
 local WPP = CreateFrame("Frame", "WiderProfessionsPlusController")
 local DEFAULT_CRAFT_SECONDS = 3
 local MAX_ROWS = 10
+local QUEUE_ROWS_PER_PAGE = 7
 
 local function Print(msg)
     DEFAULT_CHAT_FRAME:AddMessage("|cffffd100Logistician|r: " .. tostring(msg))
@@ -24,6 +25,7 @@ local function InitDB()
     db.queues = db.queues or {} -- legacy 0.1.10 storage, retained for migration only
     db.craftTimes = db.craftTimes or {}
     db.settings = db.settings or {}
+    db.settings.shoppingCollapsed = db.settings.shoppingCollapsed or {}
     db.recipeProfession = db.recipeProfession or {}
     db.recipeCache = db.recipeCache or {}
     db.seenProfessions = db.seenProfessions or {}
@@ -134,6 +136,7 @@ local VENDOR_SOLD_REAGENTS = {
     [4400] = true,  -- Heavy Stock
     [6260] = true,  -- Blue Dye
     [6261] = true,  -- Orange Dye
+    [6530] = true,  -- Nightcrawlers
     [8150] = true,  -- Deeprock Salt
     [8343] = true,  -- Heavy Silken Thread
     [8925] = true,  -- Crystal Vial
@@ -659,6 +662,157 @@ local function CurrentProductionGoal()
     return selected
 end
 
+local function BuildProductionGoalPages(queue)
+    local goals = InitDB().productionGoals
+    local groups = {}
+    local orderedGroups = {}
+    local pendingEntries = {}
+    local pendingIndices = {}
+
+    local function GroupFor(key, fallbackEntry)
+        local group = groups[key]
+        if not group then
+            group = {
+                key = key,
+                goal = goals[key],
+                entries = {},
+                indices = {},
+                fallbackEntry = fallbackEntry,
+            }
+            groups[key] = group
+            table.insert(orderedGroups, group)
+        end
+        return group
+    end
+
+    -- Each reconciled prerequisite block appears immediately before its
+    -- manual end product. Attach that complete block to the end product goal.
+    for queueIndex, entry in ipairs(queue or {}) do
+        table.insert(pendingEntries, entry)
+        table.insert(pendingIndices, queueIndex)
+        if not entry.autoDependency then
+            local key = ProductionGoalKey(entry)
+            local group = GroupFor(key, entry)
+            for index, pending in ipairs(pendingEntries) do
+                table.insert(group.entries, pending)
+                table.insert(group.indices, pendingIndices[index])
+            end
+            wipe(pendingEntries)
+            wipe(pendingIndices)
+        end
+    end
+
+    -- Keep legacy orphaned generated rows visible instead of dropping them.
+    if #pendingEntries > 0 then
+        local fallback = orderedGroups[#orderedGroups]
+        if not fallback then
+            local goal = CurrentProductionGoal()
+            fallback = GroupFor(goal and goal.key or "legacy", nil)
+            fallback.goal = goal
+        end
+        for index, pending in ipairs(pendingEntries) do
+            table.insert(fallback.entries, pending)
+            table.insert(fallback.indices, pendingIndices[index])
+        end
+    end
+
+    -- Completed goals can outlive their consumed queue rows. Keep a goal-only
+    -- page so the completion ledger is still visible.
+    local remainingGoals = {}
+    for key, goal in pairs(goals) do
+        if type(goal) == "table" and not groups[key] then
+            table.insert(remainingGoals, goal)
+        end
+    end
+    table.sort(remainingGoals, function(a, b)
+        return (tonumber(a.order) or 0) < (tonumber(b.order) or 0)
+    end)
+    for _, goal in ipairs(remainingGoals) do
+        local group = GroupFor(goal.key, nil)
+        group.goal = goal
+    end
+
+    local pages = {}
+    for _, group in ipairs(orderedGroups) do
+        table.insert(pages, {
+            goal = group.goal,
+            entries = group.entries,
+            indices = group.indices,
+        })
+    end
+    return pages
+end
+
+local function EnsureProductionGoals(queue)
+    local goals = InitDB().productionGoals
+    local missingGoals = {}
+    for _, entry in ipairs(queue or {}) do
+        if not entry.autoDependency and (tonumber(entry.quantity) or 0) > 0 then
+            local key = ProductionGoalKey(entry)
+            if key and not goals[key] then
+                local missing = missingGoals[key]
+                if not missing then
+                    missing = { entry = entry, quantity = 0 }
+                    missingGoals[key] = missing
+                end
+                missing.quantity = missing.quantity + (tonumber(entry.quantity) or 0)
+            end
+        end
+    end
+    for _, missing in pairs(missingGoals) do
+        AddProductionGoal(missing.entry, missing.quantity)
+    end
+end
+
+local function OrderedProductionGoals(queue)
+    local goals = InitDB().productionGoals
+    local ordered = {}
+    local seen = {}
+    for _, entry in ipairs(queue or {}) do
+        if not entry.autoDependency then
+            local key = ProductionGoalKey(entry)
+            if key and goals[key] and not seen[key] then
+                seen[key] = true
+                table.insert(ordered, goals[key])
+            end
+        end
+    end
+
+    local remaining = {}
+    for key, goal in pairs(goals) do
+        if type(goal) == "table" and not seen[key] then
+            table.insert(remaining, goal)
+        end
+    end
+    table.sort(remaining, function(a, b)
+        return (tonumber(a.order) or 0) < (tonumber(b.order) or 0)
+    end)
+    for _, goal in ipairs(remaining) do table.insert(ordered, goal) end
+    return ordered
+end
+
+local function QueueForProductionGoal(queue, goal)
+    local scoped = {}
+    if not goal then return scoped end
+    local key = goal.key or ProductionGoalKey(goal)
+    for _, entry in ipairs(queue or {}) do
+        if not entry.autoDependency and ProductionGoalKey(entry) == key then
+            table.insert(scoped, entry)
+        end
+    end
+    return scoped
+end
+
+local function ActiveProductionGoals(queue)
+    local active = {}
+    for _, goal in ipairs(OrderedProductionGoals(queue)) do
+        if #QueueForProductionGoal(queue, goal) > 0 then
+            table.insert(active, goal)
+        end
+    end
+    return active
+end
+
 local marketSummary
 
 local function HideAuctionatorCraftingBlock()
@@ -955,6 +1109,7 @@ local function AutoInsertPrerequisites(queue, finalRecipe, finalCrafts)
 
     local recipeMap = BuildKnownRecipeMap()
     local stock = BuildQueueProjectedStock(queue, recipeMap)
+    local collapsed = InitDB().settings.shoppingCollapsed
     local visiting = {}
     local addedRows = 0
     local addedCrafts = 0
@@ -992,6 +1147,13 @@ local function AutoInsertPrerequisites(queue, finalRecipe, finalCrafts)
         -- before scheduling any new prerequisite craft.
         local missing = itemID and Consume(itemID, amount) or amount
         if missing <= 0 then return end
+
+        -- A collapsed material branch is a make-or-buy decision. Its missing
+        -- intermediate quantity belongs on the Materials/AH buying list, so
+        -- do not generate a crafting operation for it or any of its inputs.
+        if itemID and collapsed[tostring(itemID)] then
+            return
+        end
 
         local craft = itemID and recipeMap[itemID]
         if not craft
@@ -1107,11 +1269,11 @@ local function ReconcileQueueWithInventory()
     return changed
 end
 
-local function AdjustProductionGoal(delta)
+local function AdjustProductionGoal(delta, displayedGoal)
     if QueueBusy() then return end
     delta = delta < 0 and -1 or 1
 
-    local goal = CurrentProductionGoal()
+    local goal = displayedGoal or CurrentProductionGoal()
     if not goal then return end
 
     local completed = math.max(0, tonumber(goal.completed) or 0)
@@ -1163,6 +1325,39 @@ local function AdjustProductionGoal(delta)
             + QueueTotalCrafts(GetQueue(false))
         session.paused = true
     end
+    WPP:RefreshPanel()
+end
+
+local function RemoveProductionGoal(goal)
+    if QueueBusy() then
+        Print("Wait for the current production run to finish before removing a production goal.")
+        return
+    end
+    if not goal then return end
+
+    local key = goal.key or ProductionGoalKey(goal)
+    local queue = GetQueue(false) or {}
+    for index = #queue, 1, -1 do
+        local entry = queue[index]
+        if not entry.autoDependency and ProductionGoalKey(entry) == key then
+            table.remove(queue, index)
+        end
+    end
+
+    InitDB().productionGoals[key] = nil
+    ReconcileQueueWithInventory()
+
+    local session = SavedProductionSession()
+    if #queue == 0 then
+        ClearProductionSession()
+    elseif session then
+        session.total = math.max(0, tonumber(session.completed) or 0)
+            + QueueTotalCrafts(queue)
+        session.paused = true
+    end
+
+    if panel then panel.offset = 0 end
+    Print("Removed production goal '" .. tostring(goal.name or UNKNOWN) .. "'.")
     WPP:RefreshPanel()
 end
 
@@ -1609,8 +1804,8 @@ local function CraftAll()
 end
 
 
-local function BuildShoppingList()
-    local queue = GetQueue(false)
+local function BuildShoppingList(queueOverride)
+    local queue = queueOverride or GetQueue(false)
     local shopping = {}
     if not queue or #queue == 0 then return shopping end
 
@@ -1650,6 +1845,8 @@ local function BuildShoppingList()
     ------------------------------------------------------------------------
     local stock = {}
     local visiting = {}
+    local expansionStack = {}
+    local collapsed = db.settings.shoppingCollapsed
 
     local function OwnedCount(itemID)
         if not itemID then return 0 end
@@ -1661,6 +1858,14 @@ local function BuildShoppingList()
             amount = GetItemCount(itemID, false) or 0
         end
         return tonumber(amount) or 0
+    end
+
+    local function BankCount(itemID)
+        if not itemID then return 0 end
+        local bagCount = tonumber(GetItemCount(itemID, false)) or 0
+        local ok, totalCount = pcall(GetItemCount, itemID, true)
+        if not ok then return 0 end
+        return math.max(0, (tonumber(totalCount) or 0) - bagCount)
     end
 
     local function Available(itemID)
@@ -1687,9 +1892,10 @@ local function BuildShoppingList()
         return amount - used
     end
 
-    local function AddRaw(reagent, amount)
-        amount = tonumber(amount) or 0
-        if amount <= 0 then return end
+    local function AddRaw(reagent, amount, isCollapsedCraft, requiredAmount)
+        amount = math.max(0, tonumber(amount) or 0)
+        requiredAmount = math.max(amount, tonumber(requiredAmount) or amount)
+        if requiredAmount <= 0 then return end
 
         local itemID = reagent.itemID
         local key = itemID or reagent.name
@@ -1702,11 +1908,32 @@ local function BuildShoppingList()
                 link = reagent.link,
                 icon = reagent.icon,
                 count = 0,
+                required = 0,
+                bankCount = BankCount(itemID),
             }
             shopping[key] = row
         end
 
         row.count = row.count + amount
+        row.required = row.required + requiredAmount
+
+        if isCollapsedCraft and itemID then
+            row.collapsedRecipeID = itemID
+        end
+
+        -- Remember the nearest craftable item whose expansion produced this
+        -- row. This also applies to an already-collapsed intermediate, letting
+        -- right-click advance another level when a higher intermediary exists.
+        local parent = expansionStack[#expansionStack]
+        if parent and parent.itemID and parent.itemID ~= itemID then
+            row.collapseTargets = row.collapseTargets or {}
+            row.collapseTargets[parent.itemID] = {
+                itemID = parent.itemID,
+                name = parent.name,
+                link = parent.link,
+                icon = parent.icon,
+            }
+        end
     end
 
     ------------------------------------------------------------------------
@@ -1722,7 +1949,10 @@ local function BuildShoppingList()
 
         local itemID = reagent.itemID
         local missing = itemID and Consume(itemID, amount) or amount
-        if missing <= 0 then return end
+        if missing <= 0 then
+            AddRaw(reagent, 0, false, amount)
+            return
+        end
 
         local craft = itemID and recipeMap[itemID]
         local canExpand = InitDB().settings.expandCraftables
@@ -1731,8 +1961,14 @@ local function BuildShoppingList()
             and #craft.reagents > 0
             and not visiting[itemID]
 
+        if canExpand and collapsed[tostring(itemID)] then
+            AddRaw(reagent, missing, true, amount)
+            return
+        end
+
         if canExpand then
             visiting[itemID] = true
+            table.insert(expansionStack, reagent)
 
             -- Conservative output for recipes with a variable result.
             local yield = math.max(
@@ -1750,6 +1986,8 @@ local function BuildShoppingList()
                 Require(sub, (tonumber(sub.count) or 0) * craftsNeeded)
             end
 
+            table.remove(expansionStack)
+
             -- Example: Smelt Bronze can produce more than the current request.
             -- Keep that excess for later rows instead of throwing it away.
             local produced = craftsNeeded * yield
@@ -1760,56 +1998,105 @@ local function BuildShoppingList()
 
             visiting[itemID] = nil
         else
-            AddRaw(reagent, missing)
+            AddRaw(reagent, missing, false, amount)
         end
     end
 
     ------------------------------------------------------------------------
-    -- Simulate the shared queue in its actual drag/drop order.
+    -- Simulate the user's final orders in their actual drag/drop order.
     --
     -- Inputs are consumed first, then the queued recipe output is added.
     -- Thus an earlier Mining row can satisfy a later Engineering row.
     ------------------------------------------------------------------------
     for _, queued in ipairs(queue) do
-        local recipe
+        -- Generated prerequisite operations are an execution plan for the
+        -- Crafting tab. Resolve Materials from the user's final orders so a
+        -- branch can freely switch between buying an intermediate and buying
+        -- the ingredients used to craft it.
+        if not queued.autoDependency then
+            local recipe
 
-        if queued.reagents and #queued.reagents > 0 then
-            recipe = queued
-        elseif queued.itemID then
-            recipe = recipeMap[queued.itemID]
-        end
-
-        if recipe then
-            local crafts = math.max(0, tonumber(queued.quantity) or 0)
-
-            for _, reagent in ipairs(recipe.reagents or {}) do
-                Require(reagent, (tonumber(reagent.count) or 0) * crafts)
+            if queued.reagents and #queued.reagents > 0 then
+                recipe = queued
+            elseif queued.itemID then
+                recipe = recipeMap[queued.itemID]
             end
 
-            if queued.itemID then
-                local yield = math.max(
-                    1,
-                    tonumber(recipe.minProduced)
-                        or tonumber(queued.minProduced)
-                        or 1
-                )
-                AddStock(queued.itemID, crafts * yield)
+            if recipe then
+                local crafts = math.max(0, tonumber(queued.quantity) or 0)
+
+                for _, reagent in ipairs(recipe.reagents or {}) do
+                    Require(reagent, (tonumber(reagent.count) or 0) * crafts)
+                end
+
+                if queued.itemID then
+                    local yield = math.max(
+                        1,
+                        tonumber(recipe.minProduced)
+                            or tonumber(queued.minProduced)
+                            or 1
+                    )
+                    AddStock(queued.itemID, crafts * yield)
+                end
             end
         end
     end
 
     local rows = {}
     for _, row in pairs(shopping) do
-        if (tonumber(row.count) or 0) > 0 then
+        if (tonumber(row.required) or 0) > 0 then
             table.insert(rows, row)
         end
     end
 
     table.sort(rows, function(a, b)
+        local aCovered = (tonumber(a.count) or 0) <= 0
+        local bCovered = (tonumber(b.count) or 0) <= 0
+        if aCovered ~= bCovered then
+            return not aCovered
+        end
         return (a.name or "") < (b.name or "")
     end)
 
     return rows
+end
+
+local function ChangeShoppingMaterialLevel(row, direction)
+    if not row then return end
+    if QueueBusy() then
+        Print("Wait for the current production run to finish before changing material levels.")
+        return
+    end
+
+    local collapsed = InitDB().settings.shoppingCollapsed
+    if direction == "back" then
+        if not row.collapsedRecipeID then
+            Print(tostring(row.name or "This material") .. " is already at its lowest available reagent level.")
+            return
+        end
+        collapsed[tostring(row.collapsedRecipeID)] = nil
+        ReconcileQueueWithInventory()
+        Print("Expanded " .. tostring(row.name or "material") .. " into its reagents.")
+        WPP:RefreshPanel()
+        return
+    end
+
+    local targets = row.collapseTargets or {}
+    local names = {}
+    for itemID, target in pairs(targets) do
+        collapsed[tostring(itemID)] = true
+        table.insert(names, target.name or tostring(itemID))
+    end
+
+    if #names == 0 then
+        Print(tostring(row.name or "This material") .. " has no craftable next level in the current bill of materials.")
+        return
+    end
+
+    table.sort(names)
+    ReconcileQueueWithInventory()
+    Print("Collapsed into " .. table.concat(names, ", ") .. ".")
+    WPP:RefreshPanel()
 end
 
 ------------------------------------------------------------------------
@@ -1821,13 +2108,16 @@ end
 ------------------------------------------------------------------------
 local auctionatorImportButton
 
-local function ShoppingListNameFromQueue()
+local function ShoppingListNameFromQueue(queueOverride, goal)
+    if goal and goal.name then
+        return "Logistician - " .. goal.name
+    end
     local products = {}
 
     -- Automatically inserted prerequisite crafts are not end products. Rows
     -- from older WPP builds have no autoDependency flag and are treated as
     -- user-requested products for compatibility.
-    for _, entry in ipairs(GetQueue(false) or {}) do
+    for _, entry in ipairs(queueOverride or GetQueue(false) or {}) do
         if entry.autoDependency ~= true then
             table.insert(products, string.format(
                 "%s x%d",
@@ -1844,8 +2134,10 @@ local function ShoppingListNameFromQueue()
     return table.concat(products, " + ")
 end
 
-local function ImportShoppingListToAuctionator()
-    local rows = BuildShoppingList()
+local function ImportShoppingListToAuctionator(goal)
+    local queue = GetQueue(false) or {}
+    local scopedQueue = goal and QueueForProductionGoal(queue, goal) or queue
+    local rows = BuildShoppingList(scopedQueue)
     if #rows == 0 then
         Print("The bill of materials is empty. Add recipes to the crafting queue first.")
         return
@@ -1860,7 +2152,11 @@ local function ImportShoppingListToAuctionator()
     local auctionRows = {}
     local vendorRows = 0
     for _, row in ipairs(rows) do
-        if IsVendorSoldReagent(row.link, row.itemID) then
+        local missingCount = math.max(0, tonumber(row.count) or 0)
+        if missingCount == 0 then
+            -- Fully covered materials remain visible in the BOM but do not
+            -- belong in the Auction House procurement list.
+        elseif IsVendorSoldReagent(row.link, row.itemID) then
             vendorRows = vendorRows + 1
         else
             table.insert(auctionRows, row)
@@ -1868,15 +2164,19 @@ local function ImportShoppingListToAuctionator()
     end
 
     if #auctionRows == 0 then
-        Print(string.format(
-            "The bill of materials contains only %d vendor-sold item%s; no procurement list was created.",
-            vendorRows,
-            vendorRows == 1 and "" or "s"
-        ))
+        if vendorRows == 0 then
+            Print("You already have every material required for this production goal.")
+        else
+            Print(string.format(
+                "The remaining bill of materials contains only %d vendor-sold item%s; no procurement list was created.",
+                vendorRows,
+                vendorRows == 1 and "" or "s"
+            ))
+        end
         return
     end
 
-    local name = ShoppingListNameFromQueue()
+    local name = ShoppingListNameFromQueue(scopedQueue, goal)
     local ok, err = bridge:CreateShoppingList(name, auctionRows)
     if not ok then
         Print("Could not create the procurement list: " .. tostring(err))
@@ -1890,6 +2190,19 @@ local function ImportShoppingListToAuctionator()
         name,
         vendorRows > 0 and string.format("; skipped %d vendor item%s", vendorRows, vendorRows == 1 and "" or "s") or ""
     ))
+end
+
+local function ImportAllProductionGoalLists()
+    local queue = GetQueue(false) or {}
+    EnsureProductionGoals(queue)
+    local goals = ActiveProductionGoals(queue)
+    if #goals == 0 then
+        ImportShoppingListToAuctionator(nil)
+        return
+    end
+    for _, goal in ipairs(goals) do
+        ImportShoppingListToAuctionator(goal)
+    end
 end
 
 local function ButtonText(frame)
@@ -1942,12 +2255,14 @@ local function SetupAuctionatorShoppingImport()
                 auctionatorImportButton:SetPoint("TOPLEFT", importButton, "TOPLEFT", 0, 0)
                 auctionatorImportButton:SetPoint("BOTTOMRIGHT", exportButton, "BOTTOMRIGHT", 0, 0)
                 auctionatorImportButton:SetText("Import")
-                auctionatorImportButton:SetScript("OnClick", ImportShoppingListToAuctionator)
+                auctionatorImportButton:SetScript("OnClick", function()
+                    ImportAllProductionGoalLists()
+                end)
                 auctionatorImportButton:SetScript("OnEnter", function(self)
                     GameTooltip:SetOwner(self, "ANCHOR_TOP")
                     GameTooltip:AddLine("Import Bill of Materials", 1, 1, 1)
                     GameTooltip:AddLine(
-                        "Creates a procurement list named for the end product and production quantity. Vendor-supplied components are excluded.",
+                        "Creates or updates one procurement list for each production goal. Vendor-supplied components are excluded.",
                         nil, nil, nil, true
                     )
                     GameTooltip:Show()
@@ -2089,8 +2404,14 @@ local function CreatePanel()
         bg:SetTexture("Interface\\DialogFrame\\UI-DialogBox-Background")
     end
 
+    panel.logo = panel:CreateTexture(nil, "ARTWORK")
+    panel.logo:SetSize(20, 20)
+    panel.logo:SetPoint("TOPLEFT", 18, -14)
+    panel.logo:SetTexture("Interface\\AddOns\\!Logistician\\Professions\\Assets\\PanelLogo")
+    panel.logo:SetTexCoord(0, 1, 0, 1)
+
     panel.title = panel:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-    panel.title:SetPoint("TOPLEFT", 18, -17)
+    panel.title:SetPoint("LEFT", panel.logo, "RIGHT", 6, 0)
     panel.title:SetText("Logistician")
 
     panel.close = CreateFrame("Button", nil, panel, "UIPanelCloseButton")
@@ -2100,13 +2421,37 @@ local function CreatePanel()
     panel.queueTab:SetSize(110, 22)
     panel.queueTab:SetPoint("TOPLEFT", 16, -45)
     panel.queueTab:SetText("Crafting")
-    panel.queueTab:SetScript("OnClick", function() panel.mode = "queue" WPP:RefreshPanel() end)
+    panel.queueTab.icon = panel.queueTab:CreateTexture(nil, "ARTWORK")
+    panel.queueTab.icon:SetSize(16, 16)
+    panel.queueTab.icon:SetPoint("LEFT", 11, 0)
+    panel.queueTab.icon:SetTexture("Interface\\AddOns\\!Logistician\\Professions\\Assets\\TabCrafting")
+    panel.queueTab:GetFontString():ClearAllPoints()
+    panel.queueTab:GetFontString():SetPoint("CENTER", 9, 0)
+    panel.queueTab:SetScript("OnClick", function() panel.mode = "queue" panel.offset = 0 WPP:RefreshPanel() end)
 
     panel.shopTab = CreateFrame("Button", nil, panel, "UIPanelButtonTemplate")
     panel.shopTab:SetSize(110, 22)
     panel.shopTab:SetPoint("LEFT", panel.queueTab, "RIGHT", 4, 0)
     panel.shopTab:SetText("Materials")
-    panel.shopTab:SetScript("OnClick", function() panel.mode = "shopping" WPP:RefreshPanel() end)
+    panel.shopTab.icon = panel.shopTab:CreateTexture(nil, "ARTWORK")
+    panel.shopTab.icon:SetSize(16, 16)
+    panel.shopTab.icon:SetPoint("LEFT", 11, 0)
+    panel.shopTab.icon:SetTexture("Interface\\AddOns\\!Logistician\\Professions\\Assets\\TabMaterials")
+    panel.shopTab:GetFontString():ClearAllPoints()
+    panel.shopTab:GetFontString():SetPoint("CENTER", 9, 0)
+    panel.shopTab:SetScript("OnClick", function() panel.mode = "shopping" panel.offset = 0 WPP:RefreshPanel() end)
+
+    panel.favoriteTab = CreateFrame("Button", nil, panel, "UIPanelButtonTemplate")
+    panel.favoriteTab:SetSize(110, 22)
+    panel.favoriteTab:SetPoint("LEFT", panel.shopTab, "RIGHT", 4, 0)
+    panel.favoriteTab:SetText("Favorites")
+    panel.favoriteTab.icon = panel.favoriteTab:CreateTexture(nil, "ARTWORK")
+    panel.favoriteTab.icon:SetSize(24, 24)
+    panel.favoriteTab.icon:SetPoint("LEFT", 7, -2)
+    panel.favoriteTab.icon:SetTexture("Interface\\Common\\FavoritesIcon")
+    panel.favoriteTab:GetFontString():ClearAllPoints()
+    panel.favoriteTab:GetFontString():SetPoint("CENTER", 9, 0)
+    panel.favoriteTab:SetScript("OnClick", function() panel.mode = "favorites" panel.offset = 0 WPP:RefreshPanel() end)
 
     panel.header = panel:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
     panel.header:SetPoint("TOPLEFT", 18, -78)
@@ -2132,12 +2477,36 @@ local function CreatePanel()
         local row = CreateFrame("Button", nil, panel)
         row:SetSize(350, 23)
         row:SetPoint("TOPLEFT", 18, -94 - (i - 1) * 24)
-        row:RegisterForClicks("LeftButtonUp")
+        row:RegisterForClicks("LeftButtonUp", "RightButtonUp")
         row:RegisterForDrag("LeftButton")
 
         row.icon = row:CreateTexture(nil, "ARTWORK")
         row.icon:SetSize(20, 20)
         row.icon:SetPoint("LEFT", 0, 0)
+
+        row.covered = row:CreateTexture(nil, "OVERLAY")
+        row.covered:SetSize(18, 18)
+        row.covered:SetPoint("BOTTOMRIGHT", row.icon, "BOTTOMRIGHT", 4, -3)
+        row.covered:SetTexture("Interface\\Buttons\\UI-CheckBox-Check")
+        row.covered:SetVertexColor(0.15, 1, 0.15, 1)
+        row.covered:SetBlendMode("ADD")
+        row.covered:Hide()
+
+        row.coveredBold = row:CreateTexture(nil, "OVERLAY")
+        row.coveredBold:SetSize(18, 18)
+        row.coveredBold:SetPoint("CENTER", row.covered, "CENTER", 1, 0)
+        row.coveredBold:SetTexture("Interface\\Buttons\\UI-CheckBox-Check")
+        row.coveredBold:SetVertexColor(0.1, 0.9, 0.1, 0.75)
+        row.coveredBold:SetBlendMode("ADD")
+        row.coveredBold:Hide()
+
+        row.groupDivider = row:CreateTexture(nil, "BACKGROUND")
+        row.groupDivider:SetHeight(1)
+        row.groupDivider:SetPoint("TOPLEFT", row, "TOPLEFT", 0, 2)
+        row.groupDivider:SetPoint("TOPRIGHT", row, "TOPRIGHT", 0, 2)
+        row.groupDivider:SetTexture("Interface\\Buttons\\WHITE8X8")
+        row.groupDivider:SetVertexColor(1, 1, 1, 0.28)
+        row.groupDivider:Hide()
 
         row.text = row:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         row.text:SetPoint("LEFT", row.icon, "RIGHT", 5, 0)
@@ -2153,10 +2522,16 @@ local function CreatePanel()
 
         -- Dedicated shopping quantity column. Hidden in queue mode.
         row.qty = row:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-        row.qty:SetPoint("RIGHT", -110, 0)
+        row.qty:SetPoint("RIGHT", -120, 0)
         row.qty:SetWidth(45)
         row.qty:SetJustifyH("RIGHT")
         row.qty:Hide()
+
+        row.bank = row:CreateTexture(nil, "OVERLAY")
+        row.bank:SetSize(13, 13)
+        row.bank:SetPoint("LEFT", row.qty, "RIGHT", 2, 0)
+        row.bank:SetTexture("Interface\\Minimap\\Tracking\\Banker")
+        row.bank:Hide()
 
         -- Queue quantity OR shopping total cost.
         row.right = row:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
@@ -2191,6 +2566,44 @@ local function CreatePanel()
     panel.summary:SetWidth(350)
     panel.summary:SetJustifyH("LEFT")
 
+    panel.emptyMessage = panel:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+    panel.emptyMessage:SetPoint("TOP", panel, "TOP", 0, -138)
+    panel.emptyMessage:SetWidth(320)
+    panel.emptyMessage:SetJustifyH("CENTER")
+    panel.emptyMessage:SetText("|cff40ff40You have everything needed for this production goal.|r")
+    panel.emptyMessage:Hide()
+
+    local function CreateScrollIndicator(direction)
+        local indicator = CreateFrame("Frame", nil, panel)
+        indicator:SetSize(22, 22)
+        indicator.icon = indicator:CreateTexture(nil, "OVERLAY")
+        indicator.icon:SetAllPoints()
+        local texturePath = direction == "down"
+            and "Interface\\Buttons\\Arrow-Down-Up"
+            or "Interface\\Buttons\\Arrow-Up-Up"
+        indicator.icon:SetTexture(texturePath, "CLAMP", "CLAMP", "LINEAR")
+        if indicator.icon.SetSnapToPixelGrid then
+            indicator.icon:SetSnapToPixelGrid(false)
+        end
+        if indicator.icon.SetTexelSnappingBias then
+            indicator.icon:SetTexelSnappingBias(0)
+        end
+        if direction == "down" then
+            indicator.icon:SetTexCoord(0, 1, 0, 11 / 16)
+        else
+            indicator.icon:SetTexCoord(0, 1, 6 / 16, 1)
+        end
+        indicator.icon:SetDesaturated(true)
+        indicator.icon:SetVertexColor(1, 1, 1, 0.9)
+        indicator:Hide()
+        return indicator
+    end
+
+    panel.scrollUp = CreateScrollIndicator("up")
+    panel.scrollUp:SetPoint("TOP", panel, "TOP", 0, -91)
+    panel.scrollDown = CreateScrollIndicator("down")
+    panel.scrollDown:SetPoint("BOTTOM", panel, "BOTTOM", 0, 126)
+
     panel.productionGoalHeader = panel:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     panel.productionGoalHeader:SetPoint("BOTTOMLEFT", 18, 108)
     panel.productionGoalHeader:SetText("Production Goal")
@@ -2209,9 +2622,9 @@ local function CreatePanel()
     panel.productionGoal.quantity = panel.productionGoal:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     panel.productionGoal.decrease = CreateFrame("Button", nil, panel.productionGoal, "UIPanelButtonTemplate")
     panel.productionGoal.decrease:SetSize(22, 20)
-    panel.productionGoal.decrease:SetPoint("RIGHT", -76, 0)
+    panel.productionGoal.decrease:SetPoint("RIGHT", -104, 0)
     panel.productionGoal.decrease:SetText("-")
-    panel.productionGoal.decrease:SetScript("OnClick", function() AdjustProductionGoal(-1) end)
+    panel.productionGoal.decrease:SetScript("OnClick", function() AdjustProductionGoal(-1, panel.displayedGoal) end)
     panel.productionGoal.quantity:SetPoint("LEFT", panel.productionGoal.decrease, "RIGHT", 3, 0)
     panel.productionGoal.quantity:SetWidth(45)
     panel.productionGoal.quantity:SetJustifyH("CENTER")
@@ -2219,7 +2632,20 @@ local function CreatePanel()
     panel.productionGoal.increase:SetSize(22, 20)
     panel.productionGoal.increase:SetPoint("LEFT", panel.productionGoal.quantity, "RIGHT", 3, 0)
     panel.productionGoal.increase:SetText("+")
-    panel.productionGoal.increase:SetScript("OnClick", function() AdjustProductionGoal(1) end)
+    panel.productionGoal.increase:SetScript("OnClick", function() AdjustProductionGoal(1, panel.displayedGoal) end)
+    panel.productionGoal.remove = CreateFrame("Button", nil, panel.productionGoal, "UIPanelCloseButton")
+    panel.productionGoal.remove:SetSize(20, 20)
+    panel.productionGoal.remove:SetPoint("RIGHT", 3, 0)
+    panel.productionGoal.remove:SetScript("OnClick", function()
+        RemoveProductionGoal(panel.displayedGoal)
+    end)
+    panel.productionGoal.remove:SetScript("OnEnter", function(self)
+        GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+        GameTooltip:AddLine("Remove Production Goal", 1, 0.82, 0)
+        GameTooltip:AddLine("Removes this goal and its crafting operations only.", 1, 1, 1, true)
+        GameTooltip:Show()
+    end)
+    panel.productionGoal.remove:SetScript("OnLeave", function() GameTooltip:Hide() end)
     panel.productionGoal:Hide()
 
     -- Overall queued-batch progress, using Blizzard Classic's own casting-bar
@@ -2288,19 +2714,56 @@ local function CreatePanel()
     panel.prev:SetSize(28, 20)
     panel.prev:SetPoint("BOTTOMLEFT", 18, 18)
     panel.prev:SetText("<")
-    panel.prev:SetScript("OnClick", function() panel.offset = math.max(0, (panel.offset or 0) - MAX_ROWS) WPP:RefreshPanel() end)
+    panel.prev:SetScript("OnClick", function()
+        if panel.mode == "queue" or panel.mode == "shopping" then
+            panel.page = math.max(1, (panel.page or 1) - 1)
+            panel.offset = 0
+        else
+            panel.offset = math.max(0, (panel.offset or 0) - MAX_ROWS)
+        end
+        WPP:RefreshPanel()
+    end)
 
     panel.next = CreateFrame("Button", nil, panel, "UIPanelButtonTemplate")
     panel.next:SetSize(28, 20)
     panel.next:SetPoint("LEFT", panel.prev, "RIGHT", 4, 0)
     panel.next:SetText(">")
-    panel.next:SetScript("OnClick", function() panel.offset = (panel.offset or 0) + MAX_ROWS WPP:RefreshPanel() end)
+    panel.next:SetScript("OnClick", function()
+        if panel.mode == "queue" or panel.mode == "shopping" then
+            panel.page = (panel.page or 1) + 1
+            panel.offset = 0
+        else
+            panel.offset = (panel.offset or 0) + MAX_ROWS
+        end
+        WPP:RefreshPanel()
+    end)
 
     panel.craftAll = CreateFrame("Button", nil, panel, "UIPanelButtonTemplate")
     panel.craftAll:SetSize(150, 22)
     panel.craftAll:SetPoint("BOTTOMRIGHT", -18, 18)
     panel.craftAll:SetText("Craft Queue")
     panel.craftAll:SetScript("OnClick", CraftAll)
+
+    panel.importToAH = CreateFrame("Button", nil, panel, "UIPanelButtonTemplate")
+    panel.importToAH:SetSize(150, 22)
+    panel.importToAH:SetPoint("BOTTOMRIGHT", -18, 18)
+    panel.importToAH:SetText("Import to AH")
+    panel.importToAH:SetScript("OnClick", function()
+        ImportShoppingListToAuctionator(panel.displayedGoal)
+    end)
+    panel.importToAH:SetScript("OnEnter", function(self)
+        GameTooltip:SetOwner(self, "ANCHOR_TOP")
+        GameTooltip:AddLine("Import Bill of Materials", 1, 1, 1)
+        GameTooltip:AddLine(
+            "Creates or updates the matching Auction House buying list. Vendor-supplied materials are excluded.",
+            nil, nil, nil, true
+        )
+        GameTooltip:Show()
+    end)
+    panel.importToAH:SetScript("OnLeave", function()
+        GameTooltip:Hide()
+    end)
+    panel.importToAH:Hide()
 
     panel.clear = CreateFrame("Button", nil, panel, "UIPanelButtonTemplate")
     panel.clear:SetSize(70, 22)
@@ -2316,35 +2779,98 @@ local function CreatePanel()
 
     panel.mode = "queue"
     panel.offset = 0
+    panel.page = 1
     panel:SetScript("OnMouseWheel", function(self, delta)
-        if delta < 0 then self.offset = (self.offset or 0) + MAX_ROWS else self.offset = math.max(0, (self.offset or 0) - MAX_ROWS) end
+        if self.mode == "queue" or self.mode == "shopping" then
+            if delta < 0 then
+                self.offset = (self.offset or 0) + 1
+            else
+                self.offset = math.max(0, (self.offset or 0) - 1)
+            end
+        elseif delta < 0 then
+            self.offset = (self.offset or 0) + MAX_ROWS
+        else
+            self.offset = math.max(0, (self.offset or 0) - MAX_ROWS)
+        end
         WPP:RefreshPanel()
     end)
+    panel.initialized = true
 end
 
 function WPP:RefreshPanel()
-    if not panel or not panel:IsShown() then return end
+    if not panel or not panel:IsShown() or not panel.initialized then return end
     panel.offset = panel.offset or 0
+    panel.page = panel.page or 1
 
     local data
+    local queueAll
+    local pageCount = 0
     if panel.mode == "shopping" then
-        data = BuildShoppingList()
-        panel.header:SetText("Bill of Materials")
+        queueAll = GetQueue(false) or {}
+        EnsureProductionGoals(queueAll)
+        local goals = ActiveProductionGoals(queueAll)
+        pageCount = #goals
+        if pageCount == 0 then
+            panel.page = 1
+            panel.displayedGoal = nil
+            data = {}
+        else
+            panel.page = math.max(1, math.min(panel.page, pageCount))
+            panel.displayedGoal = goals[panel.page]
+            data = BuildShoppingList(QueueForProductionGoal(queueAll, panel.displayedGoal))
+        end
+        panel.header:SetText(pageCount > 1
+            and string.format("Bill of Materials  |cffaaaaaa%d/%d|r", panel.page, pageCount)
+            or "Bill of Materials")
         panel.qtyHeader:Show()
         panel.costHeader:Show()
         panel.craftAll:Hide()
         panel.clear:Hide()
+        panel.importToAH:Show()
+        panel.progress:Hide()
+        panel.summary:Show()
+        panel.productionGoalHeader:Show()
+        panel.productionGoal:Show()
+    elseif panel.mode == "favorites" then
+        data = main and main.GetFavoriteMaterials and main:GetFavoriteMaterials() or {}
+        panel.header:SetText("Favorite Materials")
+        panel.qtyHeader:Hide()
+        panel.costHeader:Hide()
+        panel.craftAll:Hide()
+        panel.clear:Hide()
+        panel.importToAH:Hide()
         panel.progress:Hide()
         panel.summary:Show()
         panel.productionGoalHeader:Hide()
         panel.productionGoal:Hide()
     else
-        data = GetQueue(false) or {}
-        panel.header:SetText("Crafting Queue")
+        queueAll = GetQueue(false) or {}
+
+        EnsureProductionGoals(queueAll)
+
+        local pages = BuildProductionGoalPages(queueAll)
+        pageCount = #pages
+        if pageCount == 0 then
+            panel.page = 1
+            data = {}
+            panel.queueDataIndices = {}
+            panel.displayedGoal = nil
+        else
+            panel.page = math.max(1, math.min(panel.page, pageCount))
+            local currentPage = pages[panel.page]
+            data = currentPage.entries
+            panel.queueDataIndices = currentPage.indices
+            panel.displayedGoal = currentPage.goal
+        end
+
+        panel.header:SetText(pageCount > 1
+            and string.format("Crafting Queue  |cffaaaaaa%d/%d|r", panel.page, pageCount)
+            or "Crafting Queue")
         panel.qtyHeader:Hide()
         panel.costHeader:Hide()
         panel.craftAll:Show()
         panel.clear:Show()
+        panel.importToAH:Hide()
         panel.productionGoalHeader:Show()
         panel.productionGoal:Show()
         if processing or craftAllState then
@@ -2356,44 +2882,137 @@ function WPP:RefreshPanel()
         end
     end
 
-    local maxOffset = math.max(0, #data - MAX_ROWS)
-    if panel.offset > maxOffset then panel.offset = math.max(0, math.floor(maxOffset / MAX_ROWS) * MAX_ROWS) end
+    if panel.mode ~= "favorites" then
+        local visibleRows = QUEUE_ROWS_PER_PAGE
+        local maxOffset = math.max(0, #data - visibleRows)
+        if panel.offset > maxOffset then panel.offset = maxOffset end
+    else
+        local maxOffset = math.max(0, #data - MAX_ROWS)
+        if panel.offset > maxOffset then panel.offset = maxOffset end
+    end
+
+    local shoppingMissing = 0
+    if panel.mode == "shopping" then
+        for _, material in ipairs(data) do
+            shoppingMissing = shoppingMissing + math.max(0, tonumber(material.count) or 0)
+        end
+    end
+    panel.emptyMessage:SetShown(
+        panel.mode == "shopping" and #data == 0 and panel.displayedGoal ~= nil
+    )
+    local scrollableMode = panel.mode == "queue" or panel.mode == "shopping"
+    panel.scrollUp:SetShown(scrollableMode and panel.offset > 0)
+    panel.scrollDown:SetShown(
+        scrollableMode and panel.offset + QUEUE_ROWS_PER_PAGE < #data
+    )
 
     for i = 1, MAX_ROWS do
         local dataIndex = panel.offset + i
         local entry = data[dataIndex]
+        if (panel.mode == "queue" or panel.mode == "shopping") and i > QUEUE_ROWS_PER_PAGE then entry = nil end
         local row = panel.rows[i]
         if entry then
-            row.dataIndex = dataIndex
+            row.dataIndex = panel.mode == "queue"
+                and (panel.queueDataIndices[dataIndex] or dataIndex)
+                or dataIndex
             row.entry = entry
             row.icon:SetTexture(entry.icon or (entry.link and select(10, GetItemInfo(entry.link))) or "Interface\\Icons\\INV_Misc_QuestionMark")
             if panel.mode == "shopping" then
                 row.profession:Hide()
+                row.text:SetWidth(150)
                 local vendorSold = IsVendorSoldReagent(entry.link, entry.itemID)
                 local price = not vendorSold and MarketPrice(entry.link, entry.itemID) or nil
+                local covered = (tonumber(entry.count) or 0) <= 0
                 row.text:SetText((entry.name or UNKNOWN) .. (vendorSold and " |cff40ff40(Vendor)|r" or ""))
                 row.qty:SetText("x" .. tostring(entry.count or 0))
                 row.qty:Show()
+                row.covered:SetShown(covered)
+                row.coveredBold:SetShown(covered)
+                row.bank:SetShown((tonumber(entry.bankCount) or 0) > 0)
+                local previousMaterial = data[dataIndex - 1]
+                row.groupDivider:SetShown(
+                    covered
+                    and previousMaterial ~= nil
+                    and (tonumber(previousMaterial.count) or 0) > 0
+                )
 
                 row.right:ClearAllPoints()
                 row.right:SetPoint("RIGHT", -2, 0)
-                row.right:SetWidth(98)
-                row.right:SetText(vendorSold and "Vendor" or (price and MoneyText(price * (entry.count or 0)) or "--"))
+                row.right:SetWidth(88)
+                row.right:SetText(covered and "" or (vendorSold and "Vendor" or (price and MoneyText(price * (entry.count or 0)) or "--")))
+                row.right:Show()
 
                 row.remove:Hide()
+                row:SetScript("OnClick", function(self, button)
+                    ChangeShoppingMaterialLevel(
+                        self.entry,
+                        button == "RightButton" and "forward" or "back"
+                    )
+                end)
+                row:SetScript("OnEnter", function(self)
+                    if not self.entry then return end
+                    GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+                    if self.entry.link then
+                        GameTooltip:SetHyperlink(self.entry.link)
+                    else
+                        GameTooltip:AddLine(self.entry.name or UNKNOWN, 1, 0.82, 0)
+                    end
+                    if IsVendorSoldReagent(self.entry.link, self.entry.itemID) then
+                        GameTooltip:AddLine("Sold by profession-supply vendors", 0.25, 1, 0.25)
+                    end
+                    if (tonumber(self.entry.bankCount) or 0) > 0 then
+                        GameTooltip:AddLine(string.format("%d stored in your bank", self.entry.bankCount), 0.55, 0.8, 1)
+                    end
+                    if self.entry.collapsedRecipeID then
+                        GameTooltip:AddLine("Left-click to show its reagents", 0.45, 1, 0.45)
+                    end
+                    if self.entry.collapseTargets and next(self.entry.collapseTargets) then
+                        GameTooltip:AddLine("Right-click to replace with the next-level material", 0.45, 1, 0.45)
+                    end
+                    GameTooltip:Show()
+                end)
+                row:SetScript("OnLeave", function() GameTooltip:Hide() end)
+            elseif panel.mode == "favorites" then
+                row.covered:Hide()
+                row.coveredBold:Hide()
+                row.bank:Hide()
+                row.groupDivider:Hide()
+                row.text:SetText(entry.name or UNKNOWN)
+                row.text:SetWidth(285)
+                row.qty:Hide()
+                row.profession:Hide()
+                row.right:Hide()
+                row.remove:Show()
+                row.remove:SetScript("OnClick", function(self)
+                    local favorite = self:GetParent().entry
+                    if favorite and main then main:ToggleMaterialFavorite(favorite) end
+                end)
                 row:SetScript("OnClick", function(self)
                     if self.entry and self.entry.link then
                         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
                         GameTooltip:SetHyperlink(self.entry.link)
-                        if IsVendorSoldReagent(self.entry.link, self.entry.itemID) then
-                            GameTooltip:AddLine("Sold by profession-supply vendors", 0.25, 1, 0.25)
-                        end
                         GameTooltip:Show()
                     end
                 end)
+                row:SetScript("OnEnter", function(self)
+                    if not self.entry then return end
+                    GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+                    if self.entry.link then
+                        GameTooltip:SetHyperlink(self.entry.link)
+                    else
+                        GameTooltip:AddLine(self.entry.name or UNKNOWN, 1, 0.82, 0)
+                    end
+                    GameTooltip:AddLine("Click the X to remove from favorites", 0.45, 1, 0.45)
+                    GameTooltip:Show()
+                end)
                 row:SetScript("OnLeave", function() GameTooltip:Hide() end)
             else
+                row.covered:Hide()
+                row.coveredBold:Hide()
+                row.bank:Hide()
+                row.groupDivider:Hide()
                 row.text:SetText(entry.name or UNKNOWN)
+                row.text:SetWidth(160)
                 row.qty:Hide()
                 row.profession:SetText(NormalizeProfessionName(entry.profession) or "?")
                 row.profession:Show()
@@ -2402,6 +3021,7 @@ function WPP:RefreshPanel()
                 row.right:SetPoint("RIGHT", -22, 0)
                 row.right:SetWidth(46)
                 row.right:SetText("x" .. tostring(entry.quantity or 0))
+                row.right:Show()
 
                 row.remove:Show()
                 row.remove:SetScript("OnClick", function(self)
@@ -2426,50 +3046,28 @@ function WPP:RefreshPanel()
             end
             row:Show()
         else
+            row.covered:Hide()
+            row.coveredBold:Hide()
+            row.bank:Hide()
+            row.groupDivider:Hide()
             row.qty:Hide()
             row.profession:Hide()
             row:Hide()
         end
     end
 
-    if panel.offset > 0 then panel.prev:Enable() else panel.prev:Disable() end
-    if panel.offset + MAX_ROWS < #data then panel.next:Enable() else panel.next:Disable() end
-
-    if panel.mode == "shopping" then
-        local totalCost, missing = 0, false
-        for _, entry in ipairs(data) do
-            if IsVendorSoldReagent(entry.link, entry.itemID) then
-                missing = true
-            else
-                local price = MarketPrice(entry.link, entry.itemID)
-                if price then totalCost = totalCost + price * (entry.count or 0) else missing = true end
-            end
-        end
-        panel.summary:SetText(string.format(
-            "%d component%s required%s",
-            #data,
-            #data == 1 and "" or "s",
-            totalCost > 0 and (
-                "  •  " .. (missing and "Known cost: " or "Estimated cost: ")
-                .. MoneyText(totalCost)
-            ) or ""
-        ))
+    if panel.mode == "queue" or panel.mode == "shopping" then
+        if panel.page > 1 then panel.prev:Enable() else panel.prev:Disable() end
+        if panel.page < pageCount then panel.next:Enable() else panel.next:Disable() end
     else
-        local crafts = QueueTotalCrafts(data)
-        local saved = SavedProductionSession()
+        if panel.offset > 0 then panel.prev:Enable() else panel.prev:Disable() end
+        if panel.offset + MAX_ROWS < #data then panel.next:Enable() else panel.next:Disable() end
+    end
 
-        local goal = CurrentProductionGoal()
-        -- One-time compatibility for queues saved before per-product goal
-        -- tracking existed. Their remaining final batches become fresh goals.
-        if not goal then
-            for _, entry in ipairs(data) do
-                if not entry.autoDependency and (tonumber(entry.quantity) or 0) > 0 then
-                    AddProductionGoal(entry, entry.quantity)
-                end
-            end
-            goal = CurrentProductionGoal()
-        end
+    if panel.mode == "queue" or panel.mode == "shopping" then
+        local goal = panel.displayedGoal
         if goal then
+            panel.productionGoalHeader:Show()
             panel.productionGoal.icon:SetTexture(
                 goal.icon
                 or (goal.link and select(10, GetItemInfo(goal.link)))
@@ -2485,8 +3083,10 @@ function WPP:RefreshPanel()
             if QueueBusy() then
                 panel.productionGoal.decrease:Disable()
                 panel.productionGoal.increase:Disable()
+                panel.productionGoal.remove:Disable()
             else
                 panel.productionGoal.increase:Enable()
+                panel.productionGoal.remove:Enable()
                 if (tonumber(goal.total) or 0) > (tonumber(goal.completed) or 0) then
                     panel.productionGoal.decrease:Enable()
                 else
@@ -2495,8 +3095,42 @@ function WPP:RefreshPanel()
             end
             panel.productionGoal:Show()
         else
+            panel.productionGoalHeader:Hide()
             panel.productionGoal:Hide()
         end
+    end
+
+    if panel.mode == "shopping" then
+        if shoppingMissing == 0 then panel.importToAH:Disable() else panel.importToAH:Enable() end
+        local totalCost, missing = 0, false
+        for _, entry in ipairs(data) do
+            if IsVendorSoldReagent(entry.link, entry.itemID) then
+                missing = true
+            else
+                local price = MarketPrice(entry.link, entry.itemID)
+                if price then totalCost = totalCost + price * (entry.count or 0) else missing = true end
+            end
+        end
+        if shoppingMissing == 0 then
+            panel.summary:SetText("No materials remaining")
+        else
+            panel.summary:SetText(string.format(
+                "%d component%s required%s",
+                #data,
+                #data == 1 and "" or "s",
+                totalCost > 0 and (
+                    "  •  " .. (missing and "Known cost: " or "Estimated cost: ")
+                    .. MoneyText(totalCost)
+                ) or ""
+            ))
+        end
+    elseif panel.mode == "favorites" then
+        panel.summary:SetText(string.format(
+            "%d favorite material%s  -  right-click profession reagents to add",
+            #data, #data == 1 and "" or "s"))
+    else
+        local crafts = QueueTotalCrafts(data)
+        local saved = SavedProductionSession()
 
         if saved and #data > 0 then
             local completed = math.max(0, tonumber(saved.completed) or 0)
@@ -2525,7 +3159,7 @@ function WPP:RefreshPanel()
         elseif craftAllState and not processing and craftAllState.awaitingContinuation then
             panel.craftAll:SetText("Continue Queue")
         else
-            panel.craftAll:SetText(saved and #data > 0 and "Resume Queue" or "Craft Queue")
+            panel.craftAll:SetText(saved and #queueAll > 0 and "Resume Queue" or "Craft Queue")
         end
 
         if processing then
@@ -2537,7 +3171,7 @@ function WPP:RefreshPanel()
             panel.craftAll:Enable()
             panel.clear:SetText("Clear")
             panel.clear:Disable()
-        elseif #data > 0 then
+        elseif #queueAll > 0 then
             panel.clear:SetText("Clear")
             panel.craftAll:Enable()
             panel.clear:Enable()
@@ -2558,6 +3192,7 @@ local function TogglePanel(mode)
         panel:Hide()
     else
         panel.offset = 0
+        panel.page = 1
         panel:Show()
         WPP:RefreshPanel()
     end
@@ -2566,6 +3201,7 @@ end
 local function ShowQueuePanel()
     CreatePanel()
     panel.mode = "queue"
+    panel.page = 1
     panel:Show()
     WPP:RefreshPanel()
 end
@@ -2589,6 +3225,9 @@ UpdateQueueAddButton = function()
         and not QueueBusy()
 
     queueAddButton:SetShown(main and main.windowType == "TradeSkill")
+    if openButton then
+        openButton:SetShown(main and main.windowType == "TradeSkill")
+    end
     if usable then
         queueAddButton:Enable()
     else
@@ -2634,7 +3273,8 @@ local function SetupUI()
         -- "Add Selected" fits without touching the quantity decrement button.
         queueAddButton:SetSize(82, math.max(22, TradeSkillCreateAllButton:GetHeight() or 22))
         queueAddButton:ClearAllPoints()
-        queueAddButton:SetPoint("RIGHT", TradeSkillCreateButton, "LEFT", -90, 0)
+        -- Leave room immediately after Add for the compact list launcher.
+        queueAddButton:SetPoint("RIGHT", TradeSkillCreateButton, "LEFT", -122, 0)
 
         -- Blizzard/Wider Professions may try to show Create All again as the
         -- selected recipe changes. Keep it permanently suppressed while this
@@ -2645,7 +3285,7 @@ local function SetupUI()
         end)
     else
         queueAddButton:SetSize(82, 22)
-        queueAddButton:SetPoint("BOTTOMRIGHT", CraftTradeSkillFrame, "BOTTOMRIGHT", -213, 10)
+        queueAddButton:SetPoint("BOTTOMRIGHT", CraftTradeSkillFrame, "BOTTOMRIGHT", -245, 10)
     end
 
     queueAddButton:Hide()
@@ -2677,36 +3317,19 @@ local function SetupUI()
         end)
     end
 
-    openButton = CreateFrame("Button", "WiderProfessionsPlusOpenButton", CraftTradeReagentsInset)
-    openButton:SetSize(28, 28)
-
-    -- Top-right launcher. The Favorite star sits immediately to its left.
-    openButton:SetPoint("TOPRIGHT", CraftTradeReagentsInset, "TOPRIGHT", -8, -8)
-
+    openButton = CreateFrame("Button", "WiderProfessionsPlusOpenButton", CraftTradeSkillFrame, "UIPanelButtonTemplate")
+    openButton:SetSize(24, queueAddButton:GetHeight())
+    openButton:SetPoint("LEFT", queueAddButton, "RIGHT", 4, 0)
+    openButton:SetText("")
     openButton.icon = openButton:CreateTexture(nil, "ARTWORK")
-    openButton.icon:SetPoint("TOPLEFT", 4, -4)
-    openButton.icon:SetPoint("BOTTOMRIGHT", -4, 4)
-    openButton.icon:SetTexture("Interface\\AddOns\\!Logistician\\Images\\LogisticianIcon")
-    openButton.icon:SetTexCoord(0.04, 0.96, 0.04, 0.96)
-
-    -- Classic action-button style border so it reads as an actual button.
-    openButton.border = openButton:CreateTexture(nil, "OVERLAY")
-    openButton.border:SetSize(46, 46)
-    openButton.border:SetPoint("CENTER", 0, 0)
-    openButton.border:SetTexture("Interface\\Buttons\\UI-Quickslot2")
-
-    openButton:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square", "ADD")
-    local highlight = openButton:GetHighlightTexture()
-    if highlight then
-        highlight:SetPoint("TOPLEFT", 2, -2)
-        highlight:SetPoint("BOTTOMRIGHT", -2, 2)
-    end
+    openButton.icon:SetSize(16, 16)
+    openButton.icon:SetPoint("CENTER", openButton, "CENTER", 0, 0)
+    openButton.icon:SetTexture("Interface\\AddOns\\!Logistician\\Professions\\Assets\\ListIcon")
     openButton:SetScript("OnClick", function() TogglePanel("queue") end)
     openButton:SetScript("OnEnter", function(self)
-        GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-        GameTooltip:AddLine("Logistician", 1, 0.82, 0)
-        GameTooltip:AddLine("Crafting Queue & Bill of Materials", 1, 1, 1)
-        GameTooltip:AddLine("Click craftable reagents to jump to their recipe, even in another profession.", 0.8, 0.8, 0.8, true)
+        GameTooltip:SetOwner(self, "ANCHOR_TOP")
+        GameTooltip:AddLine("Open Logistician", 1, 0.82, 0)
+        GameTooltip:AddLine("Shows the crafting queue, bill of materials, and favorite reagents.", 1, 1, 1, true)
         GameTooltip:Show()
     end)
     openButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
@@ -2731,6 +3354,7 @@ local function SetupUI()
     end)
     CraftTradeSkillFrame:HookScript("OnHide", function()
         if queueAddButton then queueAddButton:Hide() end
+        if openButton then openButton:Hide() end
         if panel then
             if WPP.pendingProfession or (craftAllState and craftAllState.waitingProfession) then
                 panel.restoreAfterProfession = panel:IsShown()

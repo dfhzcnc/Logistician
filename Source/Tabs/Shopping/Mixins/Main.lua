@@ -222,6 +222,7 @@ function AuctionatorShoppingTabFrameMixin:OnLoad()
   else
     self:RegisterEvent("PLAYER_INTERACTION_MANAGER_FRAME_HIDE")
   end
+  self:RegisterEvent("GET_ITEM_INFO_RECEIVED")
 end
 
 function AuctionatorShoppingTabFrameMixin:SetupSearchProvider()
@@ -431,7 +432,13 @@ function AuctionatorShoppingTabFrameMixin:ReceiveEvent(eventName, eventData)
 end
 
 function AuctionatorShoppingTabFrameMixin:OnEvent(eventName, ...)
-  if eventName == "PLAYER_INTERACTION_MANAGER_FRAME_HIDE" then
+  if eventName == "GET_ITEM_INFO_RECEIVED" then
+    -- GetItemInfo calls made while drawing saved shopping lists can complete
+    -- asynchronously after login. Redraw to replace temporary question marks.
+    if self:IsShown() and self.ListsContainer and self.ListsContainer:IsShown() then
+      self.ListsContainer:Populate()
+    end
+  elseif eventName == "PLAYER_INTERACTION_MANAGER_FRAME_HIDE" then
     local showType = ...
     if showType == Enum.PlayerInteractionType.Auctioneer then
       self.shouldDefaultOpenOnShow = true

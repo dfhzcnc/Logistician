@@ -7,6 +7,7 @@ local buildVersion = select(4, GetBuildInfo())
 
 local defaultVariables = {
     favorites = {},
+    favoriteMaterials = {},
     knownTradeskills = {},
     openedAddonFirstTimeForProfession = {}, -- This is used to initialize old skills so that they dont count as new.
     petFamiliesTrained = {},

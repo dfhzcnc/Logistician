@@ -6,6 +6,20 @@ uses [Semantic Versioning](https://semver.org/) and the
 
 ## [Unreleased]
 
+## [2.1.0] - 2026-08-16
+
+### Added
+
+- Added paged production goals with independent crafting queues and bills of materials.
+- Added complete BOM coverage indicators, bank markers, scrolling, and per-goal removal.
+- Added material-level conversion with synchronized queue and quantity calculations.
+- Added favorite crafting materials with profession and bag indicators.
+- Added one Auction House procurement list per production goal without covered or vendor items.
+
+### Improved
+
+- Refined profession-panel navigation, icons, item selection, and queue controls.
+
 ## [2.0.1] - 2026-08-13
 
 ### Fixed
@@ -65,5 +79,7 @@ uses [Semantic Versioning](https://semver.org/) and the
 
 - Update toc for 12.1.0  
 
-[Unreleased]: https://github.com/dfhzcnc/Logistician/compare/v1.1.77...HEAD
+[Unreleased]: https://github.com/dfhzcnc/Logistician/compare/v2.1.0...HEAD
+[2.1.0]: https://github.com/dfhzcnc/Logistician/compare/v2.0.1...v2.1.0
+[2.0.1]: https://github.com/dfhzcnc/Logistician/releases/tag/v2.0.1
 [1.1.77]: https://github.com/dfhzcnc/Logistician/releases/tag/v1.1.77
