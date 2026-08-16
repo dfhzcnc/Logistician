@@ -6,6 +6,23 @@ uses [Semantic Versioning](https://semver.org/) and the
 
 ## [Unreleased]
 
+## [2.2.0] - 2026-08-16
+
+### Added
+
+- Added exact required bank quantities and one-click material withdrawal with bag-space validation.
+- Added a movable, position-saving Materials sidecar for relevant production goals at the bank.
+
+### Improved
+
+- Made the profession Logistician window movable with persistent positioning.
+- Kept the bank Materials sidecar visible after withdrawing the final required item for the current bank session.
+
+### Fixed
+
+- Corrected production-goal progress in the bank Materials sidecar.
+- Restored Mining/Smelting profession switching when resuming mixed-profession crafting queues.
+
 ## [2.1.0] - 2026-08-16
 
 ### Added
@@ -79,7 +96,8 @@ uses [Semantic Versioning](https://semver.org/) and the
 
 - Update toc for 12.1.0  
 
-[Unreleased]: https://github.com/dfhzcnc/Logistician/compare/v2.1.0...HEAD
+[Unreleased]: https://github.com/dfhzcnc/Logistician/compare/v2.2.0...HEAD
+[2.2.0]: https://github.com/dfhzcnc/Logistician/compare/v2.1.0...v2.2.0
 [2.1.0]: https://github.com/dfhzcnc/Logistician/compare/v2.0.1...v2.1.0
 [2.0.1]: https://github.com/dfhzcnc/Logistician/releases/tag/v2.0.1
 [1.1.77]: https://github.com/dfhzcnc/Logistician/releases/tag/v1.1.77

@@ -13,6 +13,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Validate tag and manifest version
         id: version
@@ -38,6 +40,23 @@ jobs:
           print(f"Validated {len(files)} XML files")
           PY
 
+      - name: Prepare release notes
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="${GITHUB_REF_NAME#v}"
+          awk -v heading="## [$version]" '
+            index($0, heading) == 1 { capture = 1; next }
+            capture && /^## \[/ { exit }
+            capture { print }
+          ' CHANGELOG.md > RELEASE_NOTES.md
+          test -s RELEASE_NOTES.md
+          previous_tag=$(git describe --tags --abbrev=0 "${GITHUB_REF_NAME}^" 2>/dev/null || true)
+          if [ -n "$previous_tag" ]; then
+            printf '\n[Full changelog](https://github.com/%s/compare/%s...%s)\n' \
+              "$GITHUB_REPOSITORY" "$previous_tag" "$GITHUB_REF_NAME" >> RELEASE_NOTES.md
+          fi
+
       - name: Package addon
         shell: bash
         run: |
@@ -58,5 +77,5 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           name: Logistician ${{ github.ref_name }}
-          generate_release_notes: true
+          body_path: RELEASE_NOTES.md
           files: Logistician-${{ github.ref_name }}.zip

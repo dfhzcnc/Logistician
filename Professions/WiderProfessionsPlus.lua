@@ -378,21 +378,27 @@ local function ResolveOtherProfession(itemID)
     if not itemID then return nil end
     local db = InitDB()
 
-    local cached = db.recipeProfession[tostring(itemID)]
-    if cached then
-        return cached
-    end
-
     -- Mining is the important special case for Engineering characters:
-    -- bars are produced through the Smelting trade-skill window.
+    -- bars are produced through the Smelting trade-skill window. Treat this
+    -- classification as authoritative before consulting cache data so a stale
+    -- Engineering snapshot cannot send a resumed queue to the wrong window.
     if MINING_OUTPUT_ITEMS[itemID] then
         local miningName = GetSpellInfo(2575)
         local smeltingName = GetSpellInfo(2656)
         if (IsSpellKnown and IsSpellKnown(2656))
             or (db.seenProfessions[miningName])
             or (db.seenProfessions[smeltingName]) then
+            db.recipeProfession[tostring(itemID)] = miningName or smeltingName or "Mining"
+            if db.recipeCache[tostring(itemID)] then
+                db.recipeCache[tostring(itemID)].profession = miningName or smeltingName or "Mining"
+            end
             return miningName or smeltingName or "Mining"
         end
+    end
+
+    local cached = db.recipeProfession[tostring(itemID)]
+    if cached then
+        return cached
     end
 
     return nil
@@ -571,6 +577,7 @@ local function EnhanceReagentClicks(skill)
 end
 
 local panel
+local bankMaterialsPanel
 local openButton
 local queueAddButton
 local UpdateQueueAddButton -- forward declaration; RefreshPanel calls this
@@ -1009,7 +1016,8 @@ local function MakeQueueEntryFromRecipe(recipe, crafts)
     if not recipe then return nil end
 
     local itemID = recipe.itemID or ItemIDFromLink(recipe.link)
-    local profession = NormalizeProfessionName(recipe.profession)
+    local profession = (itemID and ResolveOtherProfession(itemID))
+        or NormalizeProfessionName(recipe.profession)
         or (itemID and NormalizeProfessionName(
             InitDB().recipeProfession[tostring(itemID)]
         ))
@@ -1524,7 +1532,9 @@ end
 local function SelectQueueEntry(entry)
     if not entry then return end
 
-    local entryProfession = NormalizeProfessionName(entry.profession)
+    local entryProfession = (entry.itemID and ResolveOtherProfession(entry.itemID))
+        or NormalizeProfessionName(entry.profession)
+    if entryProfession then entry.profession = entryProfession end
     local currentProfession = CurrentProfession()
 
     if entryProfession and entryProfession ~= currentProfession then
@@ -1595,7 +1605,7 @@ local function StopProduction()
     WPP:RefreshPanel()
 end
 
-local function StartQueuedRecipe()
+local function StartQueuedRecipe(allowProfessionOpen)
     local queue = GetQueue(false)
 
     if not queue or #queue == 0 then
@@ -1610,12 +1620,15 @@ local function StartQueuedRecipe()
     end
 
     local entry = queue[1]
-    local entryProfession = NormalizeProfessionName(entry.profession)
+    local entryProfession = (entry.itemID and ResolveOtherProfession(entry.itemID))
+        or NormalizeProfessionName(entry.profession)
+    if entryProfession then entry.profession = entryProfession end
     local currentProfession = CurrentProfession()
 
     if entryProfession and currentProfession ~= entryProfession then
         if craftAllState then
-            if craftAllState.waitingProfession ~= entryProfession then
+            local newlyWaiting = craftAllState.waitingProfession ~= entryProfession
+            if newlyWaiting and not allowProfessionOpen then
                 Print("Crafting queue paused. Next work center: " .. tostring(entryProfession)
                     .. ". Click Craft Queue to open it.")
             end
@@ -1623,6 +1636,18 @@ local function StartQueuedRecipe()
             craftAllState.waitingItemID = entry.itemID
             processing = nil
             WPP:RefreshPanel()
+            -- Resume Queue is a fresh hardware click, so it can open the next
+            -- protected profession window immediately. Automatic spellcast
+            -- callbacks leave the queue paused and wait for that click.
+            if allowProfessionOpen then
+                if OpenProfessionByName(entryProfession, entry.itemID) then
+                    Print("Opening " .. tostring(entryProfession) .. "...")
+                else
+                    local openerName = ProfessionOpener(entryProfession)
+                    Print("Could not open " .. tostring(entryProfession)
+                        .. " (opener: " .. tostring(openerName or "unknown") .. ").")
+                end
+            end
         else
             -- Craft Next was itself a hardware click, so it may safely open
             -- the required profession. The user then clicks Craft Next again.
@@ -1720,7 +1745,7 @@ local function CraftNext()
         return
     end
 
-    StartQueuedRecipe()
+    StartQueuedRecipe(true)
 end
 
 local function CraftAll()
@@ -1741,7 +1766,7 @@ local function CraftAll()
                 -- continues queue processing.
                 craftAllState.waitingProfession = nil
                 craftAllState.waitingItemID = nil
-                StartQueuedRecipe()
+                StartQueuedRecipe(true)
             else
                 if OpenProfessionByName(waiting, craftAllState.waitingItemID) then
                     Print("Opening " .. tostring(waiting) .. "... Click Craft Queue again once it is open.")
@@ -1754,7 +1779,7 @@ local function CraftAll()
             return
         end
 
-        StartQueuedRecipe()
+        StartQueuedRecipe(true)
         return
     end
 
@@ -1800,7 +1825,7 @@ local function CraftAll()
         paused = false,
     }
 
-    StartQueuedRecipe()
+    StartQueuedRecipe(true)
 end
 
 
@@ -1868,6 +1893,11 @@ local function BuildShoppingList(queueOverride)
         return math.max(0, (tonumber(totalCount) or 0) - bagCount)
     end
 
+    local function BagCount(itemID)
+        if not itemID then return 0 end
+        return math.max(0, tonumber(GetItemCount(itemID, false)) or 0)
+    end
+
     local function Available(itemID)
         if not itemID then return 0 end
         if stock[itemID] == nil then
@@ -1909,6 +1939,7 @@ local function BuildShoppingList(queueOverride)
                 icon = reagent.icon,
                 count = 0,
                 required = 0,
+                bagCount = BagCount(itemID),
                 bankCount = BankCount(itemID),
             }
             shopping[key] = row
@@ -2205,6 +2236,229 @@ local function ImportAllProductionGoalLists()
     end
 end
 
+------------------------------------------------------------------------
+-- Bank withdrawal helpers. Blizzard only allows bank-container actions
+-- while BANKFRAME_OPENED is active, so this deliberately has no remote-bank
+-- fallback. The transfer plan reserves partial stacks before empty slots and
+-- is rebuilt on the hardware click that performs the withdrawal.
+------------------------------------------------------------------------
+local bankFrameOpen = false
+
+local function ContainerNumSlots(bag)
+    if C_Container and C_Container.GetContainerNumSlots then
+        return C_Container.GetContainerNumSlots(bag) or 0
+    end
+    return GetContainerNumSlots and (GetContainerNumSlots(bag) or 0) or 0
+end
+
+local function ContainerItem(bag, slot)
+    if C_Container and C_Container.GetContainerItemInfo then
+        local info = C_Container.GetContainerItemInfo(bag, slot)
+        if not info then return nil end
+        return {
+            itemID = info.itemID,
+            count = tonumber(info.stackCount) or 0,
+            locked = info.isLocked,
+            link = info.hyperlink,
+        }
+    end
+
+    if not GetContainerItemInfo then return nil end
+    local _, count, locked, _, _, _, link = GetContainerItemInfo(bag, slot)
+    local itemID = GetContainerItemID and GetContainerItemID(bag, slot)
+    if not itemID and link then itemID = tonumber(link:match("item:(%d+)")) end
+    if not itemID then return nil end
+    return { itemID = itemID, count = tonumber(count) or 0, locked = locked, link = link }
+end
+
+local function ContainerFreeSlots(bag)
+    if C_Container and C_Container.GetContainerNumFreeSlots then
+        return C_Container.GetContainerNumFreeSlots(bag)
+    end
+    if GetContainerNumFreeSlots then return GetContainerNumFreeSlots(bag) end
+    return 0, 0
+end
+
+local function PickupContainer(bag, slot)
+    if C_Container and C_Container.PickupContainerItem then
+        return C_Container.PickupContainerItem(bag, slot)
+    end
+    return PickupContainerItem(bag, slot)
+end
+
+local function SplitContainer(bag, slot, amount)
+    if C_Container and C_Container.SplitContainerItem then
+        return C_Container.SplitContainerItem(bag, slot, amount)
+    end
+    return SplitContainerItem(bag, slot, amount)
+end
+
+local function CompatibleEmptySlot(bagFamily, itemFamily)
+    bagFamily = tonumber(bagFamily) or 0
+    itemFamily = tonumber(itemFamily) or 0
+    if bagFamily == 0 then return true end
+    return bit and bit.band and bit.band(bagFamily, itemFamily) ~= 0
+end
+
+local function RequiredBankAmounts(goal)
+    local queue = GetQueue(false) or {}
+    local scopedQueue = goal and QueueForProductionGoal(queue, goal) or queue
+    local needs = {}
+
+    for _, row in ipairs(BuildShoppingList(scopedQueue)) do
+        local amount = math.min(
+            tonumber(row.bankCount) or 0,
+            math.max(0, (tonumber(row.required) or 0) - (tonumber(row.bagCount) or 0))
+        )
+        if row.itemID and amount > 0 then
+            needs[#needs + 1] = {
+                itemID = row.itemID,
+                link = row.link,
+                name = row.name,
+                amount = amount,
+            }
+        end
+    end
+
+    return needs
+end
+
+local function BuildBankWithdrawalPlan(goal)
+    if not bankFrameOpen then return nil, "Open your bank to withdraw materials." end
+    if CursorHasItem and CursorHasItem() then return nil, "Clear the item on your cursor first." end
+
+    local needs = RequiredBankAmounts(goal)
+    if #needs == 0 then return nil, "No materials need to be withdrawn for this goal." end
+
+    local emptySlots = {}
+    local partialByItem = {}
+    for bag = 0, (NUM_BAG_SLOTS or 4) do
+        local _, bagFamily = ContainerFreeSlots(bag)
+        for slot = 1, ContainerNumSlots(bag) do
+            local info = ContainerItem(bag, slot)
+            if not info then
+                emptySlots[#emptySlots + 1] = { bag = bag, slot = slot, family = bagFamily or 0 }
+            elseif info.itemID then
+                local maxStack = select(8, GetItemInfo(info.link or info.itemID)) or 1
+                local free = math.max(0, maxStack - (info.count or 0))
+                if free > 0 and not info.locked then
+                    partialByItem[info.itemID] = partialByItem[info.itemID] or {}
+                    partialByItem[info.itemID][#partialByItem[info.itemID] + 1] = {
+                        bag = bag, slot = slot, free = free,
+                    }
+                end
+            end
+        end
+    end
+
+    local bankSlots = {}
+    local bankBags = { BANK_CONTAINER or -1 }
+    for bag = (NUM_BAG_SLOTS or 4) + 1, (NUM_BAG_SLOTS or 4) + (NUM_BANKBAGSLOTS or 7) do
+        bankBags[#bankBags + 1] = bag
+    end
+    for _, bag in ipairs(bankBags) do
+        for slot = 1, ContainerNumSlots(bag) do
+            local info = ContainerItem(bag, slot)
+            if info and info.itemID then
+                bankSlots[info.itemID] = bankSlots[info.itemID] or {}
+                bankSlots[info.itemID][#bankSlots[info.itemID] + 1] = {
+                    bag = bag, slot = slot, count = info.count, locked = info.locked,
+                }
+            end
+        end
+    end
+
+    local plan = {}
+    local reservedEmpty = {}
+    for _, need in ipairs(needs) do
+        local remaining = need.amount
+        local destinations = {}
+
+        for _, destination in ipairs(partialByItem[need.itemID] or {}) do
+            if remaining <= 0 then break end
+            local amount = math.min(remaining, destination.free)
+            destinations[#destinations + 1] = {
+                bag = destination.bag, slot = destination.slot, amount = amount,
+            }
+            remaining = remaining - amount
+        end
+
+        local maxStack = select(8, GetItemInfo(need.link or need.itemID)) or 1
+        local itemFamily = GetItemFamily and GetItemFamily(need.link or need.itemID) or 0
+        while remaining > 0 do
+            local chosenIndex
+            for index, destination in ipairs(emptySlots) do
+                if not reservedEmpty[index] and CompatibleEmptySlot(destination.family, itemFamily) then
+                    chosenIndex = index
+                    break
+                end
+            end
+            if not chosenIndex then
+                return nil, "Not enough compatible bag space for the required bank materials."
+            end
+            reservedEmpty[chosenIndex] = true
+            local destination = emptySlots[chosenIndex]
+            local amount = math.min(remaining, maxStack)
+            destinations[#destinations + 1] = {
+                bag = destination.bag, slot = destination.slot, amount = amount,
+            }
+            remaining = remaining - amount
+        end
+
+        local sources = bankSlots[need.itemID] or {}
+        local sourceIndex, sourceRemaining = 1, sources[1] and sources[1].count or 0
+        for _, destination in ipairs(destinations) do
+            local destinationRemaining = destination.amount
+            while destinationRemaining > 0 do
+                local source = sources[sourceIndex]
+                if not source then return nil, "The required bank contents changed. Try again." end
+                if source.locked then return nil, "A required bank stack is currently locked." end
+                local amount = math.min(destinationRemaining, sourceRemaining)
+                plan[#plan + 1] = {
+                    sourceBag = source.bag,
+                    sourceSlot = source.slot,
+                    sourceWhole = amount == sourceRemaining,
+                    destinationBag = destination.bag,
+                    destinationSlot = destination.slot,
+                    amount = amount,
+                }
+                destinationRemaining = destinationRemaining - amount
+                sourceRemaining = sourceRemaining - amount
+                if sourceRemaining <= 0 then
+                    sourceIndex = sourceIndex + 1
+                    sourceRemaining = sources[sourceIndex] and sources[sourceIndex].count or 0
+                end
+            end
+        end
+    end
+
+    return plan
+end
+
+local function PullRequiredMaterialsFromBank(goal)
+    local plan, reason = BuildBankWithdrawalPlan(goal)
+    if not plan then
+        Print(reason)
+        return
+    end
+
+    for _, move in ipairs(plan) do
+        if move.sourceWhole then
+            PickupContainer(move.sourceBag, move.sourceSlot)
+        else
+            SplitContainer(move.sourceBag, move.sourceSlot, move.amount)
+        end
+        PickupContainer(move.destinationBag, move.destinationSlot)
+        if CursorHasItem and CursorHasItem() then
+            ClearCursor()
+            Print("Bank withdrawal stopped because an item could not be placed.")
+            return
+        end
+    end
+
+    Print("Required bank materials moved to your bags.")
+end
+
 local function ButtonText(frame)
     if not frame or type(frame.GetText) ~= "function" then return nil end
     local ok, value = pcall(frame.GetText, frame)
@@ -2379,17 +2633,335 @@ local function FinishQueueDrag(sourceRow)
     end
 end
 
+local function ActiveBankWindow()
+    local addon = _G.BagBrother
+    if addon and addon.Frames and addon.Frames.Get then
+        local bank = addon.Frames:Get("bank")
+        if bank and bank.IsShown and bank:IsShown() then return bank end
+    end
+    return _G.BankFrame and BankFrame:IsShown() and BankFrame or nil
+end
+
+local function CreateBankMaterialsPanel()
+    if bankMaterialsPanel then return end
+    local template = BackdropTemplateMixin and "BackdropTemplate" or nil
+    local f = CreateFrame("Frame", "LogisticianBankMaterialsPanel", UIParent, template)
+    bankMaterialsPanel = f
+    f:SetSize(390, 390)
+    f:SetFrameStrata("DIALOG")
+    f:SetClampedToScreen(true)
+    f:EnableMouse(true)
+    f:EnableMouseWheel(true)
+    f:SetMovable(true)
+    f:RegisterForDrag("LeftButton")
+    f.page, f.offset = 1, 0
+    f:Hide()
+    local function SavePosition()
+        f:StopMovingOrSizing()
+        local frameX, frameY = f:GetCenter()
+        local parentX, parentY = UIParent:GetCenter()
+        if frameX and frameY and parentX and parentY then
+            InitDB().settings.bankMaterialsPosition = {
+                x = frameX - parentX,
+                y = frameY - parentY,
+            }
+            f:ClearAllPoints()
+            f:SetPoint("CENTER", UIParent, "CENTER",
+                InitDB().settings.bankMaterialsPosition.x,
+                InitDB().settings.bankMaterialsPosition.y)
+        end
+    end
+    f:SetScript("OnDragStart", function() f:StartMoving() end)
+    f:SetScript("OnDragStop", SavePosition)
+    f:SetScript("OnEnter", function() SetCursor("Interface\\Cursor\\UI-Cursor-Move") end)
+    f:SetScript("OnLeave", function() SetCursor(nil) end)
+    f:HookScript("OnHide", function()
+        SetCursor(nil)
+    end)
+    if f.SetBackdrop then
+        f:SetBackdrop({
+            bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
+            edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",
+            tile = true, tileSize = 32, edgeSize = 32,
+            insets = {left = 8, right = 8, top = 8, bottom = 8},
+        })
+    end
+
+    f.logo = f:CreateTexture(nil, "ARTWORK")
+    f.logo:SetSize(20, 20)
+    f.logo:SetPoint("TOPLEFT", 18, -14)
+    f.logo:SetTexture("Interface\\AddOns\\!Logistician\\Professions\\Assets\\PanelLogo")
+    f.title = f:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    f.title:SetPoint("LEFT", f.logo, "RIGHT", 6, 0)
+    f.title:SetText("Logistician")
+    f.close = CreateFrame("Button", nil, f, "UIPanelCloseButton")
+    f.close:SetPoint("TOPRIGHT", -5, -5)
+    f.close:HookScript("OnClick", function() f.dismissed = true end)
+
+    f.tab = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
+    f.tab:SetSize(358, 22)
+    f.tab:SetPoint("TOPLEFT", 16, -45)
+    f.tab:SetText("Materials")
+    f.tab.icon = f.tab:CreateTexture(nil, "ARTWORK")
+    f.tab.icon:SetSize(16, 16)
+    f.tab.icon:SetPoint("CENTER", f.tab, "CENTER", -49, 0)
+    f.tab.icon:SetTexture("Interface\\AddOns\\!Logistician\\Professions\\Assets\\TabMaterials")
+
+    f.header = f:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+    f.header:SetPoint("TOPLEFT", 18, -78)
+    f.header:SetWidth(205)
+    f.header:SetJustifyH("LEFT")
+    f.qtyHeader = f:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    f.qtyHeader:SetPoint("TOPRIGHT", -132, -78)
+    f.qtyHeader:SetWidth(60)
+    f.qtyHeader:SetJustifyH("RIGHT")
+    f.qtyHeader:SetText("Required")
+    f.costHeader = f:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    f.costHeader:SetPoint("TOPRIGHT", -24, -78)
+    f.costHeader:SetWidth(98)
+    f.costHeader:SetJustifyH("RIGHT")
+    f.costHeader:SetText("Est. Cost")
+
+    f.rows = {}
+    for i = 1, QUEUE_ROWS_PER_PAGE do
+        local row = CreateFrame("Button", nil, f)
+        row:SetSize(350, 23)
+        row:SetPoint("TOPLEFT", 18, -94 - (i - 1) * 24)
+        row:RegisterForClicks("LeftButtonUp", "RightButtonUp")
+        row.icon = row:CreateTexture(nil, "ARTWORK")
+        row.icon:SetSize(20, 20)
+        row.icon:SetPoint("LEFT")
+        row.check = row:CreateTexture(nil, "OVERLAY")
+        row.check:SetSize(20, 20)
+        row.check:SetPoint("BOTTOMRIGHT", row.icon, "BOTTOMRIGHT", 4, -3)
+        row.check:SetTexture("Interface\\Buttons\\UI-CheckBox-Check")
+        row.check:SetVertexColor(0.1, 1, 0.1, 1)
+        row.check:SetBlendMode("ADD")
+        row.divider = row:CreateTexture(nil, "BACKGROUND")
+        row.divider:SetHeight(1)
+        row.divider:SetPoint("TOPLEFT", 0, 2)
+        row.divider:SetPoint("TOPRIGHT", 0, 2)
+        row.divider:SetTexture("Interface\\Buttons\\WHITE8X8")
+        row.divider:SetVertexColor(1, 1, 1, 0.28)
+        row.text = row:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        row.text:SetPoint("LEFT", row.icon, "RIGHT", 5, 0)
+        row.text:SetWidth(150)
+        row.text:SetJustifyH("LEFT")
+        row.qty = row:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+        row.qty:SetPoint("RIGHT", -120, 0)
+        row.qty:SetWidth(45)
+        row.qty:SetJustifyH("RIGHT")
+        row.bank = row:CreateTexture(nil, "OVERLAY")
+        row.bank:SetSize(13, 13)
+        row.bank:SetPoint("LEFT", row.qty, "RIGHT", 2, 0)
+        row.bank:SetTexture("Interface\\Minimap\\Tracking\\Banker")
+        row.bankAmount = row:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+        row.bankAmount:SetPoint("LEFT", row.bank, "RIGHT", 1, 0)
+        row.right = row:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+        row.right:SetPoint("RIGHT", -2, 0)
+        row.right:SetWidth(88)
+        row.right:SetJustifyH("RIGHT")
+        row.highlight = row:CreateTexture(nil, "HIGHLIGHT")
+        row.highlight:SetAllPoints()
+        row.highlight:SetTexture("Interface\\QuestFrame\\UI-QuestTitleHighlight")
+        row.highlight:SetBlendMode("ADD")
+        row:Hide()
+        f.rows[i] = row
+    end
+
+    f.goalHeader = f:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    f.goalHeader:SetPoint("BOTTOMLEFT", 18, 108)
+    f.goalHeader:SetText("Production Goal")
+    f.goal = CreateFrame("Frame", nil, f)
+    f.goal:SetSize(350, 20)
+    f.goal:SetPoint("BOTTOMLEFT", 18, 84)
+    f.goal.icon = f.goal:CreateTexture(nil, "ARTWORK")
+    f.goal.icon:SetSize(20, 20)
+    f.goal.icon:SetPoint("LEFT")
+    f.goal.name = f.goal:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    f.goal.name:SetPoint("LEFT", f.goal.icon, "RIGHT", 5, 0)
+    f.goal.name:SetWidth(255)
+    f.goal.name:SetJustifyH("LEFT")
+    f.goal.quantity = f.goal:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    f.goal.quantity:SetPoint("RIGHT", -4, 0)
+    f.summary = f:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    f.summary:SetPoint("BOTTOMLEFT", 18, 48)
+    f.summary:SetWidth(350)
+    f.summary:SetJustifyH("LEFT")
+    f.prev = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
+    f.prev:SetSize(28, 20)
+    f.prev:SetPoint("BOTTOMLEFT", 18, 18)
+    f.prev:SetText("<")
+    f.next = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
+    f.next:SetSize(28, 20)
+    f.next:SetPoint("LEFT", f.prev, "RIGHT", 4, 0)
+    f.next:SetText(">")
+    f.pull = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
+    f.pull:SetSize(112, 22)
+    f.pull:SetPoint("BOTTOMRIGHT", -18, 18)
+    f.pull:SetText("Pull from Bank")
+    f.pull:SetScript("OnClick", function() PullRequiredMaterialsFromBank(f.displayedGoal) end)
+    f.pull:SetScript("OnEnter", function(self)
+        GameTooltip:SetOwner(self, "ANCHOR_TOP")
+        GameTooltip:AddLine("Pull Required Materials", 1, 1, 1)
+        GameTooltip:AddLine(f.pullReason or "Moves the exact required quantities from your open bank into your bags.", nil, nil, nil, true)
+        GameTooltip:Show()
+    end)
+    f.pull:SetScript("OnLeave", function() GameTooltip:Hide() end)
+    f.prev:SetScript("OnClick", function() f.page = math.max(1, f.page - 1) f.offset = 0 WPP:RefreshBankMaterialsPanel() end)
+    f.next:SetScript("OnClick", function() f.page = f.page + 1 f.offset = 0 WPP:RefreshBankMaterialsPanel() end)
+    f:SetScript("OnMouseWheel", function(_, delta)
+        f.offset = delta < 0 and (f.offset + 1) or math.max(0, f.offset - 1)
+        WPP:RefreshBankMaterialsPanel()
+    end)
+end
+
+function WPP:RefreshBankMaterialsPanel()
+    local f = bankMaterialsPanel
+    if not f or not bankFrameOpen or f.dismissed then if f then f:Hide() end return end
+    local bankWindow = ActiveBankWindow()
+    local queue = GetQueue(false) or {}
+    EnsureProductionGoals(queue)
+    local goals = ActiveProductionGoals(queue)
+    local hasRelevantBankMaterials = false
+    for _, goal in ipairs(goals) do
+        if #RequiredBankAmounts(goal) > 0 then
+            hasRelevantBankMaterials = true
+            break
+        end
+    end
+    -- Once relevant materials make the sidecar visible, keep it available for
+    -- the rest of this bank session. Pulling the final material into the bags
+    -- must not make the window disappear underneath the user's cursor. A new
+    -- bank session performs a fresh eligibility check.
+    if hasRelevantBankMaterials then f.sessionEligible = true end
+    if not bankWindow or #goals == 0 or not f.sessionEligible then f:Hide() return end
+
+    f:ClearAllPoints()
+    local savedPosition = InitDB().settings.bankMaterialsPosition
+    if savedPosition and savedPosition.x and savedPosition.y then
+        f:SetPoint("CENTER", UIParent, "CENTER", savedPosition.x, savedPosition.y)
+    else
+        f:SetPoint("TOPLEFT", bankWindow, "TOPRIGHT", 4, 0)
+    end
+    f.page = math.max(1, math.min(f.page, #goals))
+    f.displayedGoal = goals[f.page]
+    local data = BuildShoppingList(QueueForProductionGoal(queue, f.displayedGoal))
+    f.offset = math.max(0, math.min(f.offset, math.max(0, #data - QUEUE_ROWS_PER_PAGE)))
+    f.header:SetText(#goals > 1 and string.format("Bill of Materials  |cffaaaaaa%d/%d|r", f.page, #goals) or "Bill of Materials")
+
+    local cost = 0
+    for _, entry in ipairs(data) do
+        local vendor = IsVendorSoldReagent(entry.link, entry.itemID)
+        local price = not vendor and MarketPrice(entry.link, entry.itemID) or nil
+        if price and (tonumber(entry.count) or 0) > 0 then
+            cost = cost + price * (tonumber(entry.count) or 0)
+        end
+    end
+    for i, row in ipairs(f.rows) do
+        local index = f.offset + i
+        local entry = data[index]
+        if entry then
+            local covered = (tonumber(entry.count) or 0) <= 0
+            local vendor = IsVendorSoldReagent(entry.link, entry.itemID)
+            local price = not vendor and MarketPrice(entry.link, entry.itemID) or nil
+            local bankNeeded = math.min(tonumber(entry.bankCount) or 0,
+                math.max(0, (tonumber(entry.required) or 0) - (tonumber(entry.bagCount) or 0)))
+            row.entry = entry
+            row.icon:SetTexture(entry.icon or (entry.link and select(10, GetItemInfo(entry.link))) or "Interface\\Icons\\INV_Misc_QuestionMark")
+            row.text:SetText((entry.name or UNKNOWN) .. (vendor and " |cff40ff40(Vendor)|r" or ""))
+            row.qty:SetText("x" .. tostring(entry.count or 0))
+            row.check:SetShown(covered)
+            row.bank:SetShown(bankNeeded > 0)
+            row.bankAmount:SetText(bankNeeded > 0 and ("(" .. bankNeeded .. ")") or "")
+            row.bankAmount:SetShown(bankNeeded > 0)
+            local previous = data[index - 1]
+            row.divider:SetShown(covered and previous and (tonumber(previous.count) or 0) > 0)
+            row.right:SetText(covered and "" or (vendor and "Vendor" or (price and MoneyText(price * (entry.count or 0)) or "--")))
+            row:SetScript("OnClick", function(self, button)
+                ChangeShoppingMaterialLevel(self.entry, button == "RightButton" and "forward" or "back")
+                WPP:RefreshBankMaterialsPanel()
+            end)
+            row:SetScript("OnEnter", function(self)
+                GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+                if self.entry.link then GameTooltip:SetHyperlink(self.entry.link) end
+                GameTooltip:Show()
+            end)
+            row:SetScript("OnLeave", function() GameTooltip:Hide() end)
+            row:Show()
+        else
+            row.entry = nil
+            row:Hide()
+        end
+    end
+
+    local goal = f.displayedGoal
+    f.goal.icon:SetTexture(goal.icon or (goal.link and select(10, GetItemInfo(goal.link))) or "Interface\\Icons\\INV_Misc_QuestionMark")
+    f.goal.name:SetText(goal.name or UNKNOWN)
+    f.goal.quantity:SetText(string.format(
+        "|cff40ff40%d|r/%d",
+        math.max(0, tonumber(goal.completed) or 0),
+        math.max(0, tonumber(goal.total) or 0)
+    ))
+    f.summary:SetText(string.format("%d components required  •  Estimated cost: %s", #data, MoneyText(cost)))
+    f.prev:SetEnabled(f.page > 1)
+    f.next:SetEnabled(f.page < #goals)
+    local plan, reason = BuildBankWithdrawalPlan(goal)
+    f.pullReason = reason
+    f.pull:SetEnabled(plan ~= nil and #plan > 0)
+    f:Show()
+end
+
+local function ShowBankMaterialsPanel()
+    CreateBankMaterialsPanel()
+    WPP:RefreshBankMaterialsPanel()
+end
+
 local function CreatePanel()
     if panel then return end
     local template = BackdropTemplateMixin and "BackdropTemplate" or nil
     panel = CreateFrame("Frame", "WiderProfessionsPlusPanel", CraftTradeSkillFrame, template)
     panel:SetSize(390, 390)
-    panel:SetPoint("TOPLEFT", CraftTradeSkillFrame, "TOPRIGHT", 4, -32)
+    local savedPosition = InitDB().settings.professionPanelPosition
+    if savedPosition and savedPosition.x and savedPosition.y then
+        panel:SetPoint("CENTER", UIParent, "CENTER", savedPosition.x, savedPosition.y)
+    else
+        panel:SetPoint("TOPLEFT", CraftTradeSkillFrame, "TOPRIGHT", 4, -32)
+    end
     panel:SetFrameStrata("DIALOG")
     panel:SetClampedToScreen(true)
     panel:EnableMouse(true)
     panel:EnableMouseWheel(true)
+    panel:SetMovable(true)
+    panel:RegisterForDrag("LeftButton")
     panel:Hide()
+    panel:SetScript("OnDragStart", function(self)
+        self:StartMoving()
+    end)
+    panel:SetScript("OnDragStop", function(self)
+        self:StopMovingOrSizing()
+        local frameX, frameY = self:GetCenter()
+        local parentX, parentY = UIParent:GetCenter()
+        if frameX and frameY and parentX and parentY then
+            InitDB().settings.professionPanelPosition = {
+                x = frameX - parentX,
+                y = frameY - parentY,
+            }
+            self:ClearAllPoints()
+            self:SetPoint("CENTER", UIParent, "CENTER",
+                InitDB().settings.professionPanelPosition.x,
+                InitDB().settings.professionPanelPosition.y)
+        end
+    end)
+    panel:SetScript("OnEnter", function()
+        SetCursor("Interface\\Cursor\\UI-Cursor-Move")
+    end)
+    panel:SetScript("OnLeave", function()
+        SetCursor(nil)
+    end)
+    panel:HookScript("OnHide", function()
+        SetCursor(nil)
+    end)
 
     if panel.SetBackdrop then
         panel:SetBackdrop({
@@ -2532,6 +3104,11 @@ local function CreatePanel()
         row.bank:SetPoint("LEFT", row.qty, "RIGHT", 2, 0)
         row.bank:SetTexture("Interface\\Minimap\\Tracking\\Banker")
         row.bank:Hide()
+
+        row.bankAmount = row:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+        row.bankAmount:SetPoint("LEFT", row.bank, "RIGHT", 1, 0)
+        row.bankAmount:SetJustifyH("LEFT")
+        row.bankAmount:Hide()
 
         -- Queue quantity OR shopping total cost.
         row.right = row:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
@@ -2765,6 +3342,28 @@ local function CreatePanel()
     end)
     panel.importToAH:Hide()
 
+    panel.pullFromBank = CreateFrame("Button", nil, panel, "UIPanelButtonTemplate")
+    panel.pullFromBank:SetSize(112, 22)
+    panel.pullFromBank:SetPoint("RIGHT", panel.importToAH, "LEFT", -6, 0)
+    panel.pullFromBank:SetText("Pull from Bank")
+    panel.pullFromBank:SetScript("OnClick", function()
+        PullRequiredMaterialsFromBank(panel.displayedGoal)
+    end)
+    panel.pullFromBank:SetScript("OnEnter", function(self)
+        GameTooltip:SetOwner(self, "ANCHOR_TOP")
+        GameTooltip:AddLine("Pull Required Materials", 1, 1, 1)
+        GameTooltip:AddLine(
+            panel.pullFromBankReason
+                or "Moves the exact required quantities from your open bank into your bags.",
+            nil, nil, nil, true
+        )
+        GameTooltip:Show()
+    end)
+    panel.pullFromBank:SetScript("OnLeave", function()
+        GameTooltip:Hide()
+    end)
+    panel.pullFromBank:Hide()
+
     panel.clear = CreateFrame("Button", nil, panel, "UIPanelButtonTemplate")
     panel.clear:SetSize(70, 22)
     panel.clear:SetPoint("RIGHT", panel.craftAll, "LEFT", -6, 0)
@@ -2827,6 +3426,10 @@ function WPP:RefreshPanel()
         panel.craftAll:Hide()
         panel.clear:Hide()
         panel.importToAH:Show()
+        panel.pullFromBank:Show()
+        local withdrawalPlan, withdrawalReason = BuildBankWithdrawalPlan(panel.displayedGoal)
+        panel.pullFromBankReason = withdrawalReason
+        panel.pullFromBank:SetEnabled(withdrawalPlan ~= nil and #withdrawalPlan > 0)
         panel.progress:Hide()
         panel.summary:Show()
         panel.productionGoalHeader:Show()
@@ -2839,6 +3442,7 @@ function WPP:RefreshPanel()
         panel.craftAll:Hide()
         panel.clear:Hide()
         panel.importToAH:Hide()
+        panel.pullFromBank:Hide()
         panel.progress:Hide()
         panel.summary:Show()
         panel.productionGoalHeader:Hide()
@@ -2871,6 +3475,7 @@ function WPP:RefreshPanel()
         panel.craftAll:Show()
         panel.clear:Show()
         panel.importToAH:Hide()
+        panel.pullFromBank:Hide()
         panel.productionGoalHeader:Show()
         panel.productionGoal:Show()
         if processing or craftAllState then
@@ -2928,7 +3533,13 @@ function WPP:RefreshPanel()
                 row.qty:Show()
                 row.covered:SetShown(covered)
                 row.coveredBold:SetShown(covered)
-                row.bank:SetShown((tonumber(entry.bankCount) or 0) > 0)
+                local bankNeeded = math.min(
+                    tonumber(entry.bankCount) or 0,
+                    math.max(0, (tonumber(entry.required) or 0) - (tonumber(entry.bagCount) or 0))
+                )
+                row.bank:SetShown(bankNeeded > 0)
+                row.bankAmount:SetText(bankNeeded > 0 and ("(" .. tostring(bankNeeded) .. ")") or "")
+                row.bankAmount:SetShown(bankNeeded > 0)
                 local previousMaterial = data[dataIndex - 1]
                 row.groupDivider:SetShown(
                     covered
@@ -2962,6 +3573,13 @@ function WPP:RefreshPanel()
                     end
                     if (tonumber(self.entry.bankCount) or 0) > 0 then
                         GameTooltip:AddLine(string.format("%d stored in your bank", self.entry.bankCount), 0.55, 0.8, 1)
+                        local withdraw = math.min(
+                            tonumber(self.entry.bankCount) or 0,
+                            math.max(0, (tonumber(self.entry.required) or 0) - (tonumber(self.entry.bagCount) or 0))
+                        )
+                        if withdraw > 0 then
+                            GameTooltip:AddLine(string.format("Withdraw %d for this goal", withdraw), 0.55, 0.8, 1)
+                        end
                     end
                     if self.entry.collapsedRecipeID then
                         GameTooltip:AddLine("Left-click to show its reagents", 0.45, 1, 0.45)
@@ -2976,6 +3594,7 @@ function WPP:RefreshPanel()
                 row.covered:Hide()
                 row.coveredBold:Hide()
                 row.bank:Hide()
+                row.bankAmount:Hide()
                 row.groupDivider:Hide()
                 row.text:SetText(entry.name or UNKNOWN)
                 row.text:SetWidth(285)
@@ -3010,6 +3629,7 @@ function WPP:RefreshPanel()
                 row.covered:Hide()
                 row.coveredBold:Hide()
                 row.bank:Hide()
+                row.bankAmount:Hide()
                 row.groupDivider:Hide()
                 row.text:SetText(entry.name or UNKNOWN)
                 row.text:SetWidth(160)
@@ -3049,6 +3669,7 @@ function WPP:RefreshPanel()
             row.covered:Hide()
             row.coveredBold:Hide()
             row.bank:Hide()
+            row.bankAmount:Hide()
             row.groupDivider:Hide()
             row.qty:Hide()
             row.profession:Hide()
@@ -3390,6 +4011,8 @@ WPP:RegisterEvent("TRADE_SKILL_UPDATE")
 WPP:RegisterEvent("AUCTION_HOUSE_SHOW")
 WPP:RegisterEvent("BAG_UPDATE_DELAYED")
 WPP:RegisterEvent("PLAYERBANKSLOTS_CHANGED")
+WPP:RegisterEvent("BANKFRAME_OPENED")
+WPP:RegisterEvent("BANKFRAME_CLOSED")
 WPP:RegisterEvent("UNIT_SPELLCAST_START")
 WPP:RegisterEvent("UNIT_SPELLCAST_SUCCEEDED")
 WPP:RegisterEvent("UNIT_SPELLCAST_INTERRUPTED")
@@ -3425,6 +4048,24 @@ WPP:SetScript("OnEvent", function(self, event, ...)
     elseif event == "TRADE_SKILL_UPDATE" then
         C_Timer.After(0, CacheCurrentProfessionRecipes)
         return
+    elseif event == "BANKFRAME_OPENED" then
+        bankFrameOpen = true
+        if bankMaterialsPanel then
+            bankMaterialsPanel.dismissed = false
+            bankMaterialsPanel.sessionEligible = false
+        end
+        WPP:RefreshPanel()
+        C_Timer.After(0, ShowBankMaterialsPanel)
+        C_Timer.After(0.2, ShowBankMaterialsPanel)
+        return
+    elseif event == "BANKFRAME_CLOSED" then
+        bankFrameOpen = false
+        WPP:RefreshPanel()
+        if bankMaterialsPanel then
+            bankMaterialsPanel.sessionEligible = false
+            bankMaterialsPanel:Hide()
+        end
+        return
     elseif event == "BAG_UPDATE_DELAYED" or event == "PLAYERBANKSLOTS_CHANGED" then
         -- Bag updates often arrive in bursts (loot, purchases, mail, and each
         -- completed craft). Rebuild once after the client has finalized item
@@ -3438,6 +4079,7 @@ WPP:SetScript("OnEvent", function(self, event, ...)
             if self.inventoryRefreshSerial ~= serial then return end
             ReconcileQueueWithInventory()
             WPP:RefreshPanel()
+            WPP:RefreshBankMaterialsPanel()
             UpdateQueueAddButton()
         end)
         return
