@@ -21,6 +21,7 @@ end
 function AuctionatorBuyCurrentPricesFrameMixin:Reset()
   self.selectedAuctionData = nil
   self.lastCancelData = nil
+  self.lastCancelExpectedCount = nil
   self.gotCompleteResults = true
   self.SearchDataProvider.onSearchEnded()
   self.SearchDataProvider:Reset()
@@ -45,6 +46,7 @@ end
 
 local function CountOwnedAuctions(auctionType)
   local allAuctions = Auctionator.AH.DumpAuctions("owner")
+  local wantedLink = Auctionator.Search.GetCleanItemLink(auctionType.itemLink)
 
   local runningTotal = 0
 
@@ -52,7 +54,8 @@ local function CountOwnedAuctions(auctionType)
     local stackPrice = auction.info[Auctionator.Constants.AuctionItemInfo.Buyout]
     local stackSize = auction.info[Auctionator.Constants.AuctionItemInfo.Quantity]
     local isSold = auction.info[Auctionator.Constants.AuctionItemInfo.SaleStatus] == 1
-    if not isSold and stackPrice == auctionType.stackPrice and stackSize == auctionType.stackSize and auction.itemLink == auctionType.itemLink then
+    local cleanLink = auction.itemLink and Auctionator.Search.GetCleanItemLink(auction.itemLink)
+    if not isSold and stackPrice == auctionType.stackPrice and stackSize == auctionType.stackSize and cleanLink == wantedLink then
       runningTotal = runningTotal + 1
     end
   end
@@ -66,13 +69,23 @@ function AuctionatorBuyCurrentPricesFrameMixin:OnEvent(eventName, ...)
   elseif eventName == "AUCTION_OWNED_LIST_UPDATE" and self.lastCancelData ~= nil then
     -- Determine how many of the auction are left after an attempted
     -- cancellation
-    self.lastCancelData.numStacks = CountOwnedAuctions(self.lastCancelData)
+    local remaining = CountOwnedAuctions(self.lastCancelData)
+    self.lastCancelData.numStacks = remaining
     Auctionator.Utilities.SetStacksText(self.lastCancelData)
-    if self.lastCancelData.numStacks == 0 then
+    if remaining == 0 then
       Auctionator.EventBus:Fire(self, Auctionator.Buying.Events.AuctionFocussed, nil)
     end
-    self.lastCancelData = nil
     self.SearchDataProvider:SetDirty()
+
+    -- Blizzard can send an owner-list event before the cancelled auction has
+    -- disappeared. Keep waiting until the expected one-stack decrease is
+    -- visible instead of accepting that stale event as the final result.
+    if remaining <= (self.lastCancelExpectedCount or remaining) then
+      self.lastCancelData = nil
+      self.lastCancelExpectedCount = nil
+    else
+      GetOwnerAuctionItems(0)
+    end
   end
 end
 
@@ -136,9 +149,10 @@ function AuctionatorBuyCurrentPricesFrameMixin:CancelFocussed()
     self:Reset()
     self:DoRefresh()
   else
+    self.lastCancelData = self.selectedAuctionData
+    self.lastCancelExpectedCount = math.max(0, self.selectedAuctionData.numStacks - 1)
     Auctionator.EventBus:Fire(self, Auctionator.Cancelling.Events.RequestCancel, self.selectedAuctionData)
   end
-  self.lastCancelData = self.selectedAuctionData --Used to set amount left after cancelling
   self:LoadForCancelling()
 end
 

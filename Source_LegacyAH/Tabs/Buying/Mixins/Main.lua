@@ -151,6 +151,7 @@ function AuctionatorBuyFrameMixinForSelling:Reset()
 
   self.CurrentPrices.SearchDataProvider:SetIgnoreItemSuffix(Auctionator.Config.Get(Auctionator.Config.Options.SELLING_IGNORE_ITEM_SUFFIX))
   self.waitingOnNewAuction = false
+  self.HistoryButton:Disable()
 end
 
 function AuctionatorBuyFrameMixinForSelling:OnShow()

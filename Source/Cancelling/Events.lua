@@ -5,4 +5,5 @@ Auctionator.Cancelling.Events = {
   UndercutStatus = "undercut_status",
   UndercutScanStart = "undercut_scan_start",
   TotalUpdated = "cancelling_view_total_updated",
+  ShowDetail = "cancelling_show_item_detail",
 }

@@ -14,6 +14,7 @@ local listEntryInset = 30
 local buttonSpacing = 60
 local buttonHeight = 20
 local draggingTermAlpha = 0.5
+local dragHoldDelay = 0.3
 
 local CATEGORY_ICONS = {
   Weapons = "Interface\\Icons\\INV_Sword_04",
@@ -114,6 +115,7 @@ local function GetSearchTermDisplay(searchTerm)
   Add(DisplayRange("lvl", search.minLevel, search.maxLevel))
   Add(DisplayRange("ilvl", search.minItemLevel, search.maxItemLevel))
   Add(DisplayRange("clvl", search.minCraftedLevel, search.maxCraftedLevel))
+  if search.usableItems then Add("Usable") end
 
   local qualities = {}
   for _, quality in ipairs(search.qualities or {}) do
@@ -283,9 +285,39 @@ function AuctionatorShoppingTabListsContainerMixin:OnHide()
     Auctionator.Shopping.Events.ListMetaChange,
     Auctionator.Shopping.Events.ListItemChange,
   })
+
+  self.pendingDragSource = nil
+  self.pendingDragButton = nil
+  self.pendingDragStarted = nil
+  self.dragSource = nil
+  self.dragTarget = nil
+  self.draggingIndex = nil
+  self:SetScript("OnUpdate", nil)
 end
 
 function AuctionatorShoppingTabListsContainerMixin:OnDragUpdate()
+  if self.pendingDragSource then
+    if not IsMouseButtonDown("LeftButton") then
+      self.pendingDragSource = nil
+      self.pendingDragButton = nil
+      self.pendingDragStarted = nil
+      self:SetScript("OnUpdate", nil)
+      return
+    elseif GetTime() - self.pendingDragStarted >= dragHoldDelay then
+      self.dragTarget = nil
+      self.dragSource = self.pendingDragSource
+      self.draggingIndex = self.pendingDragSource.index
+      if self.pendingDragButton then
+        self.pendingDragButton:SetAlpha(draggingTermAlpha)
+      end
+      self.pendingDragSource = nil
+      self.pendingDragButton = nil
+      self.pendingDragStarted = nil
+    else
+      return
+    end
+  end
+
   if not IsMouseButtonDown("LeftButton") then
     local source = self.dragSource
     local target = self.dragTarget
@@ -382,10 +414,9 @@ function AuctionatorShoppingTabListsContainerMixin:SetupContent()
   local function OnMouseDown(button, buttonClickedString)
     if buttonClickedString == "LeftButton" and button.elementData
       and (button.elementData.type == RowType.SearchTerm or button.elementData.type == RowType.List) then
-      self.dragTarget = nil
-      self.dragSource = button.elementData
-      self.draggingIndex = button.elementData.index
-      button:SetAlpha(draggingTermAlpha)
+      self.pendingDragSource = button.elementData
+      self.pendingDragButton = button
+      self.pendingDragStarted = GetTime()
       self:SetScript("OnUpdate", self.OnDragUpdate)
     end
   end

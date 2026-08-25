@@ -258,7 +258,7 @@ AUCTIONATOR_LOCALES.enUS = function()
   L["NO_RESULTS"] = "No results found."
 
   L["UNDERCUT_SCAN"] = "Undercut Scan"
-  L["CANCEL_UNDERCUT"] = "Cancel Undercut"
+  L["CANCEL_UNDERCUT"] = "Cancel Next Undercut"
   L["NAME"] = "Name"
   L["QUANTITY"] = "Quantity"
   L["MAX"] = "Max"

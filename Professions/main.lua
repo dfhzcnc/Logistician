@@ -14,6 +14,8 @@ local HEADER_FRAME_WIDTH_ADDITION_WITH_SCROLLBAR = 5
 local SKILL_BUTTON_WIDTH_ADDITION_WITHOUT_SCROLLBAR = 10
 main.LIST_WIDTH = 238
 
+local SaveProfessionWindowPosition
+
 local buildVersion = select(4, GetBuildInfo())
 if buildVersion >= 20000 then
     MAX_PETS_SHOWN = 19
@@ -40,6 +42,14 @@ local function ColorCodeToRGB(code)
 end
 
 local function linkItemInTextBar(name, link)
+    -- While Logistician Shopping is open, a modified profession-item click
+    -- should populate and run that AH search instead of targeting chat or the
+    -- profession filter.
+    if Auctionator and Auctionator.Shopping and Auctionator.Shopping.SearchItem
+        and Auctionator.Shopping.SearchItem(link or name) then
+        return
+    end
+
     -- Searchbar focus has priority.
     if CraftTradeSkillFrame.searchBar:HasFocus() then
         CraftTradeSkillFrame.searchBar:SetText(name)
@@ -151,6 +161,7 @@ main.ADDON_LOADED = function(self, event, addon)
     -- This is used to read the skill descriptions.
     CreateFrame("GameTooltip", "WiderProfessionsSpellReadingTooltip", nil, "GameTooltipTemplate")
     CraftTradeSkillFrame:SetScript("OnHide", function(self)
+        SaveProfessionWindowPosition()
         if CraftFrame and CraftFrame:IsVisible() then HideUIPanel(CraftFrame) end
         if TradeSkillFrame and TradeSkillFrame:IsVisible() then HideUIPanel(TradeSkillFrame) end
 
@@ -367,11 +378,17 @@ end
 function main:CraftTradeSkillFrame()
     CraftTradeSkillFrame = CreateFrame("Frame", "CraftTradeSkillFrame", UIParent, "PortraitFrameTemplate")
     CraftTradeSkillFrame:SetSize(310 +main.LIST_WIDTH, 106 +20 *MAX_SKILLS_SHOWN) --426
-    CraftTradeSkillFrame:SetPoint("CENTER")
+    local savedPosition = WiderProfessions_DB.windowPosition
+    if savedPosition and savedPosition.x and savedPosition.y then
+        CraftTradeSkillFrame:SetPoint("CENTER", UIParent, "CENTER", savedPosition.x, savedPosition.y)
+    else
+        CraftTradeSkillFrame:SetPoint("CENTER")
+    end
     CraftTradeSkillFrame.TitleText:SetText("")
 
     -- Ignore mouse and make it pushable to the left side.
     CraftTradeSkillFrame:SetMovable(true)
+    CraftTradeSkillFrame:SetClampedToScreen(true)
     CraftTradeSkillFrame:EnableMouse(true)
 
     CraftTradeSkillFrame:SetAttribute("UIPanelLayout-defined", true)
@@ -1381,27 +1398,42 @@ main.CleanFrameAttributes = function(frame)
     frame:SetAttribute("UIPanelLayout-width", 0)
 end
 
+SaveProfessionWindowPosition = function()
+    if not CraftTradeSkillFrame then return end
+    CraftTradeSkillFrame:StopMovingOrSizing()
+    local frameX, frameY = CraftTradeSkillFrame:GetCenter()
+    local parentX, parentY = UIParent:GetCenter()
+    if frameX and frameY and parentX and parentY then
+        local scale = CraftTradeSkillFrame:GetEffectiveScale() / UIParent:GetEffectiveScale()
+        WiderProfessions_DB.windowPosition = {
+            x = frameX * scale - parentX,
+            y = frameY * scale - parentY,
+        }
+        CraftTradeSkillFrame:ClearAllPoints()
+        CraftTradeSkillFrame:SetPoint("CENTER", UIParent, "CENTER",
+            WiderProfessions_DB.windowPosition.x,
+            WiderProfessions_DB.windowPosition.y)
+    end
+end
+
+local function EnableProfessionWindowDragging()
+    local title = CraftTradeSkillFrame and CraftTradeSkillFrame.TitleContainer
+    if not title then return end
+    CraftTradeSkillFrame:SetAttribute("UIPanelLayout-area", nil)
+    title:EnableMouse(true)
+    title:RegisterForDrag("LeftButton")
+    title:SetScript("OnDragStart", function()
+        CraftTradeSkillFrame:StartMoving()
+    end)
+    title:SetScript("OnDragStop", SaveProfessionWindowPosition)
+end
+
 main.CleanOriginalFrameAttributes = function()
     CraftTradeSkillFrame:SetScale(WiderProfessions_DB.windowScale / 100)
     main.CleanFrameAttributes(CraftFrame)
     main.CleanFrameAttributes(TradeSkillFrame)
 
-    if WiderProfessions_DB.canDragFrame then
-        CraftTradeSkillFrame:SetAttribute("UIPanelLayout-area", nil)
-        CraftTradeSkillFrame.TitleContainer:EnableMouse(true)
-        CraftTradeSkillFrame.TitleContainer:RegisterForDrag("LeftButton")
-        CraftTradeSkillFrame.TitleContainer:SetScript("OnDragStart", function()
-            CraftTradeSkillFrame:StartMoving()
-        end)
-        CraftTradeSkillFrame.TitleContainer:SetScript("OnDragStop", function()
-            CraftTradeSkillFrame:StopMovingOrSizing()
-        end) 
-    else
-        CraftTradeSkillFrame:SetAttribute("UIPanelLayout-area", "left")
-        CraftTradeSkillFrame.TitleContainer:EnableMouse(false)
-        CraftTradeSkillFrame.TitleContainer:SetScript("OnDragStart", nil)
-        CraftTradeSkillFrame.TitleContainer:SetScript("OnDragStop", nil)
-    end
+    EnableProfessionWindowDragging()
 end
 
 main.HideOriginalFrames = function()

@@ -65,6 +65,19 @@ function AuctionatorBuyAuctionsDataProviderMixin:OnLoad()
   self.requestAllResults = true
   self.ignoreItemSuffix = false
   self.itemLevelMatch = false
+  self.autoSelectResults = true
+end
+
+function AuctionatorBuyAuctionsDataProviderMixin:SetAutoSelectResults(state)
+  self.autoSelectResults = state
+end
+
+function AuctionatorBuyAuctionsDataProviderMixin:SelectInitialResult()
+  if self.autoSelectResults then
+    self:SetSelectedIndex(1)
+  else
+    self:SetSelectedIndex(nil)
+  end
 end
 
 function AuctionatorBuyAuctionsDataProviderMixin:SetIgnoreItemSuffix(state)
@@ -87,37 +100,44 @@ function AuctionatorBuyAuctionsDataProviderMixin:SetAuctions(entries)
     self.allAuctions = {}
     self:ImportAdditionalResults(entries)
     self:PopulateAuctions()
-    self:SetSelectedIndex(1)
+    self:SelectInitialResult()
   end)
 end
 
-function AuctionatorBuyAuctionsDataProviderMixin:SetQuery(itemLink, callback)
+function AuctionatorBuyAuctionsDataProviderMixin:SetQuery(itemLink, callback, displayName)
   self:Reset()
 
   if itemLink == nil then
     self.query = nil
     self.searchKey = nil
+    self.exactSearchKey = nil
+    self.exactSearchName = nil
+    self.exactSearchItemID = nil
     callback()
   else
+    -- Searching without the gear item suffix if the option is turned on
+    local isEquipment = Auctionator.Utilities.IsEquipment(select(6, C_Item.GetItemInfoInstant(itemLink)))
     self.searchKey = Auctionator.Search.GetCleanItemLink(itemLink)
     local itemID = C_Item.GetItemInfoInstant(self.searchKey)
-    -- Searching without the gear item suffix if the option is turned on
-    local isExact = not self.ignoreItemSuffix or not Auctionator.Utilities.IsEquipment(select(6, C_Item.GetItemInfoInstant(itemLink)))
-    if isExact then
+    self.exactSearchKey = not isEquipment and self.searchKey or nil
+    self.exactSearchName = not self.ignoreItemSuffix and isEquipment and
+      (displayName or Auctionator.Utilities.GetNameFromLink(itemLink)) or nil
+    self.exactSearchItemID = isEquipment and itemID or nil
+    if not isEquipment then
       self.query = {
         searchString = Auctionator.Utilities.GetNameFromLink(itemLink),
         minLevel = nil, maxLevel = nil,
-        itemClassFilters = {},
-        isExact = isExact,
+        itemClassFilters = nil,
+        isExact = true,
       }
       callback()
     else
       Item:CreateFromItemID(itemID):ContinueOnItemLoad(function()
         self.query = {
-          searchString = C_Item.GetItemNameByID(itemID),
+          searchString = self.exactSearchName or C_Item.GetItemNameByID(itemID),
           minLevel = nil, maxLevel = nil,
-          itemClassFilters = {},
-          isExact = isExact,
+          itemClassFilters = nil,
+          isExact = false,
         }
         callback()
       end)
@@ -153,7 +173,7 @@ function AuctionatorBuyAuctionsDataProviderMixin:ReceiveEvent(eventName, eventDa
 
       if self.gotAllResults then
         self:ReportNewMinPrice()
-        self:SetSelectedIndex(1)
+        self:SelectInitialResult()
 
         Auctionator.EventBus:Fire(self, Auctionator.Buying.Events.ViewSetup, result)
       end
@@ -162,7 +182,7 @@ function AuctionatorBuyAuctionsDataProviderMixin:ReceiveEvent(eventName, eventDa
   elseif eventName == Auctionator.AH.Events.ScanAborted then
     Auctionator.EventBus:Unregister(self, BUY_EVENTS)
     if self.currentResults then
-      self:SetSelectedIndex(1)
+      self:SelectInitialResult()
     end
     self.onSearchEnded()
   elseif eventName == Auctionator.Buying.Events.AuctionFocussed and self:IsShown() then
@@ -202,12 +222,18 @@ end
 function AuctionatorBuyAuctionsDataProviderMixin:ImportAdditionalResults(results)
   local itemIDWanted = C_Item.GetItemInfoInstant(self.searchKey)
   local itemLevelWanted = GetDetailedItemLevelInfo(self.searchKey)
-
+  local exactSearchKey = self.exactSearchKey
+  local exactSearchName = self.exactSearchName
+  local exactSearchItemID = self.exactSearchItemID
   local waiting = #results
   for _, entry in ipairs(results) do
     local itemID = entry.info[Auctionator.Constants.AuctionItemInfo.ItemID]
     local itemString = Auctionator.Search.GetCleanItemLink(entry.itemLink)
-    if (self.searchKey == itemString) or
+    local itemName = entry.info[1] or
+      (entry.itemLink and Auctionator.Utilities.GetNameFromLink(entry.itemLink))
+    if (exactSearchName and itemName == exactSearchName) or
+      (exactSearchKey and itemString == exactSearchKey) or
+      (not exactSearchName and not exactSearchKey and self.searchKey == itemString) or
       (self.ignoreItemSuffix and itemID == itemIDWanted) then
       table.insert(self.allAuctions, entry)
     end
@@ -405,6 +431,9 @@ local COMPARATORS = {
   otherSellers = Auctionator.Utilities.StringComparator,
   isOwnedText = Auctionator.Utilities.StringComparator,
   timeLeft = Auctionator.Utilities.NumberComparator,
+  -- Used only by Logistician's Bid Mode results panel.
+  highBidder = Auctionator.Utilities.StringComparator,
+  currentBid = Auctionator.Utilities.NumberComparator,
 }
 
 function AuctionatorBuyAuctionsDataProviderMixin:Sort(fieldName, sortDirection)

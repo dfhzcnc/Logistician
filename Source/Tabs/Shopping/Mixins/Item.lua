@@ -123,6 +123,7 @@ function AuctionatorShoppingItemMixin:OnLoad()
     self:UpdateResetStates()
   end
   self.SearchContainer.SearchString:HookScript("OnTextChanged", update)
+  self.SearchContainer.UsableItems:HookScript("OnClick", update)
   self.SearchContainer.IsExact:HookScript("OnClick", update)
   for _, range in ipairs({self.LevelRange, self.ItemLevelRange, self.PriceRange, self.CraftedLevelRange}) do
     range.MinBox:HookScript("OnTextChanged", update)
@@ -139,7 +140,7 @@ function AuctionatorShoppingItemMixin:OnLoad()
     self.TierContainer:Show()
     self.ExpansionContainer:Show()
   else
-    self:SetHeight(390)
+    self:SetHeight(410)
     self.TierContainer:Hide()
     self.ExpansionContainer:Hide()
   end
@@ -172,7 +173,8 @@ function AuctionatorShoppingItemMixin:UpdateResetStates()
   SetResetEnabled(self.ExpansionContainer.ResetExpansionButton, expansionSet)
   SetResetEnabled(self.TierContainer.ResetTierButton, tierSet)
 
-  local anySet = searchSet or self.SearchContainer.IsExact:GetChecked() or classSet
+  local anySet = searchSet or self.SearchContainer.UsableItems:GetChecked()
+    or self.SearchContainer.IsExact:GetChecked() or classSet
     or levelSet or itemLevelSet or priceSet or craftedSet or qualitySet
     or expansionSet or tierSet or quantitySet
   SetResetEnabled(self.ResetAllButton, anySet)
@@ -254,6 +256,7 @@ end
 function AuctionatorShoppingItemMixin:GetItemString()
   local search = {
     searchString = self.SearchContainer.SearchString:GetText(),
+    usableItems = self.SearchContainer.UsableItems:GetChecked(),
     isExact = self.SearchContainer.IsExact:GetChecked(),
     categoryKey = self.FilterKeySelector:GetValue(),
     minLevel = self.LevelRange:GetMin(),
@@ -276,6 +279,7 @@ end
 function AuctionatorShoppingItemMixin:SetItemString(itemString)
   local search = Auctionator.Search.SplitAdvancedSearch(itemString)
 
+  self.SearchContainer.UsableItems:SetChecked(search.usableItems)
   self.SearchContainer.IsExact:SetChecked(search.isExact)
   self.SearchContainer.SearchString:SetText(search.searchString)
 
@@ -337,6 +341,7 @@ function AuctionatorShoppingItemMixin:ResetAll()
   Auctionator.Debug.Message("AuctionatorShoppingItemMixin:ResetAll()")
 
   self.SearchContainer.SearchString:SetText("")
+  self.SearchContainer.UsableItems:SetChecked(false)
   self.SearchContainer.IsExact:SetChecked(false)
 
   self.FilterKeySelector:Reset()

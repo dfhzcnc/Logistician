@@ -2,6 +2,7 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/">
   <Include file="Events.lua" />
   <Include file="Hooks.lua" />
+  <Script file="NativeAuctionsModes.lua" />
 
   <Script file="ComposeAuctionPostedMessage.lua"/>
   <Script file="ShowCannotSellReason.lua"/>

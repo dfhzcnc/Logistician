@@ -6,6 +6,27 @@ uses [Semantic Versioning](https://semver.org/) and the
 
 ## [Unreleased]
 
+## [2.3.0] - 2026-08-25
+
+### Added
+
+- Added native legacy Auction House bid and buyout posting modes with integrated pricing, result sorting, cancellation, and listing controls.
+- Added detailed cancellation views with current listings and live undercut status.
+- Added a searchable, live-updating debug viewer with recording controls and color-coded events.
+- Added shopping-list workflow improvements, recent-search controls, and richer historical price displays.
+
+### Improved
+
+- Expanded profession planning, crafting-queue behavior, and configuration options.
+- Improved legacy Auction House searches, item tooltips, equipment previews, price presentation, and cancellation reliability.
+- Integrated Logistician's settings into a module directory for auction, profession, and debug tools.
+
+### Fixed
+
+- Improved exact item matching and suffix handling in legacy Auction House searches.
+- Made staged-item selection and owner-list refreshes more reliable on the native Auctions page.
+- Preserved cancellation state until Blizzard confirms that an owned listing was removed.
+
 ## [2.2.0] - 2026-08-16
 
 ### Added
@@ -96,7 +117,8 @@ uses [Semantic Versioning](https://semver.org/) and the
 
 - Update toc for 12.1.0  
 
-[Unreleased]: https://github.com/dfhzcnc/Logistician/compare/v2.2.0...HEAD
+[Unreleased]: https://github.com/dfhzcnc/Logistician/compare/v2.3.0...HEAD
+[2.3.0]: https://github.com/dfhzcnc/Logistician/compare/v2.2.0...v2.3.0
 [2.2.0]: https://github.com/dfhzcnc/Logistician/compare/v2.1.0...v2.2.0
 [2.1.0]: https://github.com/dfhzcnc/Logistician/compare/v2.0.1...v2.1.0
 [2.0.1]: https://github.com/dfhzcnc/Logistician/releases/tag/v2.0.1

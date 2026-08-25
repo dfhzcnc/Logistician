@@ -11,6 +11,9 @@ end
 local ALL_FILTERS = {}
 
 function ALL_FILTERS.itemLevel(resultWithKey, limits)
+  if limits.min == nil and limits.max == nil then
+    return true
+  end
   local itemLevel = GetDetailedItemLevelInfo(resultWithKey.entries[1].itemLink)
   return SatisfiesLimit(itemLevel, limits)
 end

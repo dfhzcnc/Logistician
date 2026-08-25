@@ -16,7 +16,6 @@ local defaultVariables = {
     showEnchantingCategories = true,
     showPetCategories = true,
     skillColorMode = 0, -- vanilla, plus, plusRarity
-    canDragFrame = false,
     showAlternateRanks = true,
     sortRoguePoisons = false,
     windowScale = 100,
@@ -32,17 +31,8 @@ function main:GetDefaultVariables()
 end
 
 function main:CreateSettingsFrame()
-    local category, layout
-    if Auctionator
-        and Auctionator.State
-        and Auctionator.State.OptionsCategory
-        and Settings.RegisterVerticalLayoutSubcategory then
-        category, layout = Settings.RegisterVerticalLayoutSubcategory(
-            Auctionator.State.OptionsCategory,
-            "Professions & Skills"
-        )
-    else
-        category, layout = Settings.RegisterVerticalLayoutCategory("Logistician - Professions & Skills")
+    if true then
+        return
     end
 
     local function createCheckBox(text, variableName, tooltipText, callback)
@@ -127,7 +117,6 @@ function main:CreateSettingsFrame()
     createCheckBox(main.ClientLocale.ShowFavoriteTooltip, "showFavoriteTooltip", main.ClientLocale.ShowFavoriteTooltipTooltip, main.HookFavoriteTooltips)
     createCheckBox(main.ClientLocale.ShowInformationButton, "showInformationButton", main.ClientLocale.ShowInformationButtonTooltip)
     createCheckBox(main.ClientLocale.ShowHeaderTooltip, "showHeaderTooltip", main.ClientLocale.ShowHeaderTooltipTooltip)
-    createCheckBox(UNLOCK_FRAME, "canDragFrame", main.ClientLocale.CanDragFrameTooltip)
     createSlider(main.ClientLocale.MaxSkillsShown, "maxSkillsShown", main.ClientLocale.MaxSkillsShownTooltip, 16, 22, 1)
     createSlider(main.ClientLocale.WindowScale, "windowScale", main.ClientLocale.WindowScaleTooltip, 50, 300, 5, function(self, value)
         CraftTradeSkillFrame:SetScale(value/100)
@@ -135,4 +124,7 @@ function main:CreateSettingsFrame()
     end)
 
     Settings.RegisterAddOnCategory(category)
+    if Auctionator and Auctionator.State then
+        Auctionator.State.ProfessionsOptionsCategory = category
+    end
 end

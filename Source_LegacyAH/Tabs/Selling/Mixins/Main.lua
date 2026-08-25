@@ -11,6 +11,7 @@ function AuctionatorSellingTabMixin:OnLoad()
 
   self.BuyFrame:Init()
   self.BuyFrame.CurrentPrices.SearchResultsListing:SetScrollBarOffsetX(0)
+  self.BuyFrame.CurrentPrices.SearchResultsListing:UseLoadingDots()
 end
 
 function AuctionatorSellingTabMixin:ApplyHiding()

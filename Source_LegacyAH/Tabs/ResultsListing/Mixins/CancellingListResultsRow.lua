@@ -9,13 +9,10 @@ function AuctionatorCancellingListResultsRowMixin:OnClick(button, ...)
   elseif IsModifiedClick("CHATLINK") then
     Auctionator.Utilities.InsertLink(self.rowData.itemLink)
 
-  elseif button == "LeftButton" and Auctionator.AH.IsNotThrottled() then
-    self.rowData.cancelled = true
-    self:ApplyFade()
-
+  elseif button == "LeftButton" then
     Auctionator.EventBus
       :RegisterSource(self, "CancellingListResultRow")
-      :Fire(self, Auctionator.Cancelling.Events.RequestCancel, self.rowData)
+      :Fire(self, Auctionator.Cancelling.Events.ShowDetail, self.rowData)
       :UnregisterSource(self)
   elseif button == "RightButton" then
     Auctionator.API.v1.MultiSearchExact(AUCTIONATOR_L_CANCELLING_TAB, { Auctionator.Utilities.GetNameFromLink(self.rowData.itemLink) })

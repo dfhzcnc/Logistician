@@ -31,6 +31,13 @@ function AuctionatorShoppingTabRecentsContainerMixin:OnLoad()
 end
 
 function AuctionatorShoppingTabRecentsContainerMixin:OnShow()
+  -- Import only applies to persistent shopping lists. Keep it hidden when the
+  -- Recent Searches view is restored directly from the saved last-view state.
+  local shoppingFrame = self:GetParent()
+  if shoppingFrame and shoppingFrame.ImportButton then
+    shoppingFrame.ImportButton:Hide()
+  end
+
   self:Populate()
 
   Auctionator.EventBus:Register(self, {

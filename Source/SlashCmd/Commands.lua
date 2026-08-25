@@ -6,7 +6,7 @@ local SLASH_COMMAND_DESCRIPTIONS = {
   {commands = "rt, resettimer", message = "Reset full scan timer."},
   {commands = "rc, resetconfig", message = "Reset configuration to defaults."},
   {commands = "npd, nopricedb", message = "Disable recording auction prices."},
-  {commands = "d, debug", message = "Toggle debug mode."},
+  {commands = "d, debug", message = "Toggle debug mode; use 'debug dump' or 'debug clear' for captured diagnostics."},
   {commands = "c, config", message = "Show current configuration values."},
   {commands = "c [toggle-name], config [toggle-name]", message = "Toggle the value of the configuration value [toggle-name]."},
   {commands = "v, version", message = "Show current version."},
@@ -27,7 +27,15 @@ function Auctionator.SlashCmd.CancelUndercut()
     :UnregisterSource(Auctionator.SlashCmd.CancelUndercut)
 end
 
-function Auctionator.SlashCmd.ToggleDebug()
+function Auctionator.SlashCmd.ToggleDebug(action)
+  if action == "dump" then
+    Auctionator.Debug.Dump()
+    return
+  elseif action == "clear" then
+    Auctionator.Debug.Clear()
+    return
+  end
+
   Auctionator.Debug.Toggle()
   if Auctionator.Debug.IsOn() then
     Auctionator.Utilities.Message("Debug mode on")

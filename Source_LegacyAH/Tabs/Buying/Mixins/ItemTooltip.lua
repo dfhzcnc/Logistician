@@ -17,7 +17,9 @@ function AuctionatorBuyingItemTooltipMixin:OnLeave()
 end
 
 function AuctionatorBuyingItemTooltipMixin:OnMouseUp()
-  if IsModifiedClick("CHATLINK") then
+  if self.itemLink ~= nil and IsModifiedClick("DRESSUP") then
+    DressUpLink(self.itemLink)
+  elseif IsModifiedClick("CHATLINK") then
     Auctionator.Utilities.InsertLink(self.itemLink)
   else
     if self.itemLink ~= nil then

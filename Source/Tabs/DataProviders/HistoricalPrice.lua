@@ -1,6 +1,21 @@
 local HISTORICAL_PRICE_PROVIDER_LAYOUT ={
   {
     headerTemplate = "AuctionatorStringColumnHeaderTemplate",
+    headerText = AUCTIONATOR_L_DATE,
+    headerParameters = { "rawDay" },
+    cellTemplate = "AuctionatorStringCellTemplate",
+    cellParameters = { "date" }
+  },
+  {
+    headerTemplate = "AuctionatorStringColumnHeaderTemplate",
+    headerText = AUCTIONATOR_L_RESULTS_AVAILABLE_COLUMN,
+    headerParameters = { "available" },
+    cellTemplate = "AuctionatorStringCellTemplate",
+    cellParameters = { "availableFormatted" },
+    width = 100
+  },
+  {
+    headerTemplate = "AuctionatorStringColumnHeaderTemplate",
     headerText = AUCTIONATOR_L_UNIT_PRICE,
     headerParameters = { "minSeen" },
     cellTemplate = "AuctionatorPriceCellTemplate",
@@ -13,21 +28,6 @@ local HISTORICAL_PRICE_PROVIDER_LAYOUT ={
     cellTemplate = "AuctionatorPriceCellTemplate",
     cellParameters = { "maxSeen" },
     defaultHide = true
-  },
-  {
-    headerTemplate = "AuctionatorStringColumnHeaderTemplate",
-    headerText = AUCTIONATOR_L_RESULTS_AVAILABLE_COLUMN,
-    headerParameters = { "available" },
-    cellTemplate = "AuctionatorStringCellTemplate",
-    cellParameters = { "availableFormatted" },
-    width = 100
-  },
-  {
-    headerTemplate = "AuctionatorStringColumnHeaderTemplate",
-    headerText = AUCTIONATOR_L_DATE,
-    headerParameters = { "rawDay" },
-    cellTemplate = "AuctionatorStringCellTemplate",
-    cellParameters = { "date" }
   },
 }
 

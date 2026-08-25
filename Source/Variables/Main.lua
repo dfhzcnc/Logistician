@@ -35,6 +35,7 @@ function Auctionator.Variables.InitializeSavedState()
     AUCTIONATOR_SAVEDVARS = {}
   end
   Auctionator.SavedState = AUCTIONATOR_SAVEDVARS
+  Auctionator.Debug.PruneStale()
 end
 
 -- Attempt to import from other connected realms (this may happen if another

@@ -23,20 +23,14 @@ function AuctionatorPanelConfigMixin:SetupPanel()
     -- TOC IconTexture and falls back to the generic red addon icon.
     local category = Settings.RegisterCanvasLayoutCategory(self, self.name, "!Logistician")
     Settings.RegisterAddOnCategory(category)
+    self.category = category
     Auctionator.State.OptionsCategory = category
 
-    -- Keep the integrated addon's settings easy to navigate: auction-house
-    -- pages live below Auction, while profession and pet-skill controls use a
-    -- separate Professions & Skills branch created by Professions/Options.lua.
-    if Settings.RegisterVerticalLayoutSubcategory then
-      local auctionCategory = Settings.RegisterVerticalLayoutSubcategory(category, "Auction")
-      Settings.RegisterAddOnCategory(auctionCategory)
-      Auctionator.State.AuctionOptionsCategory = auctionCategory
-    end
   else
     local parentCategory = Auctionator.State.AuctionOptionsCategory or Auctionator.State.OptionsCategory
     local subcategory = Settings.RegisterCanvasLayoutSubcategory(parentCategory, self, self.name)
     Settings.RegisterAddOnCategory(subcategory)
+    self.category = subcategory
   end
 end
 

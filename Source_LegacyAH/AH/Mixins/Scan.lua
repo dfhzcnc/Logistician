@@ -5,7 +5,7 @@ local SCAN_EVENTS = {
 }
 
 local function ParamsForBlizzardAPI(query, page)
-  return query.searchString, query.minLevel, query.maxLevel, page, nil, query.quality, false, query.isExact or false, query.itemClassFilters
+  return query.searchString, query.minLevel, query.maxLevel, page, query.usableItems or false, query.quality, false, query.isExact or false, query.itemClassFilters
 end
 
 function AuctionatorAHScanFrameMixin:OnLoad()
@@ -34,7 +34,9 @@ function AuctionatorAHScanFrameMixin:GotAllOwners()
 end
 
 function AuctionatorAHScanFrameMixin:OnEvent(eventName, ...)
-  if eventName == "AUCTION_ITEM_LIST_UPDATE" and self.waitingOnPage and self.sentQuery and self:GotAllOwners() then
+  local ownerDataReady = self.query and self.query.waitForOwners == false
+    or self:GotAllOwners()
+  if eventName == "AUCTION_ITEM_LIST_UPDATE" and self.waitingOnPage and self.sentQuery and ownerDataReady then
     self.waitingOnPage = false
     self:ProcessSearchResults()
   end
@@ -75,7 +77,10 @@ function AuctionatorAHScanFrameMixin:DoNextSearchQuery()
 
   self.lastQueuedItem = function()
     self.sentQuery = true
-    SortAuctionSetSort("list", "unitprice")
+    -- Let callers ask the server to pre-sort pages by a different column
+    -- (e.g. Bid Mode wants "bid" instead of the default buyout unit price)
+    -- so pages mostly arrive in the same order we display them locally.
+    SortAuctionSetSort("list", self.query.sortKey or "unitprice")
     QueryAuctionItems(ParamsForBlizzardAPI(self.query, page))
   end
   Auctionator.AH.Queue:Enqueue(self.lastQueuedItem)

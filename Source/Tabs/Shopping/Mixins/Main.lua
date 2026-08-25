@@ -13,6 +13,14 @@ function AuctionatorShoppingTabFrameMixin:DoSearch(terms, options)
     return
   end
 
+  -- Keep the user's criteria for the bottom Refresh action. A manual
+  -- "Load more results" rerun must not replace the original quick-search
+  -- mode with an always-all-pages refresh.
+  if not (options and options.searchAllPages) or not self.lastRefreshTerms then
+    self.lastRefreshTerms = CopyTable(terms)
+    self.lastRefreshOptions = CopyTable(options or {})
+  end
+
   -- The legacy AH API accepts exactly one quality per query. Rather than
   -- requesting every quality and filtering locally (which can produce an
   -- empty/fallback row), expand a multi-quality advanced search into one
@@ -65,9 +73,10 @@ function AuctionatorShoppingTabFrameMixin:TryOpenSingleResult()
   end
 
   local result = self.DataProvider:GetEntryAt(1)
-  -- itemLink is added after the item cache has resolved. Requiring real
-  -- auction entries excludes the synthetic row used for an unavailable item.
-  if not result or not result.itemLink
+  -- A quick legacy search can finish processing its first page while the sole
+  -- visible row is still marked incomplete. Do not auto-open that row: the
+  -- Load More Results action may reveal additional item groups.
+  if not result or not result.complete or not result.itemLink
     or not result.entries or #result.entries == 0 then
     return
   end
@@ -465,12 +474,11 @@ function AuctionatorShoppingTabFrameMixin:OnHide()
   Auctionator.EventBus:Unregister(self, EVENTBUS_EVENTS)
 end
 
-function AuctionatorShoppingTabFrameMixin:ExportCSVClicked()
-  self:CloseAnyDialogs()
-  self.DataProvider:GetCSV(function(result)
-    self.exportCSVDialog:SetExportString(result)
-    self.exportCSVDialog:Show()
-  end)
+function AuctionatorShoppingTabFrameMixin:RefreshResultsClicked()
+  if self.lastRefreshTerms and #self.lastRefreshTerms > 0 then
+    self:CloseAnyDialogs()
+    self:DoSearch(CopyTable(self.lastRefreshTerms), CopyTable(self.lastRefreshOptions or {}))
+  end
 end
 
 function AuctionatorShoppingTabFrameMixin:OpenDefaultList()

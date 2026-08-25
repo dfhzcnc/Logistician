@@ -62,14 +62,24 @@ function AuctionatorDirectSearchProviderMixin:CreateSearchTerm(term, config)
     or parsed.minPrice ~= nil
     or parsed.maxPrice ~= nil
 
+  local searchAllPages = hasClientFilters
+    or Auctionator.Config.Get(Auctionator.Config.Options.SHOPPING_ALWAYS_LOAD_MORE)
+    or config.searchAllPages
+    or false
+
   return {
     query = {
       searchString = parsed.searchString,
       minLevel = parsed.minLevel,
       maxLevel = parsed.maxLevel,
       itemClassFilters = Auctionator.Search.GetItemClassCategories(parsed.categoryKey),
+      usableItems = parsed.usableItems,
       isExact = parsed.isExact,
       quality = parsed.quality, -- Only useful for the backward-compatible single-rarity case
+      -- Quick Shopping results do not need every seller name before prices,
+      -- quantities, links, and icons can be displayed. Full scans retain the
+      -- owner wait so database and ownership data remain complete.
+      waitForOwners = searchAllPages,
     },
     extraFilters = {
       itemLevel = {
@@ -94,10 +104,7 @@ function AuctionatorDirectSearchProviderMixin:CreateSearchTerm(term, config)
     -- crafted-level, or price filters. Those filters are applied locally, so
     -- stopping after page one can incorrectly show no results. Scan every page
     -- whenever the requested search relies on client-side filtering.
-    searchAllPages = hasClientFilters
-      or Auctionator.Config.Get(Auctionator.Config.Options.SHOPPING_ALWAYS_LOAD_MORE)
-      or config.searchAllPages
-      or false,
+    searchAllPages = searchAllPages,
   }
 end
 
@@ -134,6 +141,15 @@ function AuctionatorDirectSearchProviderMixin:AddFinalResults()
   local results = {}
   local waiting = #(Auctionator.Utilities.TableKeys(self.resultsByKey))
   local completed = false
+
+  -- Only item-level and quality filters require cached item information.
+  -- Plain quick searches, price filters, and crafted-level filters can safely
+  -- group their first-page results immediately instead of waiting for every
+  -- distinct item to complete an asynchronous Item load.
+  local itemLevelFilter = self.currentFilter.itemLevel
+  local needsItemInfo = self.currentFilter.quality ~= nil
+    or (itemLevelFilter and (itemLevelFilter.min ~= nil or itemLevelFilter.max ~= nil))
+
   local function DoComplete()
     table.sort(results, function(a, b)
       return a.minPrice > b.minPrice
@@ -171,8 +187,7 @@ function AuctionatorDirectSearchProviderMixin:AddFinalResults()
       complete = not self.aborted,
       purchaseQuantity = self.resultMetadata.quantity,
     }
-    local item = Item:CreateFromItemID(C_Item.GetItemInfoInstant(key))
-    item:ContinueOnItemLoad(function()
+    local function ProcessResult()
       waiting = waiting - 1
       if Auctionator.Search.CheckFilters(possibleResult, self.currentFilter) then
         table.insert(results, possibleResult)
@@ -181,7 +196,14 @@ function AuctionatorDirectSearchProviderMixin:AddFinalResults()
         completed = true
         DoComplete()
       end
-    end)
+    end
+
+    if needsItemInfo then
+      local item = Item:CreateFromItemID(C_Item.GetItemInfoInstant(key))
+      item:ContinueOnItemLoad(ProcessResult)
+    else
+      ProcessResult()
+    end
   end
   if waiting == 0 and not completed then
     DoComplete()

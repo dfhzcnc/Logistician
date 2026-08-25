@@ -3,7 +3,7 @@
 function Auctionator.Search.SplitAdvancedSearch(searchParametersString)
   local queryString, categoryKey, minItemLevel, maxItemLevel, minLevel, maxLevel,
     minCraftedLevel, maxCraftedLevel, minPrice, maxPrice, quality, tier,
-    expansion, quantity =
+    expansion, quantity, usableItems =
     strsplit( Auctionator.Constants.AdvancedSearchDivider, searchParametersString )
 
   -- A nil queryString causes a disconnect if searched for, but an empty one
@@ -43,6 +43,7 @@ function Auctionator.Search.SplitAdvancedSearch(searchParametersString)
   expansion = tonumber( expansion )
 
   quantity = tonumber( quantity )
+  usableItems = usableItems == "1" or usableItems == "true"
 
   if minLevel == 0 then
     minLevel = nil
@@ -97,6 +98,7 @@ function Auctionator.Search.SplitAdvancedSearch(searchParametersString)
     tier = tier,
     expansion = expansion,
     quantity = quantity,
+    usableItems = usableItems,
   }
 end
 
@@ -426,6 +428,7 @@ function Auctionator.Search.ReconstituteAdvancedSearch(search)
     tostring(search.qualities and table.concat(search.qualities, ",") or search.quality or ""),
     tostring(search.tier or "#"),
     tostring(search.expansion or ""),
-    tostring(search.quantity ~= 0 and search.quantity or "")
+    tostring(search.quantity ~= 0 and search.quantity or ""),
+    search.usableItems and "1" or ""
   )
 end

@@ -63,6 +63,14 @@ local function InitDB()
     return db
 end
 
+local function SetProfessionPanelOpen(open)
+    InitDB().settings.professionPanelOpen = open == true
+end
+
+local function ShouldRestoreProfessionPanel()
+    return InitDB().settings.professionPanelOpen == true
+end
+
 local function NormalizeProfessionName(name)
     if not name then return nil end
     local smelting = GetSpellInfo(2656)
@@ -1868,7 +1876,10 @@ local function BuildShoppingList(queueOverride)
     -- outputs and sub-craft surplus are added to this same ledger and can be
     -- consumed by later requirements.
     ------------------------------------------------------------------------
-    local stock = {}
+    local producedStock = {}
+    local bagStock = {}
+    local bankStock = {}
+    local bankUsage = {}
     local visiting = {}
     local expansionStack = {}
     local collapsed = db.settings.shoppingCollapsed
@@ -1900,26 +1911,43 @@ local function BuildShoppingList(queueOverride)
 
     local function Available(itemID)
         if not itemID then return 0 end
-        if stock[itemID] == nil then
-            stock[itemID] = OwnedCount(itemID)
+        if bagStock[itemID] == nil then
+            bagStock[itemID] = BagCount(itemID)
+            bankStock[itemID] = BankCount(itemID)
+            producedStock[itemID] = 0
         end
-        return stock[itemID]
+        return (producedStock[itemID] or 0)
+            + (bagStock[itemID] or 0)
+            + (bankStock[itemID] or 0)
     end
 
     local function AddStock(itemID, amount)
         amount = tonumber(amount) or 0
         if not itemID or amount <= 0 then return end
-        stock[itemID] = Available(itemID) + amount
+        Available(itemID)
+        producedStock[itemID] = (producedStock[itemID] or 0) + amount
     end
 
     local function Consume(itemID, amount)
         amount = tonumber(amount) or 0
-        if not itemID or amount <= 0 then return 0 end
+        if not itemID or amount <= 0 then return 0, 0 end
 
-        local have = Available(itemID)
-        local used = math.min(have, amount)
-        stock[itemID] = have - used
-        return amount - used
+        Available(itemID)
+        local remaining = amount
+
+        local producedUsed = math.min(producedStock[itemID] or 0, remaining)
+        producedStock[itemID] = (producedStock[itemID] or 0) - producedUsed
+        remaining = remaining - producedUsed
+
+        local bagUsed = math.min(bagStock[itemID] or 0, remaining)
+        bagStock[itemID] = (bagStock[itemID] or 0) - bagUsed
+        remaining = remaining - bagUsed
+
+        local bankUsed = math.min(bankStock[itemID] or 0, remaining)
+        bankStock[itemID] = (bankStock[itemID] or 0) - bankUsed
+        remaining = remaining - bankUsed
+
+        return remaining, bankUsed
     end
 
     local function AddRaw(reagent, amount, isCollapsedCraft, requiredAmount)
@@ -1979,7 +2007,25 @@ local function BuildShoppingList(queueOverride)
         if amount <= 0 then return end
 
         local itemID = reagent.itemID
-        local missing = itemID and Consume(itemID, amount) or amount
+        local missing, usedFromBank
+        if itemID then
+            missing, usedFromBank = Consume(itemID, amount)
+        else
+            missing, usedFromBank = amount, 0
+        end
+        if itemID and usedFromBank > 0 then
+            local usage = bankUsage[itemID]
+            if not usage then
+                usage = {
+                    itemID = itemID,
+                    link = reagent.link,
+                    name = reagent.name or UNKNOWN,
+                    amount = 0,
+                }
+                bankUsage[itemID] = usage
+            end
+            usage.amount = usage.amount + usedFromBank
+        end
         if missing <= 0 then
             AddRaw(reagent, 0, false, amount)
             return
@@ -2089,7 +2135,7 @@ local function BuildShoppingList(queueOverride)
         return (a.name or "") < (b.name or "")
     end)
 
-    return rows
+    return rows, bankUsage
 end
 
 local function ChangeShoppingMaterialLevel(row, direction)
@@ -2139,9 +2185,35 @@ end
 ------------------------------------------------------------------------
 local auctionatorImportButton
 
+local function SetMaterialSourceAmounts(row, ahNeeded, bankNeeded, vendorSold)
+    ahNeeded = math.max(0, math.floor(tonumber(ahNeeded) or 0))
+    bankNeeded = math.max(0, math.floor(tonumber(bankNeeded) or 0))
+
+    row.qty:SetText(ahNeeded > 0 and ("x" .. tostring(ahNeeded)) or "")
+    row.qty:SetShown(ahNeeded > 0)
+    row.ah:SetShown(ahNeeded > 0 and not vendorSold)
+
+    row.bankAmount:SetText(bankNeeded > 0 and ("x" .. tostring(bankNeeded)) or "")
+    row.bankAmount:SetShown(bankNeeded > 0)
+    row.bank:SetShown(bankNeeded > 0)
+
+    -- Keep ordinary values close to their icons instead of right-aligning
+    -- them inside a wide fixed field. If a very large bank quantity needs
+    -- more room, shift the whole source group left so it cannot grow into the
+    -- estimated-cost column.
+    local bankWidth = 18
+    if bankNeeded > 0 then
+        bankWidth = math.max(bankWidth, math.ceil(row.bankAmount:GetStringWidth()) + 1)
+    end
+    row.bankAmount:SetWidth(bankWidth)
+    row.qty:ClearAllPoints()
+    row.qty:SetPoint("RIGHT", -160 - math.max(0, bankWidth - 36), 0)
+end
+
 local function ShoppingListNameFromQueue(queueOverride, goal)
     if goal and goal.name then
-        return "Logistician - " .. goal.name
+        local total = math.max(1, math.floor(tonumber(goal.total) or 1))
+        return string.format("%s x%d", goal.name, total)
     end
     local products = {}
 
@@ -2305,16 +2377,19 @@ local function RequiredBankAmounts(goal)
     local scopedQueue = goal and QueueForProductionGoal(queue, goal) or queue
     local needs = {}
 
-    for _, row in ipairs(BuildShoppingList(scopedQueue)) do
-        local amount = math.min(
-            tonumber(row.bankCount) or 0,
-            math.max(0, (tonumber(row.required) or 0) - (tonumber(row.bagCount) or 0))
-        )
-        if row.itemID and amount > 0 then
+    local _, bankUsage = BuildShoppingList(scopedQueue)
+    for itemID, usage in pairs(bankUsage or {}) do
+        local bagCount = tonumber(GetItemCount(itemID, false)) or 0
+        local ok, totalCount = pcall(GetItemCount, itemID, true)
+        local availableInBank = ok
+            and math.max(0, (tonumber(totalCount) or 0) - bagCount)
+            or 0
+        local amount = math.min(availableInBank, tonumber(usage.amount) or 0)
+        if amount > 0 then
             needs[#needs + 1] = {
-                itemID = row.itemID,
-                link = row.link,
-                name = row.name,
+                itemID = itemID,
+                link = usage.link,
+                name = usage.name,
                 amount = amount,
             }
         end
@@ -2527,7 +2602,26 @@ local function SetupAuctionatorShoppingImport()
 
                 KeepHidden(importButton)
                 KeepHidden(exportButton)
-                auctionatorImportButton:Show()
+
+                -- This custom production-goal import belongs to Shopping Lists
+                -- only. Follow the active container so it cannot overlap Recent
+                -- Searches when Auctionator restores or switches views.
+                if parent.ListsContainer then
+                    parent.ListsContainer:HookScript("OnShow", function()
+                        auctionatorImportButton:Show()
+                    end)
+                end
+                if parent.RecentsContainer then
+                    parent.RecentsContainer:HookScript("OnShow", function()
+                        auctionatorImportButton:Hide()
+                    end)
+                end
+
+                auctionatorImportButton:SetShown(
+                    parent.ListsContainer
+                    and parent.ListsContainer:IsShown()
+                    and (not parent.RecentsContainer or not parent.RecentsContainer:IsShown())
+                )
                 return true
             end
         end
@@ -2673,11 +2767,6 @@ local function CreateBankMaterialsPanel()
     end
     f:SetScript("OnDragStart", function() f:StartMoving() end)
     f:SetScript("OnDragStop", SavePosition)
-    f:SetScript("OnEnter", function() SetCursor("Interface\\Cursor\\UI-Cursor-Move") end)
-    f:SetScript("OnLeave", function() SetCursor(nil) end)
-    f:HookScript("OnHide", function()
-        SetCursor(nil)
-    end)
     if f.SetBackdrop then
         f:SetBackdrop({
             bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
@@ -2748,15 +2837,21 @@ local function CreateBankMaterialsPanel()
         row.text:SetWidth(150)
         row.text:SetJustifyH("LEFT")
         row.qty = row:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-        row.qty:SetPoint("RIGHT", -120, 0)
-        row.qty:SetWidth(45)
+        row.qty:SetPoint("RIGHT", -160, 0)
+        row.qty:SetWidth(36)
         row.qty:SetJustifyH("RIGHT")
+        row.ah = row:CreateTexture(nil, "OVERLAY")
+        row.ah:SetSize(13, 13)
+        row.ah:SetPoint("LEFT", row.qty, "RIGHT", 1, 0)
+        row.ah:SetTexture("Interface\\Minimap\\Tracking\\Auctioneer")
+        row.bankAmount = row:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+        row.bankAmount:SetPoint("LEFT", row.ah, "RIGHT", 3, 0)
+        row.bankAmount:SetWidth(36)
+        row.bankAmount:SetJustifyH("RIGHT")
         row.bank = row:CreateTexture(nil, "OVERLAY")
         row.bank:SetSize(13, 13)
-        row.bank:SetPoint("LEFT", row.qty, "RIGHT", 2, 0)
+        row.bank:SetPoint("LEFT", row.bankAmount, "RIGHT", 1, 0)
         row.bank:SetTexture("Interface\\Minimap\\Tracking\\Banker")
-        row.bankAmount = row:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-        row.bankAmount:SetPoint("LEFT", row.bank, "RIGHT", 1, 0)
         row.right = row:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
         row.right:SetPoint("RIGHT", -2, 0)
         row.right:SetWidth(88)
@@ -2870,11 +2965,9 @@ function WPP:RefreshBankMaterialsPanel()
             row.entry = entry
             row.icon:SetTexture(entry.icon or (entry.link and select(10, GetItemInfo(entry.link))) or "Interface\\Icons\\INV_Misc_QuestionMark")
             row.text:SetText((entry.name or UNKNOWN) .. (vendor and " |cff40ff40(Vendor)|r" or ""))
-            row.qty:SetText("x" .. tostring(entry.count or 0))
+            local ahNeeded = math.max(0, tonumber(entry.count) or 0)
             row.check:SetShown(covered)
-            row.bank:SetShown(bankNeeded > 0)
-            row.bankAmount:SetText(bankNeeded > 0 and ("(" .. bankNeeded .. ")") or "")
-            row.bankAmount:SetShown(bankNeeded > 0)
+            SetMaterialSourceAmounts(row, ahNeeded, bankNeeded, vendor)
             local previous = data[index - 1]
             row.divider:SetShown(covered and previous and (tonumber(previous.count) or 0) > 0)
             row.right:SetText(covered and "" or (vendor and "Vendor" or (price and MoneyText(price * (entry.count or 0)) or "--")))
@@ -2891,6 +2984,7 @@ function WPP:RefreshBankMaterialsPanel()
             row:Show()
         else
             row.entry = nil
+            row.ah:Hide()
             row:Hide()
         end
     end
@@ -2923,7 +3017,15 @@ local function CreatePanel()
     panel = CreateFrame("Frame", "WiderProfessionsPlusPanel", CraftTradeSkillFrame, template)
     panel:SetSize(390, 390)
     local savedPosition = InitDB().settings.professionPanelPosition
-    if savedPosition and savedPosition.x and savedPosition.y then
+    if savedPosition and savedPosition.side == "RIGHT" then
+        panel:SetPoint("TOPLEFT", CraftTradeSkillFrame, "TOPRIGHT", 4, savedPosition.offset or 0)
+    elseif savedPosition and savedPosition.side == "LEFT" then
+        panel:SetPoint("TOPRIGHT", CraftTradeSkillFrame, "TOPLEFT", -4, savedPosition.offset or 0)
+    elseif savedPosition and savedPosition.side == "TOP" then
+        panel:SetPoint("BOTTOMLEFT", CraftTradeSkillFrame, "TOPLEFT", savedPosition.offset or 0, 4)
+    elseif savedPosition and savedPosition.side == "BOTTOM" then
+        panel:SetPoint("TOPLEFT", CraftTradeSkillFrame, "BOTTOMLEFT", savedPosition.offset or 0, -4)
+    elseif savedPosition and savedPosition.x and savedPosition.y then
         panel:SetPoint("CENTER", UIParent, "CENTER", savedPosition.x, savedPosition.y)
     else
         panel:SetPoint("TOPLEFT", CraftTradeSkillFrame, "TOPRIGHT", 4, -32)
@@ -2940,6 +3042,51 @@ local function CreatePanel()
     end)
     panel:SetScript("OnDragStop", function(self)
         self:StopMovingOrSizing()
+        local snapDistance = 30
+        local left, right, top, bottom = self:GetLeft(), self:GetRight(), self:GetTop(), self:GetBottom()
+        local parentLeft, parentRight = CraftTradeSkillFrame:GetLeft(), CraftTradeSkillFrame:GetRight()
+        local parentTop, parentBottom = CraftTradeSkillFrame:GetTop(), CraftTradeSkillFrame:GetBottom()
+        local bestSide, bestDistance
+
+        local function Consider(side, distance, overlaps)
+            if overlaps and distance <= snapDistance
+                and (bestDistance == nil or distance < bestDistance) then
+                bestSide, bestDistance = side, distance
+            end
+        end
+
+        if left and right and top and bottom and parentLeft and parentRight
+            and parentTop and parentBottom then
+            local verticalOverlap = bottom < parentTop and top > parentBottom
+            local horizontalOverlap = left < parentRight and right > parentLeft
+            Consider("RIGHT", math.abs(left - parentRight), verticalOverlap)
+            Consider("LEFT", math.abs(right - parentLeft), verticalOverlap)
+            Consider("TOP", math.abs(bottom - parentTop), horizontalOverlap)
+            Consider("BOTTOM", math.abs(top - parentBottom), horizontalOverlap)
+        end
+
+        if bestSide then
+            self:ClearAllPoints()
+            if bestSide == "RIGHT" then
+                local offset = top - parentTop
+                self:SetPoint("TOPLEFT", CraftTradeSkillFrame, "TOPRIGHT", 4, offset)
+                InitDB().settings.professionPanelPosition = {side = bestSide, offset = offset}
+            elseif bestSide == "LEFT" then
+                local offset = top - parentTop
+                self:SetPoint("TOPRIGHT", CraftTradeSkillFrame, "TOPLEFT", -4, offset)
+                InitDB().settings.professionPanelPosition = {side = bestSide, offset = offset}
+            elseif bestSide == "TOP" then
+                local offset = left - parentLeft
+                self:SetPoint("BOTTOMLEFT", CraftTradeSkillFrame, "TOPLEFT", offset, 4)
+                InitDB().settings.professionPanelPosition = {side = bestSide, offset = offset}
+            else
+                local offset = left - parentLeft
+                self:SetPoint("TOPLEFT", CraftTradeSkillFrame, "BOTTOMLEFT", offset, -4)
+                InitDB().settings.professionPanelPosition = {side = bestSide, offset = offset}
+            end
+            return
+        end
+
         local frameX, frameY = self:GetCenter()
         local parentX, parentY = UIParent:GetCenter()
         if frameX and frameY and parentX and parentY then
@@ -2952,15 +3099,6 @@ local function CreatePanel()
                 InitDB().settings.professionPanelPosition.x,
                 InitDB().settings.professionPanelPosition.y)
         end
-    end)
-    panel:SetScript("OnEnter", function()
-        SetCursor("Interface\\Cursor\\UI-Cursor-Move")
-    end)
-    panel:SetScript("OnLeave", function()
-        SetCursor(nil)
-    end)
-    panel:HookScript("OnHide", function()
-        SetCursor(nil)
     end)
 
     if panel.SetBackdrop then
@@ -2988,6 +3126,10 @@ local function CreatePanel()
 
     panel.close = CreateFrame("Button", nil, panel, "UIPanelCloseButton")
     panel.close:SetPoint("TOPRIGHT", -5, -5)
+    panel.close:SetScript("OnClick", function()
+        SetProfessionPanelOpen(false)
+        panel:Hide()
+    end)
 
     panel.queueTab = CreateFrame("Button", nil, panel, "UIPanelButtonTemplate")
     panel.queueTab:SetSize(110, 22)
@@ -3094,21 +3236,28 @@ local function CreatePanel()
 
         -- Dedicated shopping quantity column. Hidden in queue mode.
         row.qty = row:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-        row.qty:SetPoint("RIGHT", -120, 0)
-        row.qty:SetWidth(45)
+        row.qty:SetPoint("RIGHT", -160, 0)
+        row.qty:SetWidth(36)
         row.qty:SetJustifyH("RIGHT")
         row.qty:Hide()
 
-        row.bank = row:CreateTexture(nil, "OVERLAY")
-        row.bank:SetSize(13, 13)
-        row.bank:SetPoint("LEFT", row.qty, "RIGHT", 2, 0)
-        row.bank:SetTexture("Interface\\Minimap\\Tracking\\Banker")
-        row.bank:Hide()
+        row.ah = row:CreateTexture(nil, "OVERLAY")
+        row.ah:SetSize(13, 13)
+        row.ah:SetPoint("LEFT", row.qty, "RIGHT", 1, 0)
+        row.ah:SetTexture("Interface\\Minimap\\Tracking\\Auctioneer")
+        row.ah:Hide()
 
         row.bankAmount = row:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-        row.bankAmount:SetPoint("LEFT", row.bank, "RIGHT", 1, 0)
-        row.bankAmount:SetJustifyH("LEFT")
+        row.bankAmount:SetPoint("LEFT", row.ah, "RIGHT", 3, 0)
+        row.bankAmount:SetWidth(36)
+        row.bankAmount:SetJustifyH("RIGHT")
         row.bankAmount:Hide()
+
+        row.bank = row:CreateTexture(nil, "OVERLAY")
+        row.bank:SetSize(13, 13)
+        row.bank:SetPoint("LEFT", row.bankAmount, "RIGHT", 1, 0)
+        row.bank:SetTexture("Interface\\Minimap\\Tracking\\Banker")
+        row.bank:Hide()
 
         -- Queue quantity OR shopping total cost.
         row.right = row:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
@@ -3342,28 +3491,6 @@ local function CreatePanel()
     end)
     panel.importToAH:Hide()
 
-    panel.pullFromBank = CreateFrame("Button", nil, panel, "UIPanelButtonTemplate")
-    panel.pullFromBank:SetSize(112, 22)
-    panel.pullFromBank:SetPoint("RIGHT", panel.importToAH, "LEFT", -6, 0)
-    panel.pullFromBank:SetText("Pull from Bank")
-    panel.pullFromBank:SetScript("OnClick", function()
-        PullRequiredMaterialsFromBank(panel.displayedGoal)
-    end)
-    panel.pullFromBank:SetScript("OnEnter", function(self)
-        GameTooltip:SetOwner(self, "ANCHOR_TOP")
-        GameTooltip:AddLine("Pull Required Materials", 1, 1, 1)
-        GameTooltip:AddLine(
-            panel.pullFromBankReason
-                or "Moves the exact required quantities from your open bank into your bags.",
-            nil, nil, nil, true
-        )
-        GameTooltip:Show()
-    end)
-    panel.pullFromBank:SetScript("OnLeave", function()
-        GameTooltip:Hide()
-    end)
-    panel.pullFromBank:Hide()
-
     panel.clear = CreateFrame("Button", nil, panel, "UIPanelButtonTemplate")
     panel.clear:SetSize(70, 22)
     panel.clear:SetPoint("RIGHT", panel.craftAll, "LEFT", -6, 0)
@@ -3426,10 +3553,6 @@ function WPP:RefreshPanel()
         panel.craftAll:Hide()
         panel.clear:Hide()
         panel.importToAH:Show()
-        panel.pullFromBank:Show()
-        local withdrawalPlan, withdrawalReason = BuildBankWithdrawalPlan(panel.displayedGoal)
-        panel.pullFromBankReason = withdrawalReason
-        panel.pullFromBank:SetEnabled(withdrawalPlan ~= nil and #withdrawalPlan > 0)
         panel.progress:Hide()
         panel.summary:Show()
         panel.productionGoalHeader:Show()
@@ -3442,7 +3565,6 @@ function WPP:RefreshPanel()
         panel.craftAll:Hide()
         panel.clear:Hide()
         panel.importToAH:Hide()
-        panel.pullFromBank:Hide()
         panel.progress:Hide()
         panel.summary:Show()
         panel.productionGoalHeader:Hide()
@@ -3475,7 +3597,6 @@ function WPP:RefreshPanel()
         panel.craftAll:Show()
         panel.clear:Show()
         panel.importToAH:Hide()
-        panel.pullFromBank:Hide()
         panel.productionGoalHeader:Show()
         panel.productionGoal:Show()
         if processing or craftAllState then
@@ -3529,17 +3650,14 @@ function WPP:RefreshPanel()
                 local price = not vendorSold and MarketPrice(entry.link, entry.itemID) or nil
                 local covered = (tonumber(entry.count) or 0) <= 0
                 row.text:SetText((entry.name or UNKNOWN) .. (vendorSold and " |cff40ff40(Vendor)|r" or ""))
-                row.qty:SetText("x" .. tostring(entry.count or 0))
-                row.qty:Show()
+                local ahNeeded = math.max(0, tonumber(entry.count) or 0)
                 row.covered:SetShown(covered)
                 row.coveredBold:SetShown(covered)
                 local bankNeeded = math.min(
                     tonumber(entry.bankCount) or 0,
                     math.max(0, (tonumber(entry.required) or 0) - (tonumber(entry.bagCount) or 0))
                 )
-                row.bank:SetShown(bankNeeded > 0)
-                row.bankAmount:SetText(bankNeeded > 0 and ("(" .. tostring(bankNeeded) .. ")") or "")
-                row.bankAmount:SetShown(bankNeeded > 0)
+                SetMaterialSourceAmounts(row, ahNeeded, bankNeeded, vendorSold)
                 local previousMaterial = data[dataIndex - 1]
                 row.groupDivider:SetShown(
                     covered
@@ -3593,6 +3711,7 @@ function WPP:RefreshPanel()
             elseif panel.mode == "favorites" then
                 row.covered:Hide()
                 row.coveredBold:Hide()
+                row.ah:Hide()
                 row.bank:Hide()
                 row.bankAmount:Hide()
                 row.groupDivider:Hide()
@@ -3628,6 +3747,7 @@ function WPP:RefreshPanel()
             else
                 row.covered:Hide()
                 row.coveredBold:Hide()
+                row.ah:Hide()
                 row.bank:Hide()
                 row.bankAmount:Hide()
                 row.groupDivider:Hide()
@@ -3668,6 +3788,7 @@ function WPP:RefreshPanel()
         else
             row.covered:Hide()
             row.coveredBold:Hide()
+            row.ah:Hide()
             row.bank:Hide()
             row.bankAmount:Hide()
             row.groupDivider:Hide()
@@ -3810,10 +3931,12 @@ local function TogglePanel(mode)
     CreatePanel()
     if mode then panel.mode = mode end
     if panel:IsShown() then
+        SetProfessionPanelOpen(false)
         panel:Hide()
     else
         panel.offset = 0
         panel.page = 1
+        SetProfessionPanelOpen(true)
         panel:Show()
         WPP:RefreshPanel()
     end
@@ -3823,6 +3946,7 @@ local function ShowQueuePanel()
     CreatePanel()
     panel.mode = "queue"
     panel.page = 1
+    SetProfessionPanelOpen(true)
     panel:Show()
     WPP:RefreshPanel()
 end
@@ -3968,6 +4092,11 @@ local function SetupUI()
         C_Timer.After(0, function()
             if main.windowType == "TradeSkill" then
                 openButton:Show()
+                if ShouldRestoreProfessionPanel() then
+                    CreatePanel()
+                    panel:Show()
+                    WPP:RefreshPanel()
+                end
             else
                 openButton:Hide()
             end
@@ -4039,6 +4168,9 @@ WPP:SetScript("OnEvent", function(self, event, ...)
 
             if panel and panel.restoreAfterProfession then
                 panel.restoreAfterProfession = nil
+                panel:Show()
+            elseif ShouldRestoreProfessionPanel() then
+                CreatePanel()
                 panel:Show()
             end
             WPP:RefreshPanel()

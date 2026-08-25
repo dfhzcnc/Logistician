@@ -33,6 +33,10 @@ local function SearchItem(text)
   return true
 end
 
+-- Shared by integrated UI modules which have an item link but do not pass
+-- through Blizzard's normal modified-item-click path.
+Auctionator.Shopping.SearchItem = SearchItem
+
 local function Callback(text)
   -- Prevent searching when the user is attempting to link the item in chat
   if GetCurrentKeyBoardFocus() == nil or GetCurrentKeyBoardFocus():GetName() == nil then

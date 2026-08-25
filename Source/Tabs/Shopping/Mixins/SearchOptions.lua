@@ -208,6 +208,10 @@ local function GetAppropriateText(searchTerm)
       if value then
         newSearch = "\"" .. newSearch .. "\""
       end
+    elseif key == "usableItems" then
+      if value then
+        return AUCTIONATOR_L_EXTENDED_SEARCH_ACTIVE_TEXT
+      end
     elseif key == "categoryKey" then
       if value ~= "" then
         return AUCTIONATOR_L_EXTENDED_SEARCH_ACTIVE_TEXT
