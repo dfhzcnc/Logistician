@@ -379,3 +379,32 @@ EventUtil.ContinueOnAddOnLoaded("Blizzard_ProfessionsTemplates", function()
     end)
   end
 end)
+
+-- Alt-gated rows (AH depth / market structure, see Tooltips/Main.lua's
+-- AddMarketSnapshotTip) only refresh if the tooltip is rebuilt - WoW does not
+-- automatically rebuild a currently-shown tooltip just because a modifier key
+-- changed, except for a few native surfaces (bags) that explicitly re-fire
+-- their own OnEnter on modifier changes. Re-invoking the owning frame's
+-- OnEnter script here makes Alt work generically everywhere Auctionator
+-- tooltips appear (custom addon UI, native profession/tradeskill windows).
+do
+  local altWatcher = CreateFrame("Frame")
+  local wasAltDown = false
+  altWatcher:SetScript("OnUpdate", function()
+    local isAltDown = IsAltKeyDown()
+    if isAltDown == wasAltDown then
+      return
+    end
+    wasAltDown = isAltDown
+
+    if not GameTooltip:IsShown() then
+      return
+    end
+
+    local owner = GameTooltip:GetOwner()
+    local onEnter = owner and owner.GetScript and owner:GetScript("OnEnter")
+    if onEnter then
+      onEnter(owner)
+    end
+  end)
+end

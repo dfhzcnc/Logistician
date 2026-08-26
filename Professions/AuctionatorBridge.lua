@@ -67,6 +67,20 @@ function Bridge:GetAuctionPriceByItemID(itemID)
     return nil
 end
 
+-- Robust current-market reference price (10%-depth, unit-weighted) instead of
+-- the raw cheapest listing - used for Cost/Profit/Known cost so a single
+-- one-copper undercut listing doesn't skew crafting math. Falls back to nil
+-- (caller decides whether to fall back to the lowest-listing price) if no
+-- enhanced snapshot has been captured for this item yet.
+function Bridge:GetMarketPriceByItemID(itemID)
+    if type(itemID) ~= "number" then return nil end
+    local ok, snapshot = self:Call("GetMarketSnapshotByItemID", itemID)
+    if ok and type(snapshot) == "table" and type(snapshot.marketPrice) == "number" and snapshot.marketPrice > 0 then
+        return snapshot.marketPrice
+    end
+    return nil
+end
+
 function Bridge:GetAuctionPriceByItemLink(itemLink)
     if type(itemLink) ~= "string" then return nil end
     local ok, value = self:Call("GetAuctionPriceByItemLink", itemLink)
@@ -280,6 +294,7 @@ function Bridge:GetCapabilities()
         available = self:IsAvailable(),
         version = self:GetVersion(),
         auctionPrice = self:Has("GetAuctionPriceByItemID"),
+        marketPrice = self:Has("GetMarketSnapshotByItemID"),
         auctionAverage = self:Has("GetAuctionAverageByItemID"),
         saleLikelihood = self:Has("GetSaleLikelihoodByItemID"),
         saleExposureHistory = self:Has("GetSaleExposureHistoryByItemID"),

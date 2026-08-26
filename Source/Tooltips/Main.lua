@@ -111,10 +111,6 @@ function Auctionator.Tooltip.ShowTipWithPricingDBKey(tooltipFrame, dbKeys, itemL
     end
   end
 
-  if Auctionator.Debug.IsOn() then
-    tooltipFrame:AddDoubleLine("DBKey", dbKeys[1])
-  end
-
   if vendorPrice ~= nil then
     Auctionator.Tooltip.AddVendorTip(tooltipFrame, vendorPrice, countString)
   end
@@ -287,15 +283,16 @@ function Auctionator.Tooltip.AddMarketSnapshotTip(
     return
   end
 
-  -- Advanced market analytics are intentionally opt-in so ordinary item
-  -- tooltips stay compact. WoW rebuilds hovered item tooltips when modifier
-  -- state changes, making these rows appear/disappear with Alt.
-  if not IsAltKeyDown() then
-    return
-  end
+  -- The Market price row is always shown right under Avg 21d, labeled
+  -- plainly as "Market". Holding Alt swaps the label to the more precise
+  -- "Market (10% depth)" and reveals the structural detail rows below it -
+  -- those stay opt-in so ordinary tooltips remain compact. WoW rebuilds
+  -- hovered item tooltips when modifier state changes, making the extra rows
+  -- appear/disappear live with Alt.
+  local isAltDown = IsAltKeyDown()
 
   tooltipFrame:AddDoubleLine(
-    L("MARKET_DEPTH_PRICE") .. countString,
+    (isAltDown and L("MARKET_DEPTH_PRICE") or L("MARKET")) .. countString,
     WHITE_FONT_COLOR:WrapTextInColorCode(
       Auctionator.Utilities.CreatePaddedMoneyString(marketPrice)
     )
@@ -303,12 +300,12 @@ function Auctionator.Tooltip.AddMarketSnapshotTip(
 
   -- Keep normal tooltips compact. Holding Alt reveals the structural details
   -- captured by the enhanced scan without requiring another AH query.
-  if IsAltKeyDown() then
+  if isAltDown then
     tooltipFrame:AddDoubleLine(
       L("MARKET_DEPTH"),
       LIGHTGRAY_FONT_COLOR:WrapTextInColorCode(
         string.format(
-          "%d floor · %d +10%% · %d total",
+          "%d at floor · %d within +10%% · %d total qty",
           snapshot.floorQuantity or 0,
           snapshot.depth10 or 0,
           snapshot.totalQuantity or 0

@@ -3,6 +3,11 @@ AuctionatorConfigFrameMixin = CreateFromMixins(AuctionatorPanelConfigMixin)
 function AuctionatorConfigFrameMixin:OnLoad()
   Auctionator.Debug.Message("AuctionatorConfigFrameMixin:OnLoad()")
 
+  -- Only one Settings frame instance ever exists; tracked so other UI (e.g.
+  -- the AH panel's debug shortcut button) can open the debug viewer without
+  -- needing its own reference to this frame.
+  AuctionatorConfigFrameMixin.Instance = self
+
   -- Classic's Settings list does not consistently resolve a TOC IconTexture
   -- when the visible category name differs from the addon folder (!Logistician).
   -- Embed the texture in the label so the same Pack Kodo badge is always shown.
@@ -41,7 +46,6 @@ function AuctionatorConfigFrameMixin:CreateModuleDirectory()
   local modules = {
     { name = "Auction", page = "general" },
     { name = "Profession", page = "general" },
-    { name = "Debug", page = "debug" },
   }
 
   for index, module in ipairs(modules) do
@@ -50,13 +54,44 @@ function AuctionatorConfigFrameMixin:CreateModuleDirectory()
     button:SetPoint("TOPLEFT", heading, "BOTTOMLEFT", 0, -12 - ((index - 1) * 42))
     button:SetText(module.name)
     button:SetScript("OnClick", function()
-      if module.page == "debug" then
-        self:ShowDebugViewer()
-      else
-        self:ShowGeneralPage()
-      end
+      self:ShowGeneralPage()
     end)
   end
+
+  -- Debug is now a direct Enable/Disable toggle (no separate sub-page); the
+  -- debug log itself is viewed via the shortcut button on the AH panel's
+  -- Logi tab, shown only while debug capture is enabled.
+  local debugButton = CreateFrame("Button", nil, self.ModuleDirectory, "UIPanelButtonTemplate")
+  debugButton:SetSize(220, 32)
+  debugButton:SetPoint("TOPLEFT", heading, "BOTTOMLEFT", 0, -12 - (#modules * 42))
+  debugButton:SetScript("OnClick", function()
+    Auctionator.Debug.Toggle()
+  end)
+
+  -- Tried tinting the button's Left/Middle/Right/Normal textures, a plain
+  -- inset rectangle in various colors/insets, cloning GetHighlightTexture()/
+  -- GetPushedTexture() (both nil on this template), and locking the native
+  -- button state via SetButtonState("PUSHED", true) - this specific skin
+  -- renders Normal/Highlight/Pushed all identically, so nothing native shows
+  -- any visible difference at all. Falling back to a manually-drawn overlay
+  -- is therefore the only option that actually renders anything: a small
+  -- inset rectangle (proven not to overflow the button's rounded corners)
+  -- darkened/tinted to approximate a pressed-in look.
+  local activeFill = debugButton:CreateTexture(nil, "ARTWORK")
+  activeFill:SetTexture("Interface\\Buttons\\WHITE8x8")
+  activeFill:SetPoint("TOPLEFT", 4, -4)
+  activeFill:SetPoint("BOTTOMRIGHT", -4, 4)
+  activeFill:SetVertexColor(0, 0, 0)
+  activeFill:SetAlpha(0.45)
+  activeFill:Hide()
+
+  local function RefreshDebugButton()
+    local isOn = Auctionator.Debug.IsOn()
+    debugButton:SetText(isOn and "Disable Debug" or "Enable Debug")
+    activeFill:SetShown(isOn)
+  end
+  Auctionator.Debug.RegisterUIRefreshHandler(RefreshDebugButton)
+  RefreshDebugButton()
 
   self:CreateGeneralPage()
 end
@@ -264,7 +299,7 @@ function AuctionatorConfigFrameMixin:CreateDebugViewer()
   local recordingDotsElapsed = 0
   local recordingDots = 0
   local function UpdateToggleIcon()
-    if Auctionator.Debug.IsOn() then
+    if Auctionator.Debug.IsOn() and not Auctionator.Debug.IsPaused() then
       recordingDotsElapsed = 0
       recordingDots = 0
       toggleLabel:SetText("Recording")
@@ -274,8 +309,8 @@ function AuctionatorConfigFrameMixin:CreateDebugViewer()
   end
   toggle:SetScript("OnEnter", function()
     GameTooltip:SetOwner(toggle, "ANCHOR_TOP")
-    GameTooltip:SetText(Auctionator.Debug.IsOn() and
-      "Debug capture is ON - click to stop" or "Debug capture is OFF - click to start")
+    GameTooltip:SetText(Auctionator.Debug.IsPaused() and
+      "Debug capture is stopped - click to resume" or "Debug capture is running - click to stop")
     GameTooltip:Show()
   end)
   toggle:SetScript("OnLeave", function()
@@ -296,7 +331,7 @@ function AuctionatorConfigFrameMixin:CreateDebugViewer()
   disabledNotice:SetWidth(390)
   disabledNotice:SetJustifyH("CENTER")
   disabledNotice:SetTextColor(1, 0.82, 0)
-  disabledNotice:SetText("Debug capture is disabled. Enable it below and reproduce the issue - this list updates live.")
+  disabledNotice:SetText("Debug capture is stopped. Click Start below and reproduce the issue - this list updates live.")
 
   local editBox = CreateFrame("EditBox", "LogisticianDebugScrollText", scroll)
   editBox:SetTextColor(0.9, 0.9, 0.9, 1)
@@ -314,7 +349,7 @@ function AuctionatorConfigFrameMixin:CreateDebugViewer()
     local entryCount = Auctionator.SavedState and Auctionator.SavedState.DebugLog
       and #Auctionator.SavedState.DebugLog or 0
     countLabel:SetText(tostring(entryCount))
-    disabledNotice:SetShown(entryCount == 0 and not Auctionator.Debug.IsOn())
+    disabledNotice:SetShown(entryCount == 0 and (not Auctionator.Debug.IsOn() or Auctionator.Debug.IsPaused()))
     editBox:SetText(text)
     -- BugSack's textArea never repositions the cursor after SetText at all
     -- (it only ever loads text once per manual Prev/Next click). We were
@@ -333,7 +368,7 @@ function AuctionatorConfigFrameMixin:CreateDebugViewer()
     editBox:HighlightText()
   end)
   toggle:SetScript("OnClick", function()
-    Auctionator.Debug.Toggle()
+    Auctionator.Debug.TogglePaused()
     RefreshDebugContent()
   end)
   clear:SetScript("OnClick", function()
@@ -350,7 +385,7 @@ function AuctionatorConfigFrameMixin:CreateDebugViewer()
   local autoRefreshElapsed = 0
   local lastSeenEntryCount = nil
   viewer:SetScript("OnUpdate", function(_, elapsed)
-    if Auctionator.Debug.IsOn() then
+    if Auctionator.Debug.IsOn() and not Auctionator.Debug.IsPaused() then
       recordingDotsElapsed = recordingDotsElapsed + elapsed
       if recordingDotsElapsed >= 0.4 then
         recordingDotsElapsed = 0
@@ -378,6 +413,19 @@ function AuctionatorConfigFrameMixin:CreateDebugViewer()
   viewer.RefreshDebugContent = RefreshDebugContent
   viewer.Toggle = toggle
   self.DebugViewer = viewer
+
+  -- Keeps the "Recording"/"Stopped" label (and disabled notice) in sync
+  -- immediately when debug is toggled elsewhere (Settings button, AH-tab
+  -- icon, /logi debug), not just from this window's own Start/Stop click.
+  -- Disabling the master switch also closes this window entirely - the AH
+  -- shortcut used to open it is gone too, so there's no reason to leave it
+  -- lingering (capture is already force-stopped by Auctionator.Debug.Toggle).
+  Auctionator.Debug.RegisterUIRefreshHandler(function()
+    RefreshDebugContent()
+    if not Auctionator.Debug.IsOn() then
+      viewer:Hide()
+    end
+  end)
 end
 
 function AuctionatorConfigFrameMixin:ShowDebugViewer()
@@ -387,6 +435,14 @@ function AuctionatorConfigFrameMixin:ShowDebugViewer()
   self.DebugViewer.RefreshDebugContent()
   self.DebugViewer:Show()
   self.DebugViewer:Raise()
+end
+
+-- Lets other UI (e.g. the AH panel's Logi tab shortcut button) open the
+-- debug viewer without needing a reference to the Settings frame instance.
+function Auctionator.Debug.ShowViewer()
+  if AuctionatorConfigFrameMixin.Instance then
+    AuctionatorConfigFrameMixin.Instance:ShowDebugViewer()
+  end
 end
 
 function AuctionatorConfigFrameMixin:Save()

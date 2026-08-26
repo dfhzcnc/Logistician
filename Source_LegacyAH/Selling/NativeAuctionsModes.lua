@@ -3721,14 +3721,6 @@ local function Initialize()
   controller.Stacks:SetSize(260, 40)
   controller.Stacks:SetScale(0.82)
   controller.Stacks:SetFrameLevel(AuctionFrameAuctions:GetFrameLevel() + 50)
-  if controller.Stacks.MaxNumStacks then
-    controller.Stacks.MaxNumStacks:Hide()
-    controller.Stacks.MaxNumStacks:EnableMouse(false)
-  end
-  if controller.Stacks.MaxStackSize then
-    controller.Stacks.MaxStackSize:Hide()
-    controller.Stacks.MaxStackSize:EnableMouse(false)
-  end
   controller.Stacks:Hide()
 
   controller.TotalLabel = AuctionFrameAuctions:CreateFontString(

@@ -6,6 +6,25 @@ uses [Semantic Versioning](https://semver.org/) and the
 
 ## [Unreleased]
 
+## [2.3.1] - 2026-08-25
+
+### Added
+
+- Added a persistent market-price tooltip row with Alt-expanded auction-depth and market-structure details.
+- Added projected production-goal profit alongside known or estimated material cost.
+- Added an Auction House debug-log shortcut with independent capture pause and resume controls.
+
+### Improved
+
+- Based profession cost and profit estimates on the robust 10%-depth market price, with lowest-listing fallback.
+- Clarified auction and market tooltip labels and refreshed expanded tooltip details live when Alt changes.
+- Simplified debug configuration to a direct enable/disable control and synchronized debug UI state.
+- Restored native maximum-stack controls in legacy auction selling modes.
+
+### Fixed
+
+- Prevented duplicate Auctionator pricing rows in profession item tooltips.
+
 ## [2.3.0] - 2026-08-25
 
 ### Added
@@ -117,7 +136,8 @@ uses [Semantic Versioning](https://semver.org/) and the
 
 - Update toc for 12.1.0  
 
-[Unreleased]: https://github.com/dfhzcnc/Logistician/compare/v2.3.0...HEAD
+[Unreleased]: https://github.com/dfhzcnc/Logistician/compare/v2.3.1...HEAD
+[2.3.1]: https://github.com/dfhzcnc/Logistician/compare/v2.3.0...v2.3.1
 [2.3.0]: https://github.com/dfhzcnc/Logistician/compare/v2.2.0...v2.3.0
 [2.2.0]: https://github.com/dfhzcnc/Logistician/compare/v2.1.0...v2.2.0
 [2.1.0]: https://github.com/dfhzcnc/Logistician/compare/v2.0.1...v2.1.0

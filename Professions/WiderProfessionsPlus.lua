@@ -105,7 +105,19 @@ local function AuctionatorPrice(itemID)
     if type(itemID) ~= "number" then return nil end
 
     local bridge = _G.WiderProfessionsAuctionatorBridge
-    if bridge and type(bridge.GetAuctionPriceByItemID) == "function" then
+    if not bridge then return nil end
+
+    -- Prefer the robust 10%-depth market price over the raw cheapest listing
+    -- for Cost/Profit/Known cost math, falling back to the lowest listing
+    -- price only if no enhanced snapshot exists yet for this item.
+    if type(bridge.GetMarketPriceByItemID) == "function" then
+        local marketPrice = bridge:GetMarketPriceByItemID(itemID)
+        if marketPrice then
+            return marketPrice
+        end
+    end
+
+    if type(bridge.GetAuctionPriceByItemID) == "function" then
         return bridge:GetAuctionPriceByItemID(itemID)
     end
 
@@ -3682,6 +3694,9 @@ function WPP:RefreshPanel()
                     if not self.entry then return end
                     GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
                     if self.entry.link then
+                        -- Auctionator's own SetHyperlink hook (Source/Tooltips/Hooks.lua)
+                        -- already appends the price/market rows automatically -
+                        -- calling ShowTipWithPricing here too just duplicated them.
                         GameTooltip:SetHyperlink(self.entry.link)
                     else
                         GameTooltip:AddLine(self.entry.name or UNKNOWN, 1, 0.82, 0)
@@ -3856,14 +3871,36 @@ function WPP:RefreshPanel()
         if shoppingMissing == 0 then
             panel.summary:SetText("No materials remaining")
         else
+            local costLine = ""
+            if totalCost > 0 then
+                costLine = (missing and "Known cost: " or "Estimated cost: ")
+                    .. MoneyText(totalCost)
+
+                -- Profit is dynamic off the known/estimated cost above: value
+                -- of the still-needed output quantity for the displayed
+                -- production goal, minus that materials cost.
+                local goal = panel.displayedGoal
+                local outputPrice = goal and MarketPrice(goal.link, goal.itemID)
+                if outputPrice then
+                    local remaining = math.max(
+                        0,
+                        (tonumber(goal.total) or 0) - (tonumber(goal.completed) or 0)
+                    )
+                    local profit = outputPrice * remaining - totalCost
+                    local profitColor = profit >= 0 and "|cff20d020" or "|cffff3030"
+                    local profitText = profit >= 0
+                        and ("+" .. MoneyText(profit))
+                        or ("-" .. MoneyText(-profit))
+                    costLine = costLine .. "  •  Profit: " .. profitColor .. profitText .. "|r"
+                end
+            end
+            -- Known/Estimated cost + Profit moved to their own second line,
+            -- separate from "N components required".
             panel.summary:SetText(string.format(
                 "%d component%s required%s",
                 #data,
                 #data == 1 and "" or "s",
-                totalCost > 0 and (
-                    "  •  " .. (missing and "Known cost: " or "Estimated cost: ")
-                    .. MoneyText(totalCost)
-                ) or ""
+                costLine ~= "" and ("\n" .. costLine) or ""
             ))
         end
     elseif panel.mode == "favorites" then

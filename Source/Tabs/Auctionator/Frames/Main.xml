@@ -285,6 +285,35 @@
           <OnClick>self:GetParent():OpenOptions()</OnClick>
         </Scripts>
       </Button>
+
+      <!-- Only shown while debug capture is enabled (see AuctionatorConfigTabMixin:OnLoad) -->
+      <Button inherits="UIPanelButtonTemplate" parentKey="DebugButton" hidden="true">
+        <Size x="25" y="25"/>
+        <Anchors>
+          <Anchor point="TOPRIGHT" relativeKey="$parent.OptionsButton" relativePoint="TOPLEFT" x="-3" />
+        </Anchors>
+        <Layers>
+          <Layer level="OVERLAY">
+            <!-- Same bug icon Blizzard uses for "Technical Issue" in Customer Support -->
+            <Texture parentKey="Icon" file="Interface\HELPFRAME\HelpIcon-Bug">
+              <Size x="18" y="18"/>
+              <Anchors>
+                <Anchor point="CENTER"/>
+              </Anchors>
+              <Color r="1" g="1" b="0"/>
+            </Texture>
+          </Layer>
+        </Layers>
+        <Scripts>
+          <OnClick>self:GetParent():OpenDebugViewer()</OnClick>
+          <OnEnter>
+            GameTooltip:SetOwner(self, "ANCHOR_TOP")
+            GameTooltip:SetText("View Logistician Debug Log")
+            GameTooltip:Show()
+          </OnEnter>
+          <OnLeave>GameTooltip:Hide()</OnLeave>
+        </Scripts>
+      </Button>
     </Frames>
   </Frame>
 </Ui>

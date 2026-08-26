@@ -135,9 +135,10 @@ AUCTIONATOR_LOCALES.enUS = function()
   L["TOO_SMALL_PERCENTAGE"] = "%% must be >= 0 (provided %s)"
   L["TOO_BIG_PERCENTAGE"] = "%% must be <= 100 (provided %s)"
 
-  L["AUCTION"] = "Auction"
+  L["AUCTION"] = "Auction Lowest"
   L["AUCTION_AGE"] = "Auction Age"
   L["AUCTION_MEAN"] = "Avg"
+  L["MARKET"] = "Market"
   L["MARKET_DEPTH_PRICE"] = "Market (10% depth)"
   L["MARKET_DEPTH"] = "AH depth"
   L["MARKET_STRUCTURE"] = "Market structure"
