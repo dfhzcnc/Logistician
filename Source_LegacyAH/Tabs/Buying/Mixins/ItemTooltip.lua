@@ -9,6 +9,11 @@ end
 function AuctionatorBuyingItemTooltipMixin:OnEnter()
   GameTooltip:SetOwner(self, "ANCHOR_TOP")
   GameTooltip:SetHyperlink(self.itemLink)
+  if IsShiftKeyDown() then
+    GameTooltip_ShowCompareItem(GameTooltip)
+  else
+    GameTooltip_HideShoppingTooltips(GameTooltip)
+  end
   GameTooltip:Show()
 end
 

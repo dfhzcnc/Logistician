@@ -13,8 +13,26 @@ function AuctionatorPageStatusDialogMixin:OnHide()
   self:Hide()
 end
 
+-- Same look as AuctionatorStatusDialogTemplate (bordered box + StatusText) but with no
+-- built-in event handling, for reuse in places that want to drive Show/Hide/SetText themselves.
+AuctionatorPlainStatusDialogMixin = {}
+
+function AuctionatorPlainStatusDialogMixin:OnLoad()
+end
+
+function AuctionatorPlainStatusDialogMixin:OnHide()
+  self:Hide()
+end
+
 function AuctionatorPageStatusDialogMixin:ReceiveEvent(eventName, ...)
   if eventName == Auctionator.AH.Events.ScanPageStart then
+    -- The Shopping tab shows this same "Scanning page N..." message inline in its results
+    -- panel instead (see Tabs/Shopping/Mixins/Main.lua), so don't double it up here.
+    if AuctionatorShoppingFrame and AuctionatorShoppingFrame:IsVisible() then
+      self:Hide()
+      return
+    end
+
     local page = ...
     self:Show()
     self.StatusText:SetText(AUCTIONATOR_L_SCANNING_PAGE_X:format(page + 1))

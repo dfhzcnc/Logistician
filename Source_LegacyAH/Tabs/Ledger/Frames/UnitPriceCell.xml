@@ -1,0 +1,25 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/">
+  <Button
+    name="AuctionatorLedgerUnitPriceCellTemplate"
+    mixin="AuctionatorLedgerUnitPriceCellTemplateMixin"
+    inherits="AuctionatorPriceCellTemplate"
+    virtual="true"
+  >
+    <Layers>
+      <Layer level="OVERLAY">
+        <FontString parentKey="TotalLabel" inherits="GameFontNormalSmall" text="Total" justifyH="RIGHT" hidden="true">
+          <Color r="1" g="0.82" b="0"/>
+          <Anchors>
+            <Anchor point="RIGHT" relativeKey="$parent.MoneyDisplay" relativePoint="LEFT" x="-4"/>
+          </Anchors>
+        </FontString>
+      </Layer>
+    </Layers>
+    <Animations>
+      <!-- Pulses the "Total" label while hovered so the value swap is noticeable, not just a static label. -->
+      <AnimationGroup parentKey="PulseAnim" looping="BOUNCE">
+        <Alpha childKey="TotalLabel" fromAlpha="0.3" toAlpha="1" duration="0.5" smoothing="IN_OUT"/>
+      </AnimationGroup>
+    </Animations>
+  </Button>
+</Ui>

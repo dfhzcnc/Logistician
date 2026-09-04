@@ -172,6 +172,39 @@ local function IsVendorSoldReagent(link, itemID)
     return itemID and VENDOR_SOLD_REAGENTS[itemID] or false
 end
 
+-- Price an NPC charges to sell the item, cached by Auctionator only for items
+-- the player has actually browsed at a vendor.
+local function VendorBuyPrice(link, itemID)
+    itemID = itemID or ItemIDFromLink(link)
+    if type(itemID) ~= "number" then return nil end
+
+    local bridge = _G.WiderProfessionsAuctionatorBridge
+    if not bridge or type(bridge.GetVendorPriceByItemID) ~= "function" then return nil end
+
+    local price = bridge:GetVendorPriceByItemID(itemID)
+    if type(price) ~= "number" or price <= 0 then return nil end
+    return price
+end
+
+-- Estimated cost of one unit: vendor-sold reagents are bought from an NPC, so
+-- their auction price is irrelevant. Returns nil when the source price is not
+-- known yet.
+local function ReagentUnitCost(link, itemID)
+    if IsVendorSoldReagent(link, itemID) then
+        return VendorBuyPrice(link, itemID)
+    end
+    return MarketPrice(link, itemID)
+end
+
+-- Est. Cost column text. A vendor reagent with no cached buy price counts as
+-- zero, so say so explicitly rather than showing a misleading amount.
+local function CostColumnText(unitCost, count, vendorSold)
+    if unitCost then
+        return MoneyText(unitCost * (tonumber(count) or 0))
+    end
+    return vendorSold and "|cffaaaaaaUnknown|r" or "--"
+end
+
 local function GetRecipeSnapshot(index)
     if not index then return nil end
     local name, skillType, numAvailable = GetTradeSkillInfo(index)
@@ -297,7 +330,10 @@ local function ComputeProfit(skill)
     local missingPrice = false
     for _, reagent in ipairs(skill.reagents or {}) do
         local reagentID = reagent.itemID or ItemIDFromLink(reagent.link)
-        local price = MarketPrice(reagent.link, reagentID)
+        -- A reagent you can just buy from an NPC costs its vendor price, not
+        -- whatever the auction house happens to be asking.
+        local price = VendorBuyPrice(reagent.link, reagentID)
+            or MarketPrice(reagent.link, reagentID)
         if price then
             materialCost = materialCost + price * (reagent.count or 0)
         else
@@ -666,12 +702,17 @@ end
 
 local function CompleteProductionGoal(entry)
     local key = ProductionGoalKey(entry)
-    local goal = key and InitDB().productionGoals[key]
+    local goals = InitDB().productionGoals
+    local goal = key and goals[key]
     if not goal then return end
+    local total = math.max(0, tonumber(goal.total) or 0)
     goal.completed = math.min(
-        math.max(0, tonumber(goal.total) or 0),
+        total,
         math.max(0, tonumber(goal.completed) or 0) + 1
     )
+    if goal.completed >= total then
+        goals[key] = nil
+    end
 end
 
 local function CurrentProductionGoal()
@@ -772,6 +813,15 @@ end
 
 local function EnsureProductionGoals(queue)
     local goals = InitDB().productionGoals
+    -- Drop fulfilled goals left over from earlier sessions.
+    for key, goal in pairs(goals) do
+        if type(goal) == "table"
+            and (tonumber(goal.total) or 0) > 0
+            and (tonumber(goal.completed) or 0) >= (tonumber(goal.total) or 0) then
+            goals[key] = nil
+        end
+    end
+
     local missingGoals = {}
     for _, entry in ipairs(queue or {}) do
         if not entry.autoDependency and (tonumber(entry.quantity) or 0) > 0 then
@@ -2594,7 +2644,7 @@ local function SetupAuctionatorShoppingImport()
                     "UIPanelButtonTemplate"
                 )
                 auctionatorImportButton:SetPoint("TOPLEFT", importButton, "TOPLEFT", 0, 0)
-                auctionatorImportButton:SetPoint("BOTTOMRIGHT", exportButton, "BOTTOMRIGHT", 0, 0)
+                auctionatorImportButton:SetSize(importButton:GetWidth(), importButton:GetHeight())
                 auctionatorImportButton:SetText("Import")
                 auctionatorImportButton:SetScript("OnClick", function()
                     ImportAllProductionGoalLists()
@@ -2959,8 +3009,7 @@ function WPP:RefreshBankMaterialsPanel()
 
     local cost = 0
     for _, entry in ipairs(data) do
-        local vendor = IsVendorSoldReagent(entry.link, entry.itemID)
-        local price = not vendor and MarketPrice(entry.link, entry.itemID) or nil
+        local price = ReagentUnitCost(entry.link, entry.itemID)
         if price and (tonumber(entry.count) or 0) > 0 then
             cost = cost + price * (tonumber(entry.count) or 0)
         end
@@ -2971,7 +3020,7 @@ function WPP:RefreshBankMaterialsPanel()
         if entry then
             local covered = (tonumber(entry.count) or 0) <= 0
             local vendor = IsVendorSoldReagent(entry.link, entry.itemID)
-            local price = not vendor and MarketPrice(entry.link, entry.itemID) or nil
+            local price = ReagentUnitCost(entry.link, entry.itemID)
             local bankNeeded = math.min(tonumber(entry.bankCount) or 0,
                 math.max(0, (tonumber(entry.required) or 0) - (tonumber(entry.bagCount) or 0)))
             row.entry = entry
@@ -2982,7 +3031,7 @@ function WPP:RefreshBankMaterialsPanel()
             SetMaterialSourceAmounts(row, ahNeeded, bankNeeded, vendor)
             local previous = data[index - 1]
             row.divider:SetShown(covered and previous and (tonumber(previous.count) or 0) > 0)
-            row.right:SetText(covered and "" or (vendor and "Vendor" or (price and MoneyText(price * (entry.count or 0)) or "--")))
+            row.right:SetText(covered and "" or CostColumnText(price, entry.count, vendor))
             row:SetScript("OnClick", function(self, button)
                 ChangeShoppingMaterialLevel(self.entry, button == "RightButton" and "forward" or "back")
                 WPP:RefreshBankMaterialsPanel()
@@ -3659,7 +3708,7 @@ function WPP:RefreshPanel()
                 row.profession:Hide()
                 row.text:SetWidth(150)
                 local vendorSold = IsVendorSoldReagent(entry.link, entry.itemID)
-                local price = not vendorSold and MarketPrice(entry.link, entry.itemID) or nil
+                local price = ReagentUnitCost(entry.link, entry.itemID)
                 local covered = (tonumber(entry.count) or 0) <= 0
                 row.text:SetText((entry.name or UNKNOWN) .. (vendorSold and " |cff40ff40(Vendor)|r" or ""))
                 local ahNeeded = math.max(0, tonumber(entry.count) or 0)
@@ -3680,7 +3729,7 @@ function WPP:RefreshPanel()
                 row.right:ClearAllPoints()
                 row.right:SetPoint("RIGHT", -2, 0)
                 row.right:SetWidth(88)
-                row.right:SetText(covered and "" or (vendorSold and "Vendor" or (price and MoneyText(price * (entry.count or 0)) or "--")))
+                row.right:SetText(covered and "" or CostColumnText(price, entry.count, vendorSold))
                 row.right:Show()
 
                 row.remove:Hide()
@@ -3861,12 +3910,8 @@ function WPP:RefreshPanel()
         if shoppingMissing == 0 then panel.importToAH:Disable() else panel.importToAH:Enable() end
         local totalCost, missing = 0, false
         for _, entry in ipairs(data) do
-            if IsVendorSoldReagent(entry.link, entry.itemID) then
-                missing = true
-            else
-                local price = MarketPrice(entry.link, entry.itemID)
-                if price then totalCost = totalCost + price * (entry.count or 0) else missing = true end
-            end
+            local price = ReagentUnitCost(entry.link, entry.itemID)
+            if price then totalCost = totalCost + price * (entry.count or 0) else missing = true end
         end
         if shoppingMissing == 0 then
             panel.summary:SetText("No materials remaining")

@@ -2,6 +2,7 @@ local VERSION_8_3 = 6
 local VERSION_SERIALIZED = 7
 local VERSION_KEY_SERIALIZED = 8
 local POSTING_HISTORY_DB_VERSION = 1
+local LEDGER_DB_VERSION = 1
 local VENDOR_PRICE_CACHE_DB_VERSION = 1
 
 function Auctionator.Variables.Initialize()
@@ -15,6 +16,7 @@ function Auctionator.Variables.Initialize()
 
   Auctionator.Variables.InitializeShoppingLists()
   Auctionator.Variables.InitializePostingHistory()
+  Auctionator.Variables.InitializeLedger()
   Auctionator.Variables.InitializeVendorPriceCache()
 
   Auctionator.Groups.Initialize()
@@ -217,6 +219,19 @@ function Auctionator.Variables.InitializePostingHistory()
   end
 
   Auctionator.PostingHistory = CreateAndInitFromMixin(Auctionator.PostingHistoryMixin, AUCTIONATOR_POSTING_HISTORY)
+end
+
+function Auctionator.Variables.InitializeLedger()
+  Auctionator.Debug.Message("Auctionator.Variables.InitializeLedger()")
+
+  if AUCTIONATOR_SALES_LEDGER == nil or
+     AUCTIONATOR_SALES_LEDGER["__dbversion"] ~= LEDGER_DB_VERSION then
+    AUCTIONATOR_SALES_LEDGER = {
+      ["__dbversion"] = LEDGER_DB_VERSION
+    }
+  end
+
+  Auctionator.Ledger = CreateAndInitFromMixin(Auctionator.LedgerMixin, AUCTIONATOR_SALES_LEDGER)
 end
 
 function Auctionator.Variables.InitializeShoppingLists()

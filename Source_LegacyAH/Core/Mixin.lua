@@ -76,6 +76,44 @@ local function InitializeSearchCategories()
   setupSearchCategories = true
 end
 
+-- In-memory only (not a SavedVariable), so the moved position lasts for the current login
+-- session (survives closing/reopening the AH, and /reload) but resets back to default on
+-- the next login.
+local rememberedWindowPosition = nil
+local movableWindowInitialized = false
+local function InitializeMovableWindow()
+  if movableWindowInitialized then
+    return
+  end
+  movableWindowInitialized = true
+
+  AuctionFrame:SetMovable(true)
+  AuctionFrame:SetClampedToScreen(true)
+  AuctionFrame:EnableMouse(true)
+  AuctionFrame:RegisterForDrag("LeftButton")
+  AuctionFrame:SetScript("OnDragStart", function(frame)
+    frame:StartMoving()
+  end)
+  AuctionFrame:SetScript("OnDragStop", function(frame)
+    frame:StopMovingOrSizing()
+    local point, _, relativePoint, x, y = frame:GetPoint(1)
+    rememberedWindowPosition = { point = point, relativePoint = relativePoint, x = x, y = y }
+  end)
+end
+
+local function RestoreWindowPosition()
+  if rememberedWindowPosition then
+    AuctionFrame:ClearAllPoints()
+    AuctionFrame:SetPoint(
+      rememberedWindowPosition.point,
+      UIParent,
+      rememberedWindowPosition.relativePoint,
+      rememberedWindowPosition.x,
+      rememberedWindowPosition.y
+    )
+  end
+end
+
 function AuctionatorAHFrameMixin:OnShow()
   Auctionator.Debug.Message("AuctionatorAHFrameMixin:OnShow()")
 
@@ -85,6 +123,8 @@ function AuctionatorAHFrameMixin:OnShow()
   InitializePageStatusDialog()
   InitializeThrottlingTimeoutDialog()
   InitializeFullScanFrame()
+  InitializeMovableWindow()
+  RestoreWindowPosition()
 
   ShowDefaultTab()
   C_Timer.After(0, function()

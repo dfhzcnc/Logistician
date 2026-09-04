@@ -103,6 +103,10 @@ end
 
 local function GetSearchTermDisplay(searchTerm)
   local search = Auctionator.Search.SplitAdvancedSearch(searchTerm)
+  -- A custom display name takes priority over showing the raw search string/criteria.
+  if search.displayName and search.displayName ~= "" then
+    return search.displayName
+  end
   local primary = search.searchString or ""
   if primary ~= "" and search.isExact then primary = '"' .. primary .. '"' end
 
@@ -530,22 +534,20 @@ function AuctionatorShoppingTabListsContainerMixin:SetupContent()
         icon = "|TInterface\\AddOns\\!Logistician\\Images\\Minus_Icon:8:8|t"
       end
       button.Text:SetText(icon .. "  " .. color:WrapTextInColorCode(elementData.list:GetName()))
-      Auctionator.Shopping.Tab.SetOptionIcon(button.options1, "search")
-      button.options1:SetScript("OnClick", OnListSearchOptionClicked)
-      button.options1.TooltipText = AUCTIONATOR_L_SEARCH_ALL
-      button.options1:Show()
-      Auctionator.Shopping.Tab.SetOptionIcon(button.options2, "edit")
-      button.options2:SetScript("OnClick", OnListEditOptionClicked)
+      -- Shifted into the freed-up slots from the removed search button (options1 is the
+      -- rightmost slot, options3 the one closest to the name text) so names get more room.
+      Auctionator.Shopping.Tab.SetOptionIcon(button.options1, "edit")
+      button.options1:SetScript("OnClick", OnListEditOptionClicked)
       if elementData.list:IsTemporary() then
-        button.options2.TooltipText = AUCTIONATOR_L_MAKE_PERMANENT
+        button.options1.TooltipText = AUCTIONATOR_L_MAKE_PERMANENT
       else
-        button.options2.TooltipText = AUCTIONATOR_L_RENAME
+        button.options1.TooltipText = AUCTIONATOR_L_RENAME
       end
+      button.options1:Show()
+      Auctionator.Shopping.Tab.SetOptionIcon(button.options2, "delete")
+      button.options2:SetScript("OnClick", OnListDeleteOptionClicked)
+      button.options2.TooltipText = AUCTIONATOR_L_DELETE
       button.options2:Show()
-      Auctionator.Shopping.Tab.SetOptionIcon(button.options3, "delete")
-      button.options3:SetScript("OnClick", OnListDeleteOptionClicked)
-      button.options3.TooltipText = AUCTIONATOR_L_DELETE
-      button.options3:Show()
     elseif elementData.type == RowType.SearchTerm then
       if elementData.index == self.draggingIndex then
         button:SetAlpha(draggingTermAlpha)
@@ -554,13 +556,14 @@ function AuctionatorShoppingTabListsContainerMixin:SetupContent()
       local iconPath = GetSearchTermIcon(elementData.searchTerm)
       local displayText = GetSearchTermDisplay(elementData.searchTerm)
       button.Text:SetText("|T" .. iconPath .. ":16:16:0:0|t  " .. displayText)
-      Auctionator.Shopping.Tab.SetOptionIcon(button.options1, "delete")
-      button.options1:SetScript("OnClick", OnSearchTermDeleteOptionClicked)
-      button.options1.TooltipText = AUCTIONATOR_L_DELETE
+      -- Matches the list header row's icon order (delete on the left, edit on the right).
+      Auctionator.Shopping.Tab.SetOptionIcon(button.options1, "edit")
+      button.options1:SetScript("OnClick", OnSearchTermEditOptionClicked)
+      button.options1.TooltipText = AUCTIONATOR_L_EDIT_ITEM
       button.options1:Show()
-      Auctionator.Shopping.Tab.SetOptionIcon(button.options2, "edit")
-      button.options2:SetScript("OnClick", OnSearchTermEditOptionClicked)
-      button.options2.TooltipText = AUCTIONATOR_L_EDIT_ITEM
+      Auctionator.Shopping.Tab.SetOptionIcon(button.options2, "delete")
+      button.options2:SetScript("OnClick", OnSearchTermDeleteOptionClicked)
+      button.options2.TooltipText = AUCTIONATOR_L_DELETE
       button.options2:Show()
     else
       xOffset = listEntryInset

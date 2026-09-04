@@ -37,4 +37,12 @@
 
 <Frame name="AuctionatorPageStatusDialogTemplate" mixin="AuctionatorPageStatusDialogMixin" inherits="AuctionatorStatusDialogTemplate" virtual="true"/>
 <Frame name="AuctionatorThrottlingTimeoutDialogTemplate" mixin="AuctionatorThrottlingTimeoutDialogMixin" inherits="AuctionatorStatusDialogTemplate" virtual="true" frameLevel="500" />
+<Frame name="AuctionatorPlainStatusDialogTemplate" mixin="AuctionatorPlainStatusDialogMixin" inherits="AuctionatorStatusDialogTemplate" virtual="true">
+  <Animations>
+    <!-- Same pulsing style as the Ledger tab's Unit Price "Total" hover label. -->
+    <AnimationGroup parentKey="PulseAnim" looping="BOUNCE">
+      <Alpha childKey="StatusText" fromAlpha="0.3" toAlpha="1" duration="0.5" smoothing="IN_OUT"/>
+    </AnimationGroup>
+  </Animations>
+</Frame>
 </Ui>

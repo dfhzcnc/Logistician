@@ -21,7 +21,7 @@
     <Frames>
       <Frame inherits="AuctionatorConfigurationSubHeadingFrame" parentKey="SearchStringHeading">
         <KeyValues>
-          <KeyValue key="subHeadingText" value="Name" type="string"/>
+          <KeyValue key="subHeadingText" value="Search Term" type="string"/>
         </KeyValues>
         <Anchors>
           <Anchor point="TOPLEFT" relativeKey="$parent.Inset" relativePoint="TOPLEFT" y="-5" />
@@ -112,30 +112,12 @@
         </Anchors>
       </Frame>
 
-      <Frame inherits="AuctionatorConfigurationMinMaxFrame" parentKey="ItemLevelRange">
-        <KeyValues>
-          <KeyValue key="titleText" value="AUCTIONATOR_L_ITEM_LEVEL" type="global"/>
-        </KeyValues>
-        <Anchors>
-          <Anchor point="TOPLEFT" relativeKey="$parent.LevelRange" relativePoint="TOPRIGHT"/>
-        </Anchors>
-      </Frame>
-
       <Frame inherits="AuctionatorConfigurationMinMaxFrame" parentKey="PriceRange">
         <KeyValues>
           <KeyValue key="titleText" value="AUCTIONATOR_L_PRICE" type="global"/>
         </KeyValues>
         <Anchors>
-          <Anchor point="TOPLEFT" relativeKey="$parent.LevelRange" relativePoint="BOTTOMLEFT" y="-8"/>
-        </Anchors>
-      </Frame>
-
-      <Frame inherits="AuctionatorConfigurationMinMaxFrame" parentKey="CraftedLevelRange">
-        <KeyValues>
-          <KeyValue key="titleText" value="AUCTIONATOR_L_CRAFTED_LEVEL" type="global"/>
-        </KeyValues>
-        <Anchors>
-          <Anchor point="TOPLEFT" relativeKey="$parent.PriceRange" relativePoint="TOPRIGHT"/>
+          <Anchor point="TOPLEFT" relativeKey="$parent.LevelRange" relativePoint="TOPRIGHT"/>
         </Anchors>
       </Frame>
 
@@ -144,7 +126,7 @@
           <KeyValue key="labelText" value="AUCTIONATOR_L_QUANTITY" type="global"/>
         </KeyValues>
         <Anchors>
-          <Anchor point="TOPLEFT" relativeKey="$parent.PriceRange" relativePoint="BOTTOMLEFT" y="-22" x="30"/>
+          <Anchor point="TOPLEFT" relativeKey="$parent.LevelRange" relativePoint="BOTTOMLEFT" y="-22" x="30"/>
         </Anchors>
       </Frame>
 
@@ -180,10 +162,46 @@
         </Frames>
       </Frame>
 
+      <Frame inherits="AuctionatorConfigurationSubHeadingFrame" parentKey="DisplayNameHeading">
+        <KeyValues>
+          <KeyValue key="subHeadingText" value="Display Name" type="string"/>
+        </KeyValues>
+        <Anchors>
+          <Anchor point="TOPLEFT" relativeKey="$parent.QualityContainer" relativePoint="BOTTOMLEFT" y="-14"/>
+        </Anchors>
+      </Frame>
+
+      <Frame parentKey="DisplayNameContainer">
+        <Size y="24" />
+        <Anchors>
+          <Anchor point="TOPLEFT" relativeKey="$parent.DisplayNameHeading" relativePoint="BOTTOMLEFT" />
+          <Anchor point="RIGHT" />
+        </Anchors>
+        <Frames>
+          <EditBox autoFocus="false" inherits="InputBoxTemplate" parentKey="DisplayName" letters="100">
+            <Size x="180" y="20"/>
+            <Anchors>
+              <Anchor point="TOPLEFT" relativeKey="$parent" relativePoint="TOPLEFT" x="24" y="-4" />
+            </Anchors>
+            <FontString inherits="ChatFontNormal" justifyH="LEFT"/>
+            <Scripts>
+              <OnEnterPressed>self:GetParent():GetParent():OnFinishedClicked()</OnEnterPressed>
+              <OnEscapePressed>self:ClearFocus()</OnEscapePressed>
+            </Scripts>
+          </EditBox>
+
+          <Button parentKey="ResetDisplayNameButton" inherits="AuctionatorResetButton">
+            <Anchors>
+              <Anchor point="TOPLEFT" relativeKey="$parent.DisplayName" relativePoint="TOPRIGHT" x="3" y="-3"/>
+            </Anchors>
+          </Button>
+        </Frames>
+      </Frame>
+
       <Frame parentKey="ExpansionContainer">
         <Size x="50" y="20"/>
         <Anchors>
-          <Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeKey="$parent.QualityContainer" x="-6" y="-20" />
+          <Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeKey="$parent.DisplayNameContainer" x="-6" y="-20" />
         </Anchors>
         <Layers>
           <Layer level="BACKGROUND">

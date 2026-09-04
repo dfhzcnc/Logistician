@@ -6,6 +6,7 @@ local EVENTBUS_EVENTS = {
   Auctionator.Shopping.Tab.Events.ShowHistoricalPrices,
   Auctionator.Shopping.Tab.Events.UpdateSearchTerm,
   Auctionator.Shopping.Tab.Events.BuyScreenShown,
+  Auctionator.Shopping.Tab.Events.AuctionPurchased,
 }
 
 function AuctionatorShoppingTabFrameMixin:DoSearch(terms, options)
@@ -102,31 +103,26 @@ function AuctionatorShoppingTabFrameMixin:SetSearchPanelsLocked(locked)
   self.ListsContainer.ScrollBox:EnableMouse(not locked)
   self.ResultsListing.ScrollArea.ScrollBox:EnableMouse(not locked)
 
-  for _, button in ipairs({self.NewListButton, self.ImportButton, self.ExportButton}) do
+  -- SearchButton is left enabled since it doubles as the Cancel action while a search runs.
+  for _, button in ipairs({
+    self.NewListButton, self.ImportButton, self.ExportButton, self.ExportCSV,
+    self.SearchOptions.MoreButton, self.SearchOptions.AddToListButton,
+    self.SearchOptions.ResetSearchStringButton,
+    self.ContainerTabs.ListsTab, self.ContainerTabs.RecentsTab,
+  }) do
     if locked then button:Disable() else button:Enable() end
   end
 end
 
 function AuctionatorShoppingTabFrameMixin:StartLoadingTextAnimation()
-  self:ResetLoadingTextCycle()
-  self:SetScript("OnUpdate", function(frame, elapsed)
-    frame.loadingTextElapsed = frame.loadingTextElapsed + elapsed
-    if frame.loadingTextElapsed < 0.45 then return end
-    frame.loadingTextElapsed = 0
-    frame.loadingTextDots = (frame.loadingTextDots + 1) % 4
-    local dots = string.rep(".", frame.loadingTextDots)
-    frame.ResultsListing.ScrollArea.ResultsText:SetText("Fetching item info" .. dots)
-  end)
+  self.ResultsListing:EnableSpinner()
 end
 
 function AuctionatorShoppingTabFrameMixin:ResetLoadingTextCycle()
-  self.loadingTextElapsed = 0
-  self.loadingTextDots = 0
-  self.ResultsListing.ScrollArea.ResultsText:SetText("Fetching item info")
 end
 
 function AuctionatorShoppingTabFrameMixin:StopLoadingTextAnimation()
-  self:SetScript("OnUpdate", nil)
+  self.ResultsListing:DisableSpinner()
 end
 
 function AuctionatorShoppingTabFrameMixin:StartSpinner()
@@ -162,20 +158,15 @@ function AuctionatorShoppingTabFrameMixin:OnLoad()
     self:TryOpenSingleResult()
   end)
 
-  -- Shopping searches use compact, unobtrusive progress indicators.
+  -- Shopping searches use a compact, unobtrusive progress indicator for the left panel.
+  -- The right-hand results panel's "Fetching item info" box is handled universally by the
+  -- shared ResultsListing component (see EnableSpinner/DisableSpinner there).
   self.ListsContainer.LoadingSpinner:SetAlpha(0)
   self.ListsContainer.ResultsText:SetFontObject(GameFontNormalSmall)
   self.ListsContainer.ResultsText:ClearAllPoints()
   self.ListsContainer.ResultsText:SetPoint("CENTER", self.ListsContainer, "CENTER", 0, 0)
   self.ListsContainer.ResultsText:SetWidth(230)
   self.ListsContainer.ResultsText:SetJustifyH("CENTER")
-
-  self.ResultsListing.ScrollArea.LoadingSpinner:SetAlpha(0)
-  self.ResultsListing.ScrollArea.ResultsText:SetFontObject(GameFontNormalSmall)
-  self.ResultsListing.ScrollArea.ResultsText:ClearAllPoints()
-  self.ResultsListing.ScrollArea.ResultsText:SetPoint("CENTER", self.ResultsListing.ScrollArea, "CENTER", 0, 0)
-  self.ResultsListing.ScrollArea.ResultsText:SetWidth(300)
-  self.ResultsListing.ScrollArea.ResultsText:SetJustifyH("CENTER")
 
   self.dialogs = {}
 
@@ -416,7 +407,38 @@ function AuctionatorShoppingTabFrameMixin:GetAppropriateListSearchName()
   end
 end
 
-function AuctionatorShoppingTabFrameMixin:ReceiveEvent(eventName, eventData)
+-- Subtract the units just bought at the auction house from the matching search
+-- term in the currently expanded shopping list, so the list tracks how many
+-- units are still outstanding.
+function AuctionatorShoppingTabFrameMixin:ReduceExpandedListQuantity(itemLink, purchasedQuantity)
+  purchasedQuantity = tonumber(purchasedQuantity) or 0
+  if itemLink == nil or purchasedQuantity <= 0 then
+    return
+  end
+
+  local list = self.ListsContainer and self.ListsContainer:GetExpandedList()
+  if list == nil then
+    return
+  end
+
+  local itemName = Auctionator.Utilities.GetNameFromLink(itemLink)
+  if itemName == nil or itemName == "" then
+    return
+  end
+  itemName = string.lower(itemName)
+
+  for index = 1, list:GetItemCount() do
+    local search = Auctionator.Search.SplitAdvancedSearch(list:GetItemByIndex(index))
+    if search.quantity ~= nil and search.quantity > 0
+        and string.lower(search.searchString or "") == itemName then
+      search.quantity = math.max(0, search.quantity - purchasedQuantity)
+      list:AlterItem(index, Auctionator.Search.ReconstituteAdvancedSearch(search))
+      return
+    end
+  end
+end
+
+function AuctionatorShoppingTabFrameMixin:ReceiveEvent(eventName, eventData, ...)
   if eventName == Auctionator.Shopping.Events.ListImportFinished then
     self.ListsContainer:ExpandList(Auctionator.Shopping.ListManager:GetByName(eventData))
 
@@ -437,6 +459,9 @@ function AuctionatorShoppingTabFrameMixin:ReceiveEvent(eventName, eventData)
 
   elseif eventName == Auctionator.Shopping.Tab.Events.BuyScreenShown then
     self:StopSearch()
+
+  elseif eventName == Auctionator.Shopping.Tab.Events.AuctionPurchased then
+    self:ReduceExpandedListQuantity(eventData, ...)
   end
 end
 

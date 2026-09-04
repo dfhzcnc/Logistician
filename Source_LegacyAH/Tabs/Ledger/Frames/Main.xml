@@ -1,0 +1,53 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/">
+  <Frame
+    name="AuctionatorLedgerTabFrameTemplate"
+    virtual="true"
+    parentKey="AuctionatorLedgerFrame"
+    mixin="AuctionatorLedgerFrameMixin"
+    hidden="true"
+  >
+    <Scripts>
+      <OnLoad method="OnLoad" />
+    </Scripts>
+
+    <Anchors>
+      <Anchor point="TOP" y="-20"/>
+      <Anchor point="LEFT" x="4"/>
+      <Anchor point="BOTTOMRIGHT" relativePoint="BOTTOMRIGHT" x="-4" y="27" />
+    </Anchors>
+
+    <Frames>
+      <Button parentKey="BackButton" inherits="UIPanelButtonTemplate" text="Back">
+        <Size x="80" y="22"/>
+        <Anchors>
+          <Anchor point="TOPLEFT" relativeTo="AuctionPortraitTexture" relativePoint="BOTTOMRIGHT" x="2" y="19"/>
+        </Anchors>
+        <Scripts>
+          <OnClick>AuctionFrameTab_OnClick(AuctionFrameTab3)</OnClick>
+        </Scripts>
+      </Button>
+
+      <Frame parentKey="DataProvider" mixin="AuctionatorLedgerDataProviderMixin">
+        <Scripts>
+          <OnLoad method="OnLoad"/>
+          <OnShow method="OnShow"/>
+          <OnUpdate method="OnUpdate"/>
+        </Scripts>
+      </Frame>
+
+      <Frame parentKey="ResultsListing" inherits="AuctionatorResultsListingTemplate">
+        <Anchors>
+          <Anchor point="TOPLEFT" relativeKey="$parent" relativePoint="TOPLEFT" x="4" y="-46"/>
+          <Anchor point="BOTTOMRIGHT" relativeKey="$parent" relativePoint="BOTTOMRIGHT" x="-23" />
+        </Anchors>
+      </Frame>
+
+      <Frame parentKey="ResultsInset" inherits="AuctionatorInsetTemplate">
+        <Anchors>
+          <Anchor point="TOPLEFT" relativeKey="$parent.ResultsListing" relativePoint="TOPLEFT" x="-5" y="-25"/>
+          <Anchor point="BOTTOMRIGHT" relativeKey="$parent.ResultsListing" relativePoint="BOTTOMRIGHT" y="2"/>
+        </Anchors>
+      </Frame>
+    </Frames>
+  </Frame>
+</Ui>

@@ -49,7 +49,22 @@ function AuctionatorBuyDialogMixin:OnEvent(eventName, ...)
   elseif eventName == "CHAT_MSG_SYSTEM" then
     local message = ...
     if message == ERR_AUCTION_BID_PLACED then
+      -- Only reached once the server confirms the purchase, so the whole stack
+      -- that was bought is now owned by the player.
+      local purchasedItemLink = self.auctionData ~= nil and self.auctionData.itemLink or nil
+      local purchasedQuantity = self.lastBuyStackSize
+
       self.quantityPurchased = self.quantityPurchased + self.lastBuyStackSize
+
+      if purchasedItemLink ~= nil and purchasedQuantity > 0 then
+        Auctionator.EventBus:Fire(
+          self,
+          Auctionator.Shopping.Tab.Events.AuctionPurchased,
+          purchasedItemLink,
+          purchasedQuantity
+        )
+      end
+
       self:SetDetails(self.auctionData, self.quantityPurchased, self.lastBuyStackSize, self.blacklistedBefore)
       self:LoadForPurchasing()
     end

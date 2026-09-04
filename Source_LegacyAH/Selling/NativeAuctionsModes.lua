@@ -2506,6 +2506,11 @@ local function SetListingsUndercutButtonShown(self, shown)
     self.ListingsUndercutButton:SetShown(shown)
   end
 end
+local function SetListingsLedgerButtonShown(self, shown)
+  if self.ListingsLedgerButton then
+    self.ListingsLedgerButton:SetShown(shown)
+  end
+end
 
 local function ClearStagedAuctionItem()
   if GetAuctionSellItemInfo() then
@@ -2644,6 +2649,27 @@ local function MatchesListingsSearch(self, ownerIndex)
   return true
 end
 
+-- Unlike SavePoints/RestorePoints (used elsewhere to restore a frame to its OWN native
+-- anchors), listings rows need to be reassignable to a DIFFERENT row's original slot when
+-- sorted/compacted. AuctionsButtonN rows are natively chain-anchored to the PREVIOUS row
+-- (each one's saved point's relativeTo is another AuctionsButtonN) - reusing SavePoints/
+-- RestorePoints here caused "Cannot anchor to itself" once a row got reassigned to a slot
+-- whose original relativeTo turned out to be that same row. Capture each slot's position
+-- as a plain offset from the shared (non-row) parent frame instead, sidestepping that.
+local function SaveRowSlotPosition(frame)
+  local parent = frame:GetParent()
+  return {
+    parent = parent,
+    x = frame:GetLeft() - parent:GetLeft(),
+    y = frame:GetTop() - parent:GetTop(),
+  }
+end
+
+local function RestoreRowSlotPosition(frame, slot)
+  frame:ClearAllPoints()
+  frame:SetPoint("TOPLEFT", slot.parent, "TOPLEFT", slot.x, slot.y)
+end
+
 local function CacheListingsRowPoints(self)
   if self.listingsRowPoints then
     return
@@ -2652,7 +2678,7 @@ local function CacheListingsRowPoints(self)
   self.listingsRowPoints = {}
   local rowIndex = 1
   while _G["AuctionsButton" .. rowIndex] do
-    self.listingsRowPoints[rowIndex] = SavePoints(_G["AuctionsButton" .. rowIndex])
+    self.listingsRowPoints[rowIndex] = SaveRowSlotPosition(_G["AuctionsButton" .. rowIndex])
     rowIndex = rowIndex + 1
   end
 end
@@ -2662,10 +2688,10 @@ local function RestoreListingsRowPoints(self)
     return
   end
 
-  for rowIndex, points in ipairs(self.listingsRowPoints) do
+  for rowIndex, slot in ipairs(self.listingsRowPoints) do
     local row = _G["AuctionsButton" .. rowIndex]
     if row then
-      RestorePoints(row, points)
+      RestoreRowSlotPosition(row, slot)
     end
   end
 end
@@ -2724,17 +2750,41 @@ local function EnsureListingsRowStatus(row)
     row.LogisticianUndercutStatus = (itemButton or row):CreateTexture(nil, "OVERLAY")
     row.LogisticianUndercutStatus:SetSize(22, 22)
   end
+  if not row.LogisticianUndercutStatusLabel then
+    row.LogisticianUndercutStatusLabel = (itemButton or row):CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local fontFile = row.LogisticianUndercutStatusLabel:GetFont()
+    row.LogisticianUndercutStatusLabel:SetFont(fontFile, 11, "THICKOUTLINE")
+  end
   row.LogisticianUndercutStatus:ClearAllPoints()
+  row.LogisticianUndercutStatusLabel:ClearAllPoints()
   if itemButton then
     if row.LogisticianUndercutStatus:GetParent() ~= itemButton then
       row.LogisticianUndercutStatus:SetParent(itemButton)
+      row.LogisticianUndercutStatusLabel:SetParent(itemButton)
     end
     row.LogisticianUndercutStatus:SetDrawLayer("OVERLAY", 7)
     row.LogisticianUndercutStatus:SetPoint("CENTER", itemButton, "CENTER", 0, 0)
+    row.LogisticianUndercutStatusLabel:SetDrawLayer("OVERLAY", 7)
+    row.LogisticianUndercutStatusLabel:SetPoint("BOTTOMRIGHT", itemButton, "BOTTOMRIGHT", -1, 1)
   else
     row.LogisticianUndercutStatus:SetPoint("LEFT", row, "LEFT", 8, 0)
+    row.LogisticianUndercutStatusLabel:SetPoint("LEFT", row, "LEFT", 8, 0)
   end
-  return row.LogisticianUndercutStatus
+  return row.LogisticianUndercutStatus, row.LogisticianUndercutStatusLabel
+end
+
+local function GetListingsSoldAndBidder(info)
+  -- Neither signal alone reliably catches every sold auction (matches the same
+  -- SaleStatus/Quantity caveat documented on IsListingsAuctionScannable above), so treat
+  -- it as sold if EITHER one says so.
+  local isSold = (info[Auctionator.Constants.AuctionItemInfo.SaleStatus] == 1) or
+    ((info[Auctionator.Constants.AuctionItemInfo.Quantity] or 0) <= 0)
+  -- NOTE: don't short-circuit `bidderName` down to a plain `false` when isSold is true -
+  -- `false ~= nil` and `false ~= ""` are BOTH true, so hasBidder below would wrongly read
+  -- true for sold auctions too. Only read the Bidder field when actually relevant.
+  local bidderName = (not isSold) and info[Auctionator.Constants.AuctionItemInfo.Bidder] or nil
+  local hasBidder = bidderName ~= nil and bidderName ~= ""
+  return isSold, hasBidder
 end
 
 local function ApplyListingsUndercutStatus(self)
@@ -2745,30 +2795,64 @@ local function ApplyListingsUndercutStatus(self)
   local rowIndex = 1
   while _G["AuctionsButton" .. rowIndex] do
     local row = _G["AuctionsButton" .. rowIndex]
-    local statusText = EnsureListingsRowStatus(row)
+    local statusText, statusLabel = EnsureListingsRowStatus(row)
     local ownerIndex = GetListingsRowOwnerIndex(row)
     local key = row:IsShown() and GetListingsRowUndercutKey(ownerIndex) or nil
     local status = key and self.listingsUndercutStatuses and
       self.listingsUndercutStatuses[key]
-    if status == "checking" then
-      statusText:SetTexture("Interface\\RAIDFRAME\\ReadyCheck-Waiting")
-      statusText:SetAlpha(self.listingsUndercutBlinkAlpha or 1)
-      statusText:Show()
-    elseif status == "unknown" then
-      statusText:SetTexture("Interface\\RAIDFRAME\\ReadyCheck-Waiting")
-      statusText:SetAlpha(1)
-      statusText:Show()
-    elseif status == "undercut" then
-      statusText:SetTexture("Interface\\RAIDFRAME\\ReadyCheck-NotReady")
-      statusText:SetAlpha(1)
-      statusText:Show()
-    elseif status == "ok" then
-      statusText:SetTexture("Interface\\RAIDFRAME\\ReadyCheck-Ready")
-      statusText:SetAlpha(1)
-      statusText:Show()
-    else
+
+    -- An auction that already has a bidder shouldn't show the red "undercut" cross -
+    -- cancelling a bid-on auction forfeits the bid, so flag it with its own
+    -- "already bidding" icon instead, regardless of the underlying undercut status.
+    -- Already-sold auctions (collecting payment) have a "winning bidder" too, but there's
+    -- nothing left to undercut/cancel for those, so skip the icon entirely for them.
+    local info = row:IsShown() and { GetAuctionItemInfo("owner", ownerIndex) }
+    local isSold, hasBidder = false, false
+    if info then
+      isSold, hasBidder = GetListingsSoldAndBidder(info)
+    end
+
+    if hasBidder then
+      -- "HB" = High Bidder, matching the native "High Bidder" column label - shown as text
+      -- instead of an icon here since it sits on top of the item's own icon.
+      statusText:Hide()
+      statusLabel:SetText("HB")
+      statusLabel:SetTextColor(0.2, 1, 0.2)
+      statusLabel:Show()
+    elseif isSold then
+      statusText:SetVertexColor(1, 1, 1)
       statusText:SetAlpha(1)
       statusText:Hide()
+      statusLabel:Hide()
+    elseif status == "checking" then
+      statusText:SetTexture("Interface\\RAIDFRAME\\ReadyCheck-Waiting")
+      statusText:SetVertexColor(1, 1, 1)
+      statusText:SetAlpha(self.listingsUndercutBlinkAlpha or 1)
+      statusText:Show()
+      statusLabel:Hide()
+    elseif status == "unknown" then
+      statusText:SetTexture("Interface\\RAIDFRAME\\ReadyCheck-Waiting")
+      statusText:SetVertexColor(1, 1, 1)
+      statusText:SetAlpha(1)
+      statusText:Show()
+      statusLabel:Hide()
+    elseif status == "undercut" then
+      statusText:SetTexture("Interface\\RAIDFRAME\\ReadyCheck-NotReady")
+      statusText:SetVertexColor(1, 1, 1)
+      statusText:SetAlpha(1)
+      statusText:Show()
+      statusLabel:Hide()
+    elseif status == "ok" then
+      statusText:SetTexture("Interface\\RAIDFRAME\\ReadyCheck-Ready")
+      statusText:SetVertexColor(1, 1, 1)
+      statusText:SetAlpha(1)
+      statusText:Show()
+      statusLabel:Hide()
+    else
+      statusText:SetVertexColor(1, 1, 1)
+      statusText:SetAlpha(1)
+      statusText:Hide()
+      statusLabel:Hide()
     end
     rowIndex = rowIndex + 1
   end
@@ -2789,9 +2873,12 @@ end
 local function HideListingsUndercutStatus(self)
   local rowIndex = 1
   while _G["AuctionsButton" .. rowIndex] do
-    local statusText = _G["AuctionsButton" .. rowIndex].LogisticianUndercutStatus
-    if statusText then
-      statusText:Hide()
+    local row = _G["AuctionsButton" .. rowIndex]
+    if row.LogisticianUndercutStatus then
+      row.LogisticianUndercutStatus:Hide()
+    end
+    if row.LogisticianUndercutStatusLabel then
+      row.LogisticianUndercutStatusLabel:Hide()
     end
     rowIndex = rowIndex + 1
   end
@@ -2826,7 +2913,7 @@ local function ApplyListingsSearchFilter(self)
     local row = _G["AuctionsButton" .. rowIndex]
     if row:IsShown() then
       if MatchesListingsSearch(self, GetListingsRowOwnerIndex(row)) then
-        RestorePoints(row, self.listingsRowPoints[compactRowIndex])
+        RestoreRowSlotPosition(row, self.listingsRowPoints[compactRowIndex])
         compactRowIndex = compactRowIndex + 1
       else
         row:Hide()
@@ -2834,6 +2921,7 @@ local function ApplyListingsSearchFilter(self)
     end
     rowIndex = rowIndex + 1
   end
+
   ApplyListingsUndercutStatus(self)
 end
 
@@ -3235,14 +3323,8 @@ local function SetMode(self, mode)
       self.ModeIcon:SetPoint("LEFT", self.ModeButton, "LEFT", buyout and 39 or 46, -1)
     end
   end
-  if self.ModeToggleSwapIcon then
-    self.ModeToggleSwapIcon:SetTexture(listings and
-      "Interface\\Buttons\\UI-GuildButton-MOTD-Up" or
-      "Interface\\Buttons\\UI-GuildButton-PublicNote-Up")
-    self.ModeToggleSwapIcon:SetVertexColor(1, 1, 1)
-    self.ModeToggleSwapIcon:SetSize(18, 18)
-    self.ModeToggleSwapIcon:ClearAllPoints()
-    self.ModeToggleSwapIcon:SetPoint("CENTER", self.ModeToggleButton, "CENTER", 0, 0)
+  if self.ModeToggleButton then
+    self.ModeToggleButton:SetText(listings and "Posting" or "My Listings")
   end
 
   self.StartPriceText:SetText(buyout and "Unit Price" or "Starting Unit Price")
@@ -3267,6 +3349,7 @@ local function SetMode(self, mode)
   SetListingsSlotCoverShown(self, listingsPanel)
   UpdateListingsPendingIncome(self)
   SetListingsUndercutButtonShown(self, listingsPanel)
+  SetListingsLedgerButtonShown(self, listingsPanel)
   if listings then
     SetListingsUndercutButtonBusy(self, false, "Check Undercut")
   else
@@ -3508,53 +3591,11 @@ local function Initialize()
   controller.ModeIcon:SetSize(16, 16)
   controller.ModeIcon:SetPoint("LEFT", controller.ModeButton, "LEFT", 46, -1)
 
-  -- Compact icon button for entering and leaving My Listings.
-  controller.ModeToggleButton = CreateFrame(
-    "Button", "LogisticianModeToggleButton", AuctionFrameAuctions, "UIPanelButtonTemplate"
-  )
-  controller.ModeToggleButton:SetSize(38, 24)
-  -- Anchored to AuctionsTabText's ORIGINAL point tuple (not the live label),
-  -- since Buyout Mode nudges the label itself; this keeps the button fixed
-  -- regardless of mode.
-  local tabAnchorPoint, tabAnchorRelativeTo, tabAnchorRelativePoint, tabAnchorX, tabAnchorY =
-    unpack(controller.original.tabTextPoints[1])
-  controller.ModeToggleButton:SetPoint(
-    tabAnchorPoint, tabAnchorRelativeTo, tabAnchorRelativePoint,
-    tabAnchorX + 60, tabAnchorY - 22
-  )
-  controller.ModeToggleButton:SetText("")
-  controller.ModeToggleSwapIcon = controller.ModeToggleButton:CreateTexture(nil, "OVERLAY")
-  controller.ModeToggleSwapIcon:SetTexture("Interface\\Buttons\\UI-GuildButton-PublicNote-Up")
-  controller.ModeToggleSwapIcon:SetSize(18, 18)
-  controller.ModeToggleSwapIcon:SetPoint("CENTER", controller.ModeToggleButton, "CENTER", 0, 0)
-  controller.ModeToggleSwapIcon:SetTexCoord(0, 1, 0, 1)
-  controller.ModeToggleButton:SetScript("OnEnter", function()
-    UpdateModeSwitchTooltip(controller.ModeToggleButton)
-  end)
-  controller.ModeToggleButton:SetScript("OnLeave", function()
-    GameTooltip:Hide()
-    GameTooltip:SetScale(1)
-  end)
-  controller.ModeToggleButton:SetFrameLevel(AuctionFrameAuctions:GetFrameLevel() + 45)
-  -- The banner (ModeButton) still toggles Bid/Buyout; this button now
-  -- toggles My Listings on and off, remembering the mode to return to.
-  controller.ModeToggleButton:SetScript("OnClick", function()
-    if controller.mode == "listings" then
-      SetMode(controller, controller.lastBuyoutMode or "bid")
-    else
-      controller.lastBuyoutMode = controller.mode
-      SetMode(controller, "listings")
-    end
-    if GameTooltip:IsOwned(controller.ModeToggleButton) then
-      UpdateModeSwitchTooltip(controller.ModeToggleButton)
-    end
-  end)
-
   controller.ListingsSlotCover = CreateFrame(
     "Frame", nil, AuctionFrameAuctions, "BackdropTemplate"
   )
   controller.ListingsSlotCover:SetPoint("TOPLEFT", AuctionFrameAuctions, "TOPLEFT", 24, -77)
-  controller.ListingsSlotCover:SetSize(180, 77)
+  controller.ListingsSlotCover:SetSize(180, 127)
   controller.ListingsSlotCover:SetFrameLevel(AuctionFrameAuctions:GetFrameLevel() + 35)
   controller.ListingsSlotCover:SetBackdrop({
     bgFile = "Interface\\FrameGeneral\\UI-Background-Rock",
@@ -3572,16 +3613,20 @@ local function Initialize()
   controller.ListingsSearchTitle = controller.ListingsSlotCover:CreateFontString(
     nil, "ARTWORK", "GameFontHighlightSmall"
   )
-  controller.ListingsSearchTitle:SetText("Search")
-  controller.ListingsSearchTitle:SetTextColor(1, 1, 1, 1)
+  controller.ListingsSearchTitle:SetText("Filter")
+  controller.ListingsSearchTitle:SetTextColor(1, 0.82, 0, 1)
+  do
+    local fontFile, fontSize = controller.ListingsSearchTitle:GetFont()
+    controller.ListingsSearchTitle:SetFont(fontFile, fontSize + 1, "THICKOUTLINE")
+  end
 
   controller.ListingsSearchBox = CreateFrame(
     "EditBox", "LogisticianListingsSearchBox", controller.ListingsSlotCover, "SearchBoxTemplate"
   )
-  controller.ListingsSearchBox:SetSize(156, 22)
-  controller.ListingsSearchBox:SetPoint("CENTER", controller.ListingsSlotCover, "CENTER", 0, -3)
+  controller.ListingsSearchBox:SetSize(150, 22)
+  controller.ListingsSearchBox:SetPoint("CENTER", controller.ListingsSlotCover, "CENTER", 5, 27)
   controller.ListingsSearchTitle:SetPoint(
-    "BOTTOMLEFT", controller.ListingsSearchBox, "TOPLEFT", 2, 2
+    "BOTTOMLEFT", controller.ListingsSearchBox, "TOPLEFT", -3, 2
   )
   controller.ListingsSearchBox:SetAutoFocus(false)
   local instructions = controller.ListingsSearchBox.Instructions or
@@ -3783,6 +3828,66 @@ local function Initialize()
   end)
   controller.ListingsUndercutButton:Hide()
 
+  controller.ListingsLedgerButton = CreateFrame(
+    "Button", nil, AuctionFrameAuctions, "UIPanelButtonTemplate"
+  )
+  controller.ListingsLedgerButton:SetSize(AuctionsCreateAuctionButton:GetWidth() - 10, AuctionsCreateAuctionButton:GetHeight())
+  -- Offset reduced by 50 to compensate for ListingsSlotCover's height increase, keeping this
+  -- button's absolute on-screen position unchanged.
+  controller.ListingsLedgerButton:SetPoint("TOP", controller.ListingsSlotCover, "BOTTOM", 0, -46)
+  controller.ListingsLedgerButton:SetText("Ledger")
+  controller.ListingsLedgerButton:SetFrameLevel(AuctionFrameAuctions:GetFrameLevel() + 45)
+  controller.ListingsLedgerButton:SetScript("OnClick", function()
+    local ledgerTab = _G["AuctionatorTabs_Ledger"]
+    if ledgerTab then
+      ledgerTab:Click()
+    end
+  end)
+  controller.ListingsLedgerButton:Hide()
+
+  -- Button for entering and leaving My Listings, stacked directly above the Ledger button
+  -- and matching its width. Labelled with text ("Posting"/"My Listings") rather than an icon.
+  controller.ModeToggleButton = CreateFrame(
+    "Button", "LogisticianModeToggleButton", AuctionFrameAuctions, "UIPanelButtonTemplate"
+  )
+  controller.ModeToggleButton:SetSize(67, 19)
+  -- Anchored to AuctionsTabText's ORIGINAL point tuple (not the live label),
+  -- since Buyout Mode nudges the label itself; this keeps the button fixed
+  -- regardless of mode.
+  local tabAnchorPoint, tabAnchorRelativeTo, tabAnchorRelativePoint, tabAnchorX, tabAnchorY =
+    unpack(controller.original.tabTextPoints[1])
+  controller.ModeToggleButton:SetPoint(
+    tabAnchorPoint, tabAnchorRelativeTo, tabAnchorRelativePoint,
+    tabAnchorX + 45, tabAnchorY - 24
+  )
+  controller.ModeToggleButton:SetText("Posting")
+  do
+    local fontFile, _, fontFlags = GameFontNormalSmall:GetFont()
+    -- GameFontNormalSmall (12px) still clips at this button's width - shrink further to fit.
+    controller.ModeToggleButton:GetFontString():SetFont(fontFile, 9, fontFlags)
+  end
+  controller.ModeToggleButton:SetScript("OnEnter", function()
+    UpdateModeSwitchTooltip(controller.ModeToggleButton)
+  end)
+  controller.ModeToggleButton:SetScript("OnLeave", function()
+    GameTooltip:Hide()
+    GameTooltip:SetScale(1)
+  end)
+  controller.ModeToggleButton:SetFrameLevel(AuctionFrameAuctions:GetFrameLevel() + 45)
+  -- The banner (ModeButton) still toggles Bid/Buyout; this button now
+  -- toggles My Listings on and off, remembering the mode to return to.
+  controller.ModeToggleButton:SetScript("OnClick", function()
+    if controller.mode == "listings" then
+      SetMode(controller, controller.lastBuyoutMode or "bid")
+    else
+      controller.lastBuyoutMode = controller.mode
+      SetMode(controller, "listings")
+    end
+    if GameTooltip:IsOwned(controller.ModeToggleButton) then
+      UpdateModeSwitchTooltip(controller.ModeToggleButton)
+    end
+  end)
+
   AuctionsCreateAuctionButton:SetScript("OnClick", function(button, ...)
     if controller.mode == "buyout" then
       PostBuyout(controller)
@@ -3795,7 +3900,9 @@ local function Initialize()
   end)
 
   AuctionFrameAuctions:HookScript("OnShow", function()
-    SetMode(controller, controller.mode or "buyout")
+    -- Always land on My Listings when the Auctions tab is (re)shown, even if a prior posting
+    -- attempt left controller.mode set to "buyout"/"bid" from the last visit.
+    SetMode(controller, "listings")
   end)
   AuctionFrameAuctions:HookScript("OnHide", function()
     if controller.listingsUndercutScanning then
@@ -3977,7 +4084,7 @@ local function Initialize()
     end
   end)
 
-  SetMode(controller, "buyout")
+  SetMode(controller, "listings")
 end
 
 local loader = CreateFrame("Frame")

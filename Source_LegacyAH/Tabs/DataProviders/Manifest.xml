@@ -7,4 +7,5 @@
   <Script file="BuyingRealmHistory.lua"/>
   <Script file="BuyingPostingHistory.lua"/>
   <Script file="Cancelling.lua"/>
+  <Script file="Ledger.lua"/>
 </Ui>

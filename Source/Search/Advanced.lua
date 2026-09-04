@@ -3,7 +3,7 @@
 function Auctionator.Search.SplitAdvancedSearch(searchParametersString)
   local queryString, categoryKey, minItemLevel, maxItemLevel, minLevel, maxLevel,
     minCraftedLevel, maxCraftedLevel, minPrice, maxPrice, quality, tier,
-    expansion, quantity, usableItems =
+    expansion, quantity, usableItems, displayName =
     strsplit( Auctionator.Constants.AdvancedSearchDivider, searchParametersString )
 
   -- A nil queryString causes a disconnect if searched for, but an empty one
@@ -44,6 +44,7 @@ function Auctionator.Search.SplitAdvancedSearch(searchParametersString)
 
   quantity = tonumber( quantity )
   usableItems = usableItems == "1" or usableItems == "true"
+  displayName = displayName or ""
 
   if minLevel == 0 then
     minLevel = nil
@@ -99,6 +100,7 @@ function Auctionator.Search.SplitAdvancedSearch(searchParametersString)
     expansion = expansion,
     quantity = quantity,
     usableItems = usableItems,
+    displayName = displayName,
   }
 end
 
@@ -365,20 +367,6 @@ local function TooltipLevelRange(splitSearch)
   }
 end
 
-local function TooltipItemLevelRange(splitSearch)
-  return {
-    AUCTIONATOR_L_ITEM_LEVEL,
-    TooltipRangeString(splitSearch.minItemLevel, splitSearch.maxItemLevel)
-  }
-end
-
-local function TooltipCraftedLevelRange(splitSearch)
-  return {
-    AUCTIONATOR_L_CRAFTED_LEVEL,
-    TooltipRangeString(splitSearch.minCraftedLevel, splitSearch.maxCraftedLevel)
-  }
-end
-
 function Auctionator.Search.ComposeTooltip(searchString)
   local splitSearch = Auctionator.Search.SplitAdvancedSearch(searchString)
 
@@ -387,9 +375,7 @@ function Auctionator.Search.ComposeTooltip(searchString)
   table.insert(lines, TooltipCategory(splitSearch))
   table.insert(lines, TooltipPriceRange(splitSearch))
   table.insert(lines, TooltipLevelRange(splitSearch))
-  table.insert(lines, TooltipItemLevelRange(splitSearch))
   table.insert(lines, TooltipQuantity(splitSearch))
-  table.insert(lines, TooltipCraftedLevelRange(splitSearch))
   table.insert(lines, TooltipQuality(splitSearch))
   if Auctionator.Constants.IsRetail then
     table.insert(lines, TooltipExpansion(splitSearch))
@@ -429,6 +415,7 @@ function Auctionator.Search.ReconstituteAdvancedSearch(search)
     tostring(search.tier or "#"),
     tostring(search.expansion or ""),
     tostring(search.quantity ~= 0 and search.quantity or ""),
-    search.usableItems and "1" or ""
+    search.usableItems and "1" or "",
+    search.displayName or ""
   )
 end

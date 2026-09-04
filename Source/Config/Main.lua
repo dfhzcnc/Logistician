@@ -51,6 +51,7 @@ Auctionator.Config.Options = {
   COLUMNS_HISTORICAL_PRICES = "historical_prices",
   COLUMNS_POSTING_HISTORY = "columns_posting_history",
   COLUMNS_CANCELLING = "columns_cancelling",
+  COLUMNS_LEDGER = "columns_ledger",
 
   CRAFTING_INFO_SHOW = "crafting_info_show",
   CRAFTING_INFO_SHOW_PROFIT = "crafting_info_show_profit",
@@ -125,6 +126,7 @@ Auctionator.Config.Defaults = {
   [Auctionator.Config.Options.COLUMNS_SELLING_SEARCH] = {},
   [Auctionator.Config.Options.COLUMNS_HISTORICAL_PRICES] = {},
   [Auctionator.Config.Options.COLUMNS_POSTING_HISTORY] = {},
+  [Auctionator.Config.Options.COLUMNS_LEDGER] = {},
 
   [Auctionator.Config.Options.CRAFTING_INFO_SHOW] = true,
   [Auctionator.Config.Options.CRAFTING_INFO_SHOW_PROFIT] = true,
