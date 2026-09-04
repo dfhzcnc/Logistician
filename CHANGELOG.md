@@ -6,6 +6,30 @@ uses [Semantic Versioning](https://semver.org/) and the
 
 ## [Unreleased]
 
+## [2.4.0] - 2026-09-04
+
+### Added
+
+- Added a persistent sales Ledger with item, stack size, unit and total prices, sale date, and market-price snapshots.
+- Added custom display names for Shopping entries and Alt-click recipe reagent list creation.
+- Added automatic Shopping quantity reduction after confirmed Auction House purchases.
+- Added cached vendor-buy prices to tooltips and profession material-cost estimates.
+- Added Ledger maintenance and test-data slash commands.
+
+### Improved
+
+- Made the legacy Auction House window movable and opened its Auctions page in My Listings mode.
+- Added clearer bidder and undercut status indicators plus direct access to the Ledger from My Listings.
+- Simplified Shopping list controls, advanced-search fields, loading feedback, and layout.
+- Improved equipment-comparison tooltips and modifier-driven tooltip refresh safety.
+- Automatically removed completed profession production goals and kept profession windows above the Auction House.
+
+### Fixed
+
+- Corrected legacy My Listings row re-anchoring during filtering and sorting.
+- Corrected numeric date sorting in the sales Ledger.
+- Included limited-stock vendor items when caching gold purchase prices.
+
 ## [2.3.1] - 2026-08-25
 
 ### Added

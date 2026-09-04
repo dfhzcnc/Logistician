@@ -23,13 +23,33 @@ function AuctionatorShoppingTabSearchOptionsMixin:OnLoad()
     end
   end)
 
-  self.OptionsClearButton = CreateFrame("Button", nil, self.MoreButton, "AuctionatorResetButton")
+  -- A bare (unskinned) Button rather than the AuctionatorResetButton template, so only the
+  -- plain icon texture shows, matching the gear icon's plain look instead of a button box.
+  self.OptionsClearButton = CreateFrame("Button", nil, self.MoreButton)
+  self.OptionsClearButton:SetSize(15, 15)
   self.OptionsClearButton:SetPoint("LEFT", 7, 0)
   self.OptionsClearButton:SetFrameLevel(self.MoreButton:GetFrameLevel() + 5)
+  self.OptionsClearButton.Icon = self.OptionsClearButton:CreateTexture(nil, "ARTWORK")
+  self.OptionsClearButton.Icon:SetAllPoints()
+  self.OptionsClearButton.Icon:SetTexture("Interface\\Buttons\\UI-GroupLoot-Pass-Up")
+  self.OptionsClearButton.Icon:SetAlpha(0.75)
   self.OptionsClearButton:SetScript("OnClick", function(button)
     self:ClearSearchTerm()
   end)
   self.OptionsClearButton:Hide()
+
+  self.MoreButtonGearIcon = self.MoreButton:CreateTexture(nil, "OVERLAY")
+  self.MoreButtonGearIcon:SetTexture("Interface\\Buttons\\UI-OptionsButton")
+  self.MoreButtonGearIcon:SetSize(15, 15)
+  self.MoreButtonGearIcon:SetPoint("LEFT", self.MoreButton, "LEFT", 7, 0)
+
+  -- Anchor the label to start right after the icon column instead of the default centered
+  -- text, so it can't overlap the icon when the button auto-shrinks to fit shorter text.
+  local moreButtonLabel = self.MoreButton:GetFontString()
+  moreButtonLabel:ClearAllPoints()
+  moreButtonLabel:SetPoint("LEFT", self.MoreButton, "LEFT", 26, 0)
+  moreButtonLabel:SetPoint("RIGHT", self.MoreButton, "RIGHT", -6, 0)
+  moreButtonLabel:SetJustifyH("LEFT")
 
   self:UpdateOptionsButton(false)
 
@@ -134,6 +154,7 @@ function AuctionatorShoppingTabSearchOptionsMixin:UpdateOptionsButton(active)
   self.extendedOptionsActive = active
   self.MoreButton:SetText(active and "Edit Options" or AUCTIONATOR_L_SEARCH_OPTIONS)
   DynamicResizeButton_Resize(self.MoreButton)
+  self.MoreButtonGearIcon:SetShown(not active)
 
   self.OptionsClearButton:SetShown(active)
   if active then

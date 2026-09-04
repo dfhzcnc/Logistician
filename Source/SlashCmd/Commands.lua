@@ -11,6 +11,9 @@ local SLASH_COMMAND_DESCRIPTIONS = {
   {commands = "c [toggle-name], config [toggle-name]", message = "Toggle the value of the configuration value [toggle-name]."},
   {commands = "v, version", message = "Show current version."},
   {commands = "h, help", message = "Show this help message."},
+  {commands = "lt [count], ledgertrim [count]", message = "Keep only the newest [count] Ledger entries, discarding the rest."},
+  {commands = "lc, ledgerclear", message = "Delete all Ledger entries."},
+  {commands = "ltest [count], ledgertest [count]", message = "Add [count] (default 40) dummy Ledger entries for UI testing."},
 }
 
 function Auctionator.SlashCmd.Post()
@@ -77,6 +80,55 @@ function Auctionator.SlashCmd.NoPriceDB()
   Auctionator.Variables.InitializeDatabase()
 
   Auctionator.Utilities.Message("Disabled recording auction prices in the price database.")
+end
+
+function Auctionator.SlashCmd.LedgerTrim(countArg)
+  local count = tonumber(countArg)
+  if count == nil or count < 0 then
+    Auctionator.Utilities.Message("Usage: /logi ledgertrim <count>")
+    return
+  end
+
+  Auctionator.Ledger:TrimTo(count)
+  Auctionator.Utilities.Message("Ledger trimmed to " .. count .. " entries.")
+end
+
+function Auctionator.SlashCmd.LedgerClear()
+  Auctionator.Ledger:Clear()
+  Auctionator.Utilities.Message("Ledger cleared.")
+end
+
+function Auctionator.SlashCmd.LedgerTestData(countArg)
+  local count = tonumber(countArg) or 40
+  -- Fabricated |cAARRGGBB colors so all 6 quality tiers get exercised regardless of the test
+  -- items' real quality - this is throwaway test data, not meant to be accurate.
+  local qualityColors = { "ff9d9d9d", "ffffffff", "ff1eff00", "ff0070dd", "ffa335ee", "ffff8000" }
+  local testItemIDs = { 6948, 4306, 2589, 2592, 818 }
+  local testQuantities = { 1, 5, 10, 20, 50, 200 }
+  local testUnitPrices = { 150, 4999, 12599, 98765, 500000, 987654, 5000000, 222229999 }
+  local now = time()
+
+  for i = 1, count do
+    local itemID = testItemIDs[((i - 1) % #testItemIDs) + 1]
+    local color = qualityColors[((i - 1) % #qualityColors) + 1]
+    local quantity = testQuantities[((i - 1) % #testQuantities) + 1]
+    local unitPrice = testUnitPrices[((i - 1) % #testUnitPrices) + 1]
+    local itemLink = "|c" .. color .. "|Hitem:" .. itemID .. "::::::::1:0:::::|h[Test Item " .. i .. "]|h|r"
+    -- Spread sale times over the last 14 days (pseudo-random via a coprime step) so date
+    -- formatting/sorting can be tested too, instead of every entry sharing the current instant.
+    local saleTime = now - (((i - 1) * 9973) % (14 * 86400))
+
+    Auctionator.Ledger:AddSale({
+      itemLink = itemLink,
+      quantity = quantity,
+      unitPrice = unitPrice,
+      saleType = (i % 2 == 0) and "buyout" or "bid",
+      marketPrice = unitPrice,
+      time = saleTime,
+    })
+  end
+
+  Auctionator.Utilities.Message("Added " .. count .. " dummy Ledger entries.")
 end
 
 function Auctionator.SlashCmd.ResetConfig()

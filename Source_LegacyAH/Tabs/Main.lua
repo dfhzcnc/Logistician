@@ -32,3 +32,13 @@ Auctionator.Tabs.Register( {
   tabFrameName = "AuctionatorConfigFrame",
   tabOrder = 4,
 })
+Auctionator.Tabs.Register( {
+  name = "Ledger",
+  textLabel = AUCTIONATOR_L_LEDGER_TAB,
+  tabTemplate = "AuctionatorLedgerTabFrameTemplate",
+  tabHeader = AUCTIONATOR_L_LEDGER_TAB_HEADER,
+  tabFrameName = "AuctionatorLedgerFrame",
+  tabOrder = 5,
+  -- Only reachable via the "Ledger" button in My Listings now, not the tab bar itself.
+  hiddenTab = true,
+})

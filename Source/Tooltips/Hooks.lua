@@ -390,18 +390,31 @@ end)
 do
   local altWatcher = CreateFrame("Frame")
   local wasAltDown = false
+  local wasShiftDown = false
   altWatcher:SetScript("OnUpdate", function()
     local isAltDown = IsAltKeyDown()
-    if isAltDown == wasAltDown then
+    local isShiftDown = IsShiftKeyDown()
+    if isAltDown == wasAltDown and isShiftDown == wasShiftDown then
       return
     end
     wasAltDown = isAltDown
+    wasShiftDown = isShiftDown
 
     if not GameTooltip:IsShown() then
       return
     end
 
     local owner = GameTooltip:GetOwner()
+    -- Never call a PROTECTED frame's OnEnter from here - this frame's OnUpdate runs in an
+    -- insecure context, and Blizzard's own secure frames (action buttons, etc.) can taint
+    -- their protected functions (e.g. SetAttribute) if their OnEnter gets invoked this way.
+    -- Shift is held/released constantly during normal play (autorun, action bar paging,
+    -- chat linking, etc.), so hovering an action button while doing any of that used to
+    -- reliably trigger an ADDON_ACTION_BLOCKED error here.
+    if owner and owner.IsProtected and owner:IsProtected() then
+      return
+    end
+
     local onEnter = owner and owner.GetScript and owner:GetScript("OnEnter")
     if onEnter then
       onEnter(owner)

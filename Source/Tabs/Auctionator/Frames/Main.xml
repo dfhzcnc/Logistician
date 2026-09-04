@@ -305,7 +305,7 @@
           </Layer>
         </Layers>
         <Scripts>
-          <OnClick>self:GetParent():OpenDebugViewer()</OnClick>
+          <OnClick>Auctionator.Debug.ShowViewer()</OnClick>
           <OnEnter>
             GameTooltip:SetOwner(self, "ANCHOR_TOP")
             GameTooltip:SetText("View Logistician Debug Log")

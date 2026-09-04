@@ -1,0 +1,5 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/">
+  <Include file="ItemCell.xml" />
+  <Include file="UnitPriceCell.xml" />
+  <Include file="Main.xml" />
+</Ui>

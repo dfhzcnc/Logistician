@@ -114,6 +114,18 @@ function Auctionator.Tooltip.ShowTipWithPricingDBKey(tooltipFrame, dbKeys, itemL
   if vendorPrice ~= nil then
     Auctionator.Tooltip.AddVendorTip(tooltipFrame, vendorPrice, countString)
   end
+
+  -- Only populated once the player has actually browsed a vendor selling
+  -- this item (AUCTIONATOR_VENDOR_PRICE_CACHE, see CraftingInfo/Main.lua),
+  -- so this row only appears when that data happens to be available.
+  local vendorBuyPrice = nil
+  for _, dbKey in ipairs(dbKeys) do
+    if AUCTIONATOR_VENDOR_PRICE_CACHE and AUCTIONATOR_VENDOR_PRICE_CACHE[dbKey] then
+      vendorBuyPrice = AUCTIONATOR_VENDOR_PRICE_CACHE[dbKey] * (showStackPrices and itemCount or 1)
+      break
+    end
+  end
+  Auctionator.Tooltip.AddVendorBuyTip(tooltipFrame, vendorBuyPrice, countString)
   Auctionator.Tooltip.AddAuctionTip(tooltipFrame, auctionPrice, countString, cannotAuction)
   Auctionator.Tooltip.AddAuctionMeanTip(
     tooltipFrame,
@@ -216,21 +228,40 @@ function Auctionator.Tooltip.AddVendorTip(tooltipFrame, vendorPrice, countString
   end
 end
 
+-- Price to BUY this item from a vendor (only known if the player has
+-- previously browsed a merchant selling it), distinct from AddVendorTip's
+-- sell-to-vendor price. Shown as its own row right under "Vendor".
+function Auctionator.Tooltip.AddVendorBuyTip(tooltipFrame, vendorBuyPrice, countString)
+  if Auctionator.Config.Get(Auctionator.Config.Options.VENDOR_TOOLTIPS)
+      and vendorBuyPrice ~= nil and vendorBuyPrice > 0 then
+    tooltipFrame:AddDoubleLine(
+      L("VENDOR_BUY") .. countString,
+      WHITE_FONT_COLOR:WrapTextInColorCode(
+        Auctionator.Utilities.CreatePaddedMoneyString(vendorBuyPrice)
+      )
+    )
+  end
+end
+
 function Auctionator.Tooltip.AddAuctionTip (tooltipFrame, auctionPrice, countString, cannotAuction)
   if cannotAuction then
     return
   end
   if Auctionator.Config.Get(Auctionator.Config.Options.AUCTION_TOOLTIPS) then
+    -- Plain "Auction" normally; holding Alt swaps to the more precise
+    -- "Auction Lowest" label, matching the Market row's Alt behavior.
+    local label = (IsAltKeyDown() and L("AUCTION_LOWEST") or L("AUCTION"))
+      .. countString
     if (auctionPrice ~= nil) then
       tooltipFrame:AddDoubleLine(
-        L("AUCTION") .. countString,
+        label,
         WHITE_FONT_COLOR:WrapTextInColorCode(
           Auctionator.Utilities.CreatePaddedMoneyString(auctionPrice)
         )
       )
     else
       tooltipFrame:AddDoubleLine(
-        L("AUCTION") .. countString,
+        label,
         WHITE_FONT_COLOR:WrapTextInColorCode(
           L("UNKNOWN") .. "  "
         )
@@ -255,8 +286,13 @@ function Auctionator.Tooltip.AddAuctionMeanTip(
   end
 
   if auctionMean ~= nil then
+    -- Plain "Avg" normally; holding Alt appends the day-window ("Avg 21d"),
+    -- matching the Market/Auction rows' Alt behavior.
+    local label = L("AUCTION_MEAN")
+      .. (IsAltKeyDown() and (" " .. tostring(days or 21) .. "d") or "")
+      .. countString
     tooltipFrame:AddDoubleLine(
-      L("AUCTION_MEAN") .. " " .. tostring(days or 21) .. "d" .. countString,
+      label,
       WHITE_FONT_COLOR:WrapTextInColorCode(
         Auctionator.Utilities.CreatePaddedMoneyString(auctionMean)
       )

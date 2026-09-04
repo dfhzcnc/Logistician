@@ -38,6 +38,13 @@ function AuctionatorConfigTabMixin:OnLoad()
   local debugButton = self.DebugButton
   debugButton:SetParent(AuctionFrame or self)
   debugButton:ClearAllPoints()
+  -- SetVertexColor multiplies the icon's own pixel colors - HelpIcon-Bug's red/black art has
+  -- almost no green channel to begin with, so tinting it "yellow" (1,1,0) alone barely changes
+  -- its look. Desaturating first makes it neutral gray so the yellow tint actually reads as yellow.
+  if debugButton.Icon then
+    debugButton.Icon:SetDesaturated(true)
+    debugButton.Icon:SetVertexColor(1, 1, 0)
+  end
   local closeButton = AuctionFrame and (AuctionFrame.CloseButton or _G["AuctionFrameCloseButton"])
   if closeButton then
     debugButton:SetPoint("CENTER", closeButton, "LEFT", -8, 0)
@@ -54,8 +61,4 @@ end
 
 function AuctionatorConfigTabMixin:OpenOptions()
   Settings.OpenToCategory(Auctionator.State.OptionsCategory:GetID())
-end
-
-function AuctionatorConfigTabMixin:OpenDebugViewer()
-  Auctionator.Debug.ShowViewer()
 end

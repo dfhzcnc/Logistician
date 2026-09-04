@@ -31,6 +31,12 @@ local SLASH_COMMANDS = {
   ["npd"] = Auctionator.SlashCmd.NoPriceDB,
   ["h"] = Auctionator.SlashCmd.Help,
   ["help"] = Auctionator.SlashCmd.Help,
+  ["lt"] = Auctionator.SlashCmd.LedgerTrim,
+  ["ledgertrim"] = Auctionator.SlashCmd.LedgerTrim,
+  ["lc"] = Auctionator.SlashCmd.LedgerClear,
+  ["ledgerclear"] = Auctionator.SlashCmd.LedgerClear,
+  ["ltest"] = Auctionator.SlashCmd.LedgerTestData,
+  ["ledgertest"] = Auctionator.SlashCmd.LedgerTestData,
 }
 
 function Auctionator.SlashCmd.Handler(input)

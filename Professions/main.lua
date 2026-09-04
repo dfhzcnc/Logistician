@@ -390,6 +390,9 @@ function main:CraftTradeSkillFrame()
     CraftTradeSkillFrame:SetMovable(true)
     CraftTradeSkillFrame:SetClampedToScreen(true)
     CraftTradeSkillFrame:EnableMouse(true)
+    -- Keep this above the Auction House window (which shares the default "MEDIUM" strata).
+    CraftTradeSkillFrame:SetFrameStrata("HIGH")
+    CraftTradeSkillFrame:SetToplevel(true)
 
     CraftTradeSkillFrame:SetAttribute("UIPanelLayout-defined", true)
     CraftTradeSkillFrame:SetAttribute("UIPanelLayout-enabled", true)

@@ -22,4 +22,7 @@ Auctionator.Shopping.Tab.Events = {
   UpdateSearchTerm = "shopping update search term",
   ListSearchRequested = "shopping list search requested",
   BuyScreenShown = "shopping list buy screen shown",
+  -- Fired only after the server confirms an auction purchase, with the
+  -- purchased item link and the number of units actually received.
+  AuctionPurchased = "shopping list auction purchased",
 }

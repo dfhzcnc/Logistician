@@ -38,7 +38,7 @@
       <Layer level="BACKGROUND">
         <FontString parentKey="SearchLabel" inherits="GameFontNormal" text="Name:">
           <Anchors>
-            <Anchor point="TOPLEFT" x="80" y="-4" />
+            <Anchor point="TOPLEFT" x="80" y="-9" />
           </Anchors>
         </FontString>
       </Layer>
@@ -108,15 +108,15 @@
           <Anchor point="BOTTOMLEFT" relativePoint="TOPLEFT" y="-150"/>
           <Anchor point="RIGHT"/>
         </Anchors>
-        <Size x="280"/>
+        <Size x="240"/>
       </Frame>
       <Frame inherits="AuctionatorShoppingTabListsContainerTemplate" hidden="true">
         <Anchors>
-          <Anchor point="TOP" y="-50"/>
+          <Anchor point="TOP" y="-60"/>
           <Anchor point="BOTTOM" y="35"/>
           <Anchor point="LEFT"/>
         </Anchors>
-        <Size x="280"/>
+        <Size x="240"/>
         <Layers>
           <Layer level="OVERLAY">
             <Texture parentKey="LoadingSpinner" atlas="auctionhouse-ui-loadingspinner" hidden="true">
@@ -145,16 +145,17 @@
       </Frame>
       <Frame inherits="AuctionatorShoppingTabRecentsContainerTemplate">
         <Anchors>
-          <Anchor point="TOP" y="-50"/>
+          <Anchor point="TOP" y="-60"/>
           <Anchor point="BOTTOM" y="10"/>
           <Anchor point="LEFT"/>
         </Anchors>
-        <Size x="280"/>
+        <Size x="240"/>
       </Frame>
-      <Button parentKey="NewListButton" inherits="UIPanelDynamicResizeButtonTemplate" text="AUCTIONATOR_L_NEW_LIST">
+      <Button parentKey="NewListButton" inherits="UIPanelButtonTemplate" text="AUCTIONATOR_L_NEW_LIST">
         <Anchors>
           <Anchor point="BOTTOMLEFT" y="10" x="5"/>
         </Anchors>
+        <Size x="90" y="22"/>
       </Button>
       <Button parentKey="ExportButton" inherits="UIPanelDynamicResizeButtonTemplate" text="AUCTIONATOR_L_EXPORT">
         <Anchors>
@@ -162,10 +163,11 @@
           <Anchor point="BOTTOM" y="10"/>
         </Anchors>
       </Button>
-      <Button parentKey="ImportButton" inherits="UIPanelDynamicResizeButtonTemplate" text="AUCTIONATOR_L_IMPORT">
+      <Button parentKey="ImportButton" inherits="UIPanelButtonTemplate" text="AUCTIONATOR_L_IMPORT">
         <Anchors>
           <Anchor point="RIGHT" relativeKey="$parent.ExportButton" relativePoint="LEFT"/>
         </Anchors>
+        <Size x="90" y="22"/>
       </Button>
     </Frames>
     <Frames>
@@ -209,7 +211,7 @@
       <Frame inherits="AuctionatorResultsListingTemplate">
         <Anchors>
           <!-- Use a 5px leftward extension for the empty results view. -->
-          <Anchor point="TOPLEFT" relativeKey="$parent.ListsContainer.ScrollBar" relativePoint="TOPRIGHT" x="10" y="27"/>
+          <Anchor point="TOPLEFT" relativeKey="$parent.ListsContainer.ScrollBar" relativePoint="TOPRIGHT" x="10" y="17"/>
           <Anchor point="BOTTOMRIGHT" relativeKey="$parent" relativePoint="BOTTOMRIGHT" x="-25"/>
         </Anchors>
       </Frame>

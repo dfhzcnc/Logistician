@@ -12,6 +12,15 @@ local function SetResetEnabled(button, enabled)
   end
 end
 
+-- Strips the inherited UIPanelButtonTemplate skin (Normal/Pushed/Highlight/Disabled
+-- textures) from an AuctionatorResetButton instance, leaving just its plain icon.
+local function StripButtonChrome(button)
+  button:SetNormalTexture("")
+  button:SetPushedTexture("")
+  button:SetHighlightTexture("")
+  button:SetDisabledTexture("")
+end
+
 local function InitializeQualityDropDown(dropDown)
   local qualityStrings = {}
   local qualityIDs = {}
@@ -71,6 +80,10 @@ function AuctionatorShoppingItemMixin:OnLoad()
     self.SearchContainer.SearchString:SetText("")
   end)
 
+  self.DisplayNameContainer.ResetDisplayNameButton:SetClickCallback(function()
+    self.DisplayNameContainer.DisplayName:SetText("")
+  end)
+
   self.QualityContainer.ResetQualityButton:SetClickCallback(function()
     self.QualityContainer.DropDown:SetValues({})
   end)
@@ -83,6 +96,16 @@ function AuctionatorShoppingItemMixin:OnLoad()
     self.ExpansionContainer.DropDown:SetValue(NO_QUALITY)
   end)
 
+  for _, button in ipairs({
+    self.SearchContainer.ResetSearchStringButton,
+    self.DisplayNameContainer.ResetDisplayNameButton,
+    self.QualityContainer.ResetQualityButton,
+    self.TierContainer.ResetTierButton,
+    self.ExpansionContainer.ResetExpansionButton,
+  }) do
+    StripButtonChrome(button)
+  end
+
   local onEnterCallback = function()
     self:OnFinishedClicked()
   end
@@ -90,25 +113,11 @@ function AuctionatorShoppingItemMixin:OnLoad()
   self.LevelRange:SetCallbacks({
     OnEnter = onEnterCallback,
     OnTab = function()
-      self.ItemLevelRange:SetFocus()
-    end
-  })
-
-  self.ItemLevelRange:SetCallbacks({
-    OnEnter = onEnterCallback,
-    OnTab = function()
       self.PriceRange:SetFocus()
     end
   })
 
   self.PriceRange:SetCallbacks({
-    OnEnter = onEnterCallback,
-    OnTab = function()
-      self.CraftedLevelRange:SetFocus()
-    end
-  })
-
-  self.CraftedLevelRange:SetCallbacks({
     OnEnter = onEnterCallback,
     OnTab = function()
       self.SearchContainer.SearchString:SetFocus()
@@ -123,9 +132,10 @@ function AuctionatorShoppingItemMixin:OnLoad()
     self:UpdateResetStates()
   end
   self.SearchContainer.SearchString:HookScript("OnTextChanged", update)
+  self.DisplayNameContainer.DisplayName:HookScript("OnTextChanged", update)
   self.SearchContainer.UsableItems:HookScript("OnClick", update)
   self.SearchContainer.IsExact:HookScript("OnClick", update)
-  for _, range in ipairs({self.LevelRange, self.ItemLevelRange, self.PriceRange, self.CraftedLevelRange}) do
+  for _, range in ipairs({self.LevelRange, self.PriceRange}) do
     range.MinBox:HookScript("OnTextChanged", update)
     range.MaxBox:HookScript("OnTextChanged", update)
   end
@@ -153,29 +163,27 @@ end
 
 function AuctionatorShoppingItemMixin:UpdateResetStates()
   local searchSet = self.SearchContainer.SearchString:GetText() ~= ""
+  local displayNameSet = self.DisplayNameContainer.DisplayName:GetText() ~= ""
   local classSet = self.FilterKeySelector:GetValue() ~= ""
   local levelSet = self.LevelRange.MinBox:GetText() ~= "" or self.LevelRange.MaxBox:GetText() ~= ""
-  local itemLevelSet = self.ItemLevelRange.MinBox:GetText() ~= "" or self.ItemLevelRange.MaxBox:GetText() ~= ""
   local priceSet = self.PriceRange.MinBox:GetText() ~= "" or self.PriceRange.MaxBox:GetText() ~= ""
-  local craftedSet = self.CraftedLevelRange.MinBox:GetText() ~= "" or self.CraftedLevelRange.MaxBox:GetText() ~= ""
   local qualitySet = #self.QualityContainer.DropDown:GetValues() > 0
   local expansionSet = self.ExpansionContainer.DropDown:GetValue() ~= NO_QUALITY
   local tierSet = self.TierContainer.DropDown:GetValue() ~= NO_QUALITY
   local quantitySet = self.PurchaseQuantity:GetNumber() > 0
 
   SetResetEnabled(self.SearchContainer.ResetSearchStringButton, searchSet)
+  SetResetEnabled(self.DisplayNameContainer.ResetDisplayNameButton, displayNameSet)
   SetResetEnabled(self.FilterKeySelector.ResetButton, classSet)
   SetResetEnabled(self.LevelRange.ResetButton, levelSet)
-  SetResetEnabled(self.ItemLevelRange.ResetButton, itemLevelSet)
   SetResetEnabled(self.PriceRange.ResetButton, priceSet)
-  SetResetEnabled(self.CraftedLevelRange.ResetButton, craftedSet)
   SetResetEnabled(self.QualityContainer.ResetQualityButton, qualitySet)
   SetResetEnabled(self.ExpansionContainer.ResetExpansionButton, expansionSet)
   SetResetEnabled(self.TierContainer.ResetTierButton, tierSet)
 
-  local anySet = searchSet or self.SearchContainer.UsableItems:GetChecked()
+  local anySet = searchSet or displayNameSet or self.SearchContainer.UsableItems:GetChecked()
     or self.SearchContainer.IsExact:GetChecked() or classSet
-    or levelSet or itemLevelSet or priceSet or craftedSet or qualitySet
+    or levelSet or priceSet or qualitySet
     or expansionSet or tierSet or quantitySet
   SetResetEnabled(self.ResetAllButton, anySet)
 
@@ -256,15 +264,12 @@ end
 function AuctionatorShoppingItemMixin:GetItemString()
   local search = {
     searchString = self.SearchContainer.SearchString:GetText(),
+    displayName = self.DisplayNameContainer.DisplayName:GetText(),
     usableItems = self.SearchContainer.UsableItems:GetChecked(),
     isExact = self.SearchContainer.IsExact:GetChecked(),
     categoryKey = self.FilterKeySelector:GetValue(),
     minLevel = self.LevelRange:GetMin(),
     maxLevel = self.LevelRange:GetMax(),
-    minItemLevel = self.ItemLevelRange:GetMin(),
-    maxItemLevel = self.ItemLevelRange:GetMax(),
-    minCraftedLevel = self.CraftedLevelRange:GetMin(),
-    maxCraftedLevel = self.CraftedLevelRange:GetMax(),
     minPrice = self.PriceRange:GetMin() * 10000,
     maxPrice = self.PriceRange:GetMax() * 10000,
     expansion = tonumber(self.ExpansionContainer.DropDown:GetValue()),
@@ -282,17 +287,12 @@ function AuctionatorShoppingItemMixin:SetItemString(itemString)
   self.SearchContainer.UsableItems:SetChecked(search.usableItems)
   self.SearchContainer.IsExact:SetChecked(search.isExact)
   self.SearchContainer.SearchString:SetText(search.searchString)
+  self.DisplayNameContainer.DisplayName:SetText(search.displayName or "")
 
   self.FilterKeySelector:SetValue(search.categoryKey)
 
-  self.ItemLevelRange:SetMin(search.minItemLevel)
-  self.ItemLevelRange:SetMax(search.maxItemLevel)
-
   self.LevelRange:SetMin(search.minLevel)
   self.LevelRange:SetMax(search.maxLevel)
-
-  self.CraftedLevelRange:SetMin(search.minCraftedLevel)
-  self.CraftedLevelRange:SetMax(search.maxCraftedLevel)
 
   if search.minPrice ~= nil then
     self.PriceRange:SetMin(search.minPrice/10000)
@@ -341,15 +341,14 @@ function AuctionatorShoppingItemMixin:ResetAll()
   Auctionator.Debug.Message("AuctionatorShoppingItemMixin:ResetAll()")
 
   self.SearchContainer.SearchString:SetText("")
+  self.DisplayNameContainer.DisplayName:SetText("")
   self.SearchContainer.UsableItems:SetChecked(false)
   self.SearchContainer.IsExact:SetChecked(false)
 
   self.FilterKeySelector:Reset()
 
-  self.ItemLevelRange:Reset()
   self.LevelRange:Reset()
   self.PriceRange:Reset()
-  self.CraftedLevelRange:Reset()
   self.QualityContainer.DropDown:SetValues({})
   self.PurchaseQuantity:SetNumber(0)
   self.TierContainer.DropDown:SetValue(NO_QUALITY)

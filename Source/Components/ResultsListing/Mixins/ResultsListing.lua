@@ -14,6 +14,13 @@ function AuctionatorResultsListingMixin:Init(dataProvider)
   self.dataProvider = dataProvider
   self.columnSpecification = self.dataProvider:GetTableLayout()
 
+  do
+    local statusText = self.ScrollArea.FetchingInfoDialog.StatusText
+    local fontFile, fontSize = statusText:GetFont()
+    statusText:SetFont(fontFile, fontSize, "THICKOUTLINE")
+    statusText:SetTextColor(1, 0.82, 0, 1)
+  end
+
   local view = CreateScrollBoxListLinearView()
   view:SetElementExtent(20)
   view:SetElementInitializer(dataProvider:GetRowTemplate(), function(frame, index)
@@ -242,53 +249,17 @@ function AuctionatorResultsListingMixin:UpdateDimensionsForHiding()
   self.tableBuilder:Arrange()
 end
 
+-- Retained as a no-op for existing callers (Cancelling/Selling price panels): every tab now
+-- shares the one bordered "Fetching item info" box below instead of separate dot/spinner styles.
 function AuctionatorResultsListingMixin:UseLoadingDots()
-  self.useLoadingDots = true
-
-  self.ScrollArea.LoadingSpinner:Hide()
-  self.ScrollArea.ResultsText:SetFontObject(GameFontNormalSmall)
-  self.ScrollArea.ResultsText:ClearAllPoints()
-  self.ScrollArea.ResultsText:SetPoint("CENTER", self.ScrollArea, "CENTER", 0, 0)
-  self.ScrollArea.ResultsText:SetWidth(300)
-  self.ScrollArea.ResultsText:SetJustifyH("CENTER")
-end
-
-function AuctionatorResultsListingMixin:UpdateLoadingDots(elapsed)
-  self.loadingDotsElapsed = self.loadingDotsElapsed + elapsed
-  if self.loadingDotsElapsed < 0.45 then
-    return
-  end
-
-  self.loadingDotsElapsed = 0
-  self.loadingDotsCount = (self.loadingDotsCount + 1) % 4
-  local loadingText = AUCTIONATOR_L_FETCHING_ITEM_INFO:gsub("%.*$", "")
-  self.ScrollArea.ResultsText:SetText(loadingText .. string.rep(".", self.loadingDotsCount))
 end
 
 function AuctionatorResultsListingMixin:EnableSpinner()
-  self.ScrollArea.ResultsText:Show()
-
-  if self.useLoadingDots then
-    self.ScrollArea.LoadingSpinner:Hide()
-    self.ScrollArea.SpinnerAnim:Stop()
-    self.loadingDotsElapsed = 0
-    self.loadingDotsCount = 0
-    self.ScrollArea.ResultsText:SetText(AUCTIONATOR_L_FETCHING_ITEM_INFO:gsub("%.*$", ""))
-    self:SetScript("OnUpdate", function(_, elapsed)
-      self:UpdateLoadingDots(elapsed)
-    end)
-    return
-  end
-
-  self.ScrollArea.LoadingSpinner:Show()
-  self.ScrollArea.SpinnerAnim:Play()
+  self.ScrollArea.FetchingInfoDialog:Show()
+  self.ScrollArea.FetchingInfoDialog.PulseAnim:Play()
 end
 
 function AuctionatorResultsListingMixin:DisableSpinner()
-  if self.useLoadingDots then
-    self:SetScript("OnUpdate", nil)
-  end
-  self.ScrollArea.ResultsText:Hide()
-  self.ScrollArea.LoadingSpinner:Hide()
-  self.ScrollArea.SpinnerAnim:Stop()
+  self.ScrollArea.FetchingInfoDialog.PulseAnim:Stop()
+  self.ScrollArea.FetchingInfoDialog:Hide()
 end

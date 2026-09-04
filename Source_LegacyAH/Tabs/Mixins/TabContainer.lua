@@ -19,6 +19,14 @@ local function InitializeFromDetails(details)
   frame:Initialize(details.name, details.tabTemplate, details.tabHeader, {details.tabFrameName})
   PanelTemplates_TabResize(frame, tabPadding, tabAbsoluteSize, minTabWidth)
 
+  -- Some tabs are only meant to be reached via another entry point (e.g. a button elsewhere)
+  -- rather than shown in the tab bar - their content frame still gets created normally above,
+  -- :Click() still works programmatically on a hidden button, it just isn't visible/clickable
+  -- by the player directly.
+  if details.hiddenTab then
+    frame:Hide()
+  end
+
   return frame
 end
 

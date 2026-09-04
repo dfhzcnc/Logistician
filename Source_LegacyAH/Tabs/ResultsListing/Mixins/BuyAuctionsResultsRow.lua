@@ -18,6 +18,11 @@ function AuctionatorBuyAuctionsResultsRowMixin:OnEnter()
   if Auctionator.Utilities.IsEquipment(select(6, C_Item.GetItemInfoInstant(self.rowData.itemLink))) then
     GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
     GameTooltip:SetHyperlink(self.rowData.itemLink)
+    if IsShiftKeyDown() then
+      GameTooltip_ShowCompareItem(GameTooltip)
+    else
+      GameTooltip_HideShoppingTooltips(GameTooltip)
+    end
     GameTooltip:Show()
   end
 end
