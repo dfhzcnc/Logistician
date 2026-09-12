@@ -6,6 +6,29 @@ uses [Semantic Versioning](https://semver.org/) and the
 
 ## [Unreleased]
 
+## [2.5.0] - 2026-09-11
+
+### Added
+
+- Added Ledger filtering across visible columns and a total for matching sales.
+- Added auction invoice mail scanning to recover missed sales, with item-link and icon recovery.
+- Added lo and ledgeropen slash commands for direct Ledger access.
+- Added goal-specific production runs with saved goal selection on resume.
+- Added confirmation before removing an individual production goal.
+
+### Improved
+
+- Based expected crafting revenue on the lowest auction price, with market-price fallback.
+- Defaulted Bid Mode starting unit prices to 120% of vendor sell value.
+- Preserved production-goal order when adjusting quantities and allowed goal removal between crafts.
+- Refreshed visible Shopping entries when list items change.
+- Kept profession and Auction House windows visible when combat ends their interaction sessions.
+
+### Fixed
+
+- Excluded returned posting deposits from mail-based sale prices and buyout classification.
+- Guarded profession selection refresh when favoriting removes the former recipe category.
+
 ## [2.4.0] - 2026-09-04
 
 ### Added

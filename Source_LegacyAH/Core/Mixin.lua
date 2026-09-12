@@ -114,6 +114,24 @@ local function RestoreWindowPosition()
   end
 end
 
+-- Blizzard's own FrameXML closes AuctionFrame when the auctioneer interaction ends, which also
+-- happens automatically the instant combat starts. Rather than fight that (unregistering the
+-- underlying event risks skipping other cleanup it does), just let it hide then immediately
+-- reshow it while still in combat, keeping the window visually open through combat.
+local combatKeepOpenInitialized = false
+local function InitializeCombatKeepOpen()
+  if combatKeepOpenInitialized then
+    return
+  end
+  combatKeepOpenInitialized = true
+
+  hooksecurefunc(AuctionFrame, "Hide", function()
+    if InCombatLockdown() then
+      ShowUIPanel(AuctionFrame)
+    end
+  end)
+end
+
 function AuctionatorAHFrameMixin:OnShow()
   Auctionator.Debug.Message("AuctionatorAHFrameMixin:OnShow()")
 
@@ -124,6 +142,7 @@ function AuctionatorAHFrameMixin:OnShow()
   InitializeThrottlingTimeoutDialog()
   InitializeFullScanFrame()
   InitializeMovableWindow()
+  InitializeCombatKeepOpen()
   RestoreWindowPosition()
 
   ShowDefaultTab()
@@ -136,6 +155,9 @@ function AuctionatorAHFrameMixin:OnEvent(eventName, ...)
   if eventName == "AUCTION_HOUSE_SHOW" then
     self:Show()
   elseif eventName == "AUCTION_HOUSE_CLOSED" then
+    -- Entering combat also fires this (the auctioneer session ends), but keep the window
+    -- visually open through combat instead of auto-hiding it.
+    if InCombatLockdown() then return end
     self:Hide()
   end
 end
