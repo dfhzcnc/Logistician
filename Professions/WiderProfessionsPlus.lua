@@ -129,6 +129,21 @@ local function MarketPrice(link, itemID)
     return AuctionatorPrice(itemID)
 end
 
+-- Sell-side price for profit math: the raw cheapest current listing (not the
+-- 10%-depth market price), falling back to market price if nothing is listed.
+local function AuctionLowestPrice(link, itemID)
+    itemID = itemID or ItemIDFromLink(link)
+    if type(itemID) ~= "number" then return nil end
+
+    local bridge = _G.WiderProfessionsAuctionatorBridge
+    if bridge and type(bridge.GetAuctionPriceByItemID) == "function" then
+        local lowest = bridge:GetAuctionPriceByItemID(itemID)
+        if lowest then return lowest end
+    end
+
+    return MarketPrice(link, itemID)
+end
+
 -- TBC profession supplies that are purchased from NPC vendors. Auctionator's
 -- vendor-price API reports the sell-to-vendor value for arbitrary items, so it
 -- cannot by itself tell us whether an NPC sells an item. Keep this whitelist
@@ -318,7 +333,7 @@ local function ComputeProfit(skill)
     local outputID = ItemIDFromLink(skill.link)
     if not outputID then return nil end
 
-    local outputUnitPrice = MarketPrice(skill.link, outputID)
+    local outputUnitPrice = AuctionLowestPrice(skill.link, outputID)
     if not outputUnitPrice then return nil end
 
     local minMade = skill.minProduced or 1
@@ -809,6 +824,31 @@ local function BuildProductionGoalPages(queue)
         })
     end
     return pages
+end
+
+-- Locates the page (entries + original queue indices) belonging to one
+-- specific production goal, so crafting can be scoped to just that goal
+-- instead of always operating on the front of the shared queue array.
+local function FindProductionGoalPage(queue, goalKey)
+    if not goalKey then return nil end
+    for _, page in ipairs(BuildProductionGoalPages(queue)) do
+        local key = page.goal and (page.goal.key or ProductionGoalKey(page.goal))
+        if key == goalKey then
+            return page
+        end
+    end
+    return nil
+end
+
+-- First queue index (including any auto-dependency prerequisites) belonging
+-- to the given goal. nil means that goal has nothing left to craft - this
+-- must never fall through to another goal's entries.
+local function FindNextQueueIndexForGoal(queue, goalKey)
+    if not goalKey then
+        return queue and queue[1] and 1 or nil
+    end
+    local page = FindProductionGoalPage(queue, goalKey)
+    return page and page.indices and page.indices[1] or nil
 end
 
 local function EnsureProductionGoals(queue)
@@ -1361,18 +1401,27 @@ local function AdjustProductionGoal(delta, displayedGoal)
 
     local queue = GetQueue(true)
     local key = goal.key or ProductionGoalKey(goal)
-    local finalEntry
+    local finalEntry, finalIndex
     for index = #queue, 1, -1 do
         local entry = queue[index]
         if not entry.autoDependency and ProductionGoalKey(entry) == key then
-            finalEntry = entry
-            table.remove(queue, index)
+            if finalEntry then
+                -- Extra duplicate row (e.g. from older merge bugs) - drop it.
+                table.remove(queue, index)
+            else
+                finalEntry, finalIndex = entry, index
+            end
         end
     end
 
     local remaining = newTotal - completed
     if remaining > 0 then
-        if not finalEntry then
+        if finalEntry then
+            -- Update in place: moving it to the end of the queue would
+            -- reshuffle production-goal page order on every +/- click.
+            finalEntry.quantity = remaining
+            finalEntry.autoDependency = false
+        else
             local cached = goal.itemID
                 and InitDB().recipeCache[tostring(goal.itemID)]
                 or nil
@@ -1386,12 +1435,13 @@ local function AdjustProductionGoal(delta, displayedGoal)
                 minProduced = cached and cached.minProduced or 1,
                 maxProduced = cached and cached.maxProduced or 1,
                 reagents = cached and cached.reagents or {},
+                quantity = remaining,
                 autoDependency = false,
             }
+            table.insert(queue, finalEntry)
         end
-        finalEntry.quantity = remaining
-        finalEntry.autoDependency = false
-        table.insert(queue, finalEntry)
+    elseif finalEntry then
+        table.remove(queue, finalIndex)
     end
 
     goal.total = newTotal
@@ -1403,39 +1453,6 @@ local function AdjustProductionGoal(delta, displayedGoal)
             + QueueTotalCrafts(GetQueue(false))
         session.paused = true
     end
-    WPP:RefreshPanel()
-end
-
-local function RemoveProductionGoal(goal)
-    if QueueBusy() then
-        Print("Wait for the current production run to finish before removing a production goal.")
-        return
-    end
-    if not goal then return end
-
-    local key = goal.key or ProductionGoalKey(goal)
-    local queue = GetQueue(false) or {}
-    for index = #queue, 1, -1 do
-        local entry = queue[index]
-        if not entry.autoDependency and ProductionGoalKey(entry) == key then
-            table.remove(queue, index)
-        end
-    end
-
-    InitDB().productionGoals[key] = nil
-    ReconcileQueueWithInventory()
-
-    local session = SavedProductionSession()
-    if #queue == 0 then
-        ClearProductionSession()
-    elseif session then
-        session.total = math.max(0, tonumber(session.completed) or 0)
-            + QueueTotalCrafts(queue)
-        session.paused = true
-    end
-
-    if panel then panel.offset = 0 end
-    Print("Removed production goal '" .. tostring(goal.name or UNKNOWN) .. "'.")
     WPP:RefreshPanel()
 end
 
@@ -1584,6 +1601,55 @@ local function ClearQueue()
     WPP:RefreshPanel()
 end
 
+-- Unlike ClearQueue, this is reachable mid-production (the goal's own remove
+-- button stays enabled while paused/queued so a single goal can be scrapped
+-- without waiting); it only refuses while a craft is actively in flight.
+-- Only removes the ONE goal passed in (and its queue entries) - "Clear" is
+-- the button for wiping the entire queue/all goals.
+local function RemoveProductionGoal(goal)
+    if processing then
+        Print("Wait for the current craft to finish before removing a production goal.")
+        return
+    end
+    if not goal then return end
+
+    local key = goal.key or ProductionGoalKey(goal)
+    local queue = GetQueue(false) or {}
+    for index = #queue, 1, -1 do
+        local entry = queue[index]
+        if not entry.autoDependency and ProductionGoalKey(entry) == key then
+            table.remove(queue, index)
+        end
+    end
+
+    InitDB().productionGoals[key] = nil
+    ReconcileQueueWithInventory()
+
+    local session = SavedProductionSession()
+    if #queue == 0 then
+        craftAllState = nil
+        ClearProductionSession()
+    elseif session then
+        session.total = math.max(0, tonumber(session.completed) or 0)
+            + QueueTotalCrafts(queue)
+        session.paused = true
+    end
+
+    if panel then panel.offset = 0 end
+    Print("Removed production goal '" .. tostring(goal.name or UNKNOWN) .. "'.")
+    WPP:RefreshPanel()
+end
+
+StaticPopupDialogs["LOGISTICIAN_CONFIRM_REMOVE_PRODUCTION_GOAL"] = {
+    text = "Remove the production goal '%s' and its queued crafting operations?",
+    button1 = YES,
+    button2 = NO,
+    OnAccept = function(dialog) RemoveProductionGoal(dialog.data) end,
+    timeout = 0,
+    whileDead = 1,
+    hideOnEscape = 1,
+}
+
 local function MoveQueueEntry(fromIndex, toIndex)
     if QueueBusy() then return end
     local queue = GetQueue(false)
@@ -1639,6 +1705,7 @@ local function SaveProductionProgress()
     session.total = math.max(0, tonumber(craftAllState.total) or 0)
     session.completed = math.max(0, tonumber(craftAllState.completed) or 0)
     session.paused = true
+    session.goalKey = craftAllState.goalKey
     InitDB().productionSession = session
 end
 
@@ -1677,8 +1744,10 @@ end
 
 local function StartQueuedRecipe(allowProfessionOpen)
     local queue = GetQueue(false)
+    local goalKey = craftAllState and craftAllState.goalKey
+    local targetIndex = queue and FindNextQueueIndexForGoal(queue, goalKey)
 
-    if not queue or #queue == 0 then
+    if not queue or #queue == 0 or not targetIndex then
         if craftAllState then
             Print("Crafting queue complete.")
             craftAllState = nil
@@ -1689,7 +1758,7 @@ local function StartQueuedRecipe(allowProfessionOpen)
         return false
     end
 
-    local entry = queue[1]
+    local entry = queue[targetIndex]
     local entryProfession = (entry.itemID and ResolveOtherProfession(entry.itemID))
         or NormalizeProfessionName(entry.profession)
     if entryProfession then entry.profession = entryProfession end
@@ -1776,7 +1845,7 @@ local function StartQueuedRecipe(allowProfessionOpen)
 
     processing = {
         entry = entry,
-        queueIndex = 1,
+        queueIndex = targetIndex,
         name = name or entry.name,
         expected = count,
         completed = 0,
@@ -1870,13 +1939,23 @@ local function CraftAll()
     ReconcileQueueWithInventory()
     queue = GetQueue(false)
 
-    local total = QueueTotalCrafts(queue)
+    -- Each production goal is its own independent queue: a fresh start crafts
+    -- only the currently-displayed goal; resuming a paused run stays on
+    -- whichever goal it was originally scoped to, regardless of which page
+    -- is being viewed now.
+    local saved = SavedProductionSession()
+    local displayedGoal = panel and panel.displayedGoal
+    local goalKey = (saved and saved.goalKey)
+        or (displayedGoal and (displayedGoal.key or ProductionGoalKey(displayedGoal)))
+    local goalPage = goalKey and FindProductionGoalPage(queue, goalKey)
+    local scopedEntries = goalPage and goalPage.entries or queue
+
+    local total = QueueTotalCrafts(scopedEntries)
     if total <= 0 then
         Print("The crafting queue is empty.")
         return
     end
 
-    local saved = SavedProductionSession()
     local savedCompleted = saved and math.max(0, tonumber(saved.completed) or 0) or 0
     -- The queue is authoritative for work still outstanding, including any
     -- edits made while production was paused.
@@ -1885,6 +1964,7 @@ local function CraftAll()
     craftAllState = {
         total = sessionTotal,
         completed = savedCompleted,
+        goalKey = goalKey,
         waitingProfession = nil,
         waitingItemID = nil,
     }
@@ -1893,6 +1973,7 @@ local function CraftAll()
         total = sessionTotal,
         completed = savedCompleted,
         paused = false,
+        goalKey = goalKey,
     }
 
     StartQueuedRecipe(true)
@@ -3424,16 +3505,24 @@ local function CreatePanel()
     panel.productionGoal.remove:SetSize(20, 20)
     panel.productionGoal.remove:SetPoint("RIGHT", 3, 0)
     panel.productionGoal.remove:SetScript("OnClick", function()
-        RemoveProductionGoal(panel.displayedGoal)
+        local goal = panel.displayedGoal
+        if not goal then return end
+        StaticPopupDialogs["LOGISTICIAN_CONFIRM_REMOVE_PRODUCTION_GOAL"].text = string.format(
+            "Remove the production goal '%s' and its queued crafting operations?",
+            tostring(goal.name or UNKNOWN)
+        )
+        local dialog = StaticPopup_Show("LOGISTICIAN_CONFIRM_REMOVE_PRODUCTION_GOAL")
+        if dialog then dialog.data = goal end
     end)
     panel.productionGoal.remove:SetScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
         GameTooltip:AddLine("Remove Production Goal", 1, 0.82, 0)
-        GameTooltip:AddLine("Removes this goal and its crafting operations only.", 1, 1, 1, true)
+        GameTooltip:AddLine("Removes this goal and its crafting operations only. Use Clear to remove everything.", 1, 1, 1, true)
         GameTooltip:Show()
     end)
     panel.productionGoal.remove:SetScript("OnLeave", function() GameTooltip:Hide() end)
     panel.productionGoal:Hide()
+
 
     -- Overall queued-batch progress, using Blizzard Classic's own casting-bar
     -- art. The normal player cast bar still displays each individual craft.
@@ -3828,6 +3917,11 @@ function WPP:RefreshPanel()
                 row.right:Show()
 
                 row.remove:Show()
+                if QueueBusy() then
+                    row.remove:Disable()
+                else
+                    row.remove:Enable()
+                end
                 row.remove:SetScript("OnClick", function(self)
                     RemoveQueueEntry(self:GetParent().dataIndex)
                 end)
@@ -3889,16 +3983,16 @@ function WPP:RefreshPanel()
             if QueueBusy() then
                 panel.productionGoal.decrease:Disable()
                 panel.productionGoal.increase:Disable()
-                panel.productionGoal.remove:Disable()
             else
                 panel.productionGoal.increase:Enable()
-                panel.productionGoal.remove:Enable()
                 if (tonumber(goal.total) or 0) > (tonumber(goal.completed) or 0) then
                     panel.productionGoal.decrease:Enable()
                 else
                     panel.productionGoal.decrease:Disable()
                 end
             end
+            -- Stays enabled mid-production: it's the only way to scrap a paused run.
+            panel.productionGoal.remove:Enable()
             panel.productionGoal:Show()
         else
             panel.productionGoalHeader:Hide()
@@ -3925,7 +4019,7 @@ function WPP:RefreshPanel()
                 -- of the still-needed output quantity for the displayed
                 -- production goal, minus that materials cost.
                 local goal = panel.displayedGoal
-                local outputPrice = goal and MarketPrice(goal.link, goal.itemID)
+                local outputPrice = goal and AuctionLowestPrice(goal.link, goal.itemID)
                 if outputPrice then
                     local remaining = math.max(
                         0,
@@ -4371,7 +4465,7 @@ WPP:SetScript("OnEvent", function(self, event, ...)
                             WPP:RefreshPanel()
                         end
                     end)
-                elseif not queue or #queue == 0 then
+                elseif not queue or #queue == 0 or not FindNextQueueIndexForGoal(queue, craftAllState.goalKey) then
                     craftAllState.completed = craftAllState.total
                     Print("Crafting queue complete.")
                     craftAllState = nil

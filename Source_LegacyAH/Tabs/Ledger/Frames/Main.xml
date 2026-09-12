@@ -27,6 +27,13 @@
         </Scripts>
       </Button>
 
+      <EditBox parentKey="FilterBox" inherits="SearchBoxTemplate">
+        <Size x="170" y="22"/>
+        <Anchors>
+          <Anchor point="LEFT" relativeKey="$parent.BackButton" relativePoint="RIGHT" x="12" y="0"/>
+        </Anchors>
+      </EditBox>
+
       <Frame parentKey="DataProvider" mixin="AuctionatorLedgerDataProviderMixin">
         <Scripts>
           <OnLoad method="OnLoad"/>
@@ -49,5 +56,20 @@
         </Anchors>
       </Frame>
     </Frames>
+
+    <Layers>
+      <Layer level="ARTWORK">
+        <FontString parentKey="TotalLabel" inherits="GameFontNormal" text="Total:">
+          <Anchors>
+            <Anchor point="LEFT" relativeKey="$parent.FilterBox" relativePoint="RIGHT" x="16" y="0"/>
+          </Anchors>
+        </FontString>
+        <FontString parentKey="TotalValue" inherits="GameFontHighlight">
+          <Anchors>
+            <Anchor point="LEFT" relativeKey="$parent.TotalLabel" relativePoint="RIGHT" x="4" y="0"/>
+          </Anchors>
+        </FontString>
+      </Layer>
+    </Layers>
   </Frame>
 </Ui>

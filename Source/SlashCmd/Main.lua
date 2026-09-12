@@ -37,6 +37,8 @@ local SLASH_COMMANDS = {
   ["ledgerclear"] = Auctionator.SlashCmd.LedgerClear,
   ["ltest"] = Auctionator.SlashCmd.LedgerTestData,
   ["ledgertest"] = Auctionator.SlashCmd.LedgerTestData,
+  ["lo"] = Auctionator.SlashCmd.LedgerOpen,
+  ["ledgeropen"] = Auctionator.SlashCmd.LedgerOpen,
 }
 
 function Auctionator.SlashCmd.Handler(input)

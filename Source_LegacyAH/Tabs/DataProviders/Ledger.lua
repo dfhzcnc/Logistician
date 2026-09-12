@@ -79,13 +79,53 @@ function AuctionatorLedgerDataProviderMixin:ReceiveEvent(eventName)
   end
 end
 
+function AuctionatorLedgerDataProviderMixin:SetOnTotalChangedCallback(callback)
+  self.onTotalChanged = callback
+end
+
+function AuctionatorLedgerDataProviderMixin:SetFilterText(filterText)
+  self.filterText = filterText
+  self:RefreshEntries()
+end
+
+-- Matches typed keywords against every visible column (name/size/price/date/sale type/market
+-- price), not just the item name, so e.g. "50" or "buyout" or "aug 25" all work as filters too.
+local function EntryMatchesFilter(entry, tokens)
+  if #tokens == 0 then
+    return true
+  end
+
+  local haystack = table.concat({
+    entry.itemName or "",
+    entry.date or "",
+    entry.quantityFormatted or "",
+    GetMoneyString(entry.unitPrice or 0, true) or "",
+    GetMoneyString(entry.totalPrice or 0, true) or "",
+    entry.saleTypeFormatted or "",
+    entry.marketPrice and GetMoneyString(entry.marketPrice, true) or "",
+  }, " "):lower()
+
+  for _, token in ipairs(tokens) do
+    if not haystack:find(token, 1, true) then
+      return false
+    end
+  end
+  return true
+end
+
 function AuctionatorLedgerDataProviderMixin:RefreshEntries()
   self:Reset()
   self.onSearchStarted()
 
+  local tokens = {}
+  for token in (self.filterText or ""):lower():gmatch("%S+") do
+    table.insert(tokens, token)
+  end
+
   local entries = {}
+  local totalGold = 0
   for _, record in ipairs(Auctionator.Ledger:GetEntries()) do
-    table.insert(entries, {
+    local entry = {
       itemLink = record.itemLink,
       itemName = record.itemName,
       iconTexture = record.iconTexture,
@@ -102,7 +142,16 @@ function AuctionatorLedgerDataProviderMixin:RefreshEntries()
       saleType = record.saleType,
       saleTypeFormatted = record.saleType == "buyout" and AUCTIONATOR_L_SALE_TYPE_BUYOUT or AUCTIONATOR_L_SALE_TYPE_BID,
       marketPrice = record.marketPrice,
-    })
+    }
+
+    if EntryMatchesFilter(entry, tokens) then
+      totalGold = totalGold + entry.totalPrice
+      table.insert(entries, entry)
+    end
+  end
+
+  if self.onTotalChanged then
+    self.onTotalChanged(totalGold)
   end
 
   self:AppendEntries(entries, true)

@@ -349,7 +349,10 @@ end
 
 function AuctionatorShoppingTabListsContainerMixin:ReceiveEvent(eventName, eventData)
   if eventName == Auctionator.Shopping.Events.ListItemChange then
-    if self.expandedList and self.expandedList:GetName() == eventData then
+    -- Always repopulate regardless of eventData/expandedList name matching (e.g. a purchase
+    -- reducing an item's quantity was observed to fire this event correctly but not repaint
+    -- the visible row when gated behind that comparison) - a redundant repopulate is cheap.
+    if self.expandedList then
       self:Populate()
     end
   elseif eventName == Auctionator.Shopping.Events.ListMetaChange then

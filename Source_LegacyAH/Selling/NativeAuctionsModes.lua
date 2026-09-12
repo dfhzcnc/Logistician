@@ -61,7 +61,21 @@ local function GetSelectedItemInfo()
     totalCount = totalCount or count or 0,
     maxStack = maxStack or count or 1,
     quality = quality,
+    -- Per-unit vendor sell price, independent of the currently selected
+    -- stack size; used to default Bid Mode's Starting Unit Price.
+    vendorUnitPrice = pricePerUnit,
   }
+end
+
+-- Bid Mode's Starting Unit Price defaults to 120% of the item's per-unit
+-- vendor sell price rather than any live-market/undercut figure.
+local BID_STARTING_PRICE_VENDOR_MULTIPLIER = 1.2
+
+local function GetVendorBasedStartingPrice(item)
+  if not item or not item.vendorUnitPrice or item.vendorUnitPrice <= 0 then
+    return nil
+  end
+  return math.max(1, math.ceil(item.vendorUnitPrice * BID_STARTING_PRICE_VENDOR_MULTIPLIER))
 end
 
 local function GetAutoBid(stackPrice)
@@ -715,19 +729,21 @@ local function RenderResults(self)
       self.previousUnitPrice = unitPrice
       self.previousStackPrice = stackPrice
     end
-  elseif self.mode == "bid" and count > 0 and not self.pricesSeededForSearch then
-    -- Unlike Buyout Mode, Bid Mode's query already asks the server to sort
-    -- pages by current bid ascending (see RefreshResults), so the first
-    -- entry is already reliably the cheapest as soon as ANY page has
-    -- arrived - no need to wait for the whole multi-page search to finish,
-    -- which was leaving Starting Unit Price/Total Price/Deposit blank and
-    -- popping in late instead of updating promptly.
-    local first = provider:GetEntryAt(1)
-    if first and first.currentBid then
-      self.pricesSeededForSearch = true
-      local unitBid = first.isOwned and first.currentBid or
-        GetAmountWithUndercut(first.currentBid)
-      MoneyInputFrame_SetCopper(StartPrice, unitBid)
+  elseif self.mode == "bid" then
+    -- Bid Mode no longer seeds Starting Unit Price from live AH results; it
+    -- always defaults to 120% of the item's per-unit vendor sell price
+    -- instead, independent of current market listings. This is tracked via
+    -- its own key (not the shared pricesSeededForSearch latch Buyout Mode
+    -- uses) since it must fire as soon as an item is staged, without
+    -- waiting on any search results, and must reseed whenever the staged
+    -- item actually changes rather than only once per search.
+    local itemKey = selectedItem and (selectedItem.itemLink or selectedItem.itemID)
+    if itemKey ~= self.bidPriceSeededForItem then
+      self.bidPriceSeededForItem = itemKey
+      local startingPrice = itemKey and GetVendorBasedStartingPrice(selectedItem)
+      if startingPrice then
+        MoneyInputFrame_SetCopper(StartPrice, startingPrice)
+      end
     end
   end
   FauxScrollFrame_Update(self.ResultsScroll, count, RESULT_ROW_COUNT, RESULT_ROW_HEIGHT)

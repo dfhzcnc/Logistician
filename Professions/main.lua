@@ -1512,7 +1512,10 @@ main.CRAFT_TRADE_UPDATE = function()
     end
 
     if main.selectedSkill ~= nil then -- Ugliest way to update the reagents.
-        local movedSelected = main.skillInfoDict[main.selectedSkill.category][main.selectedSkill.position]
+        -- Favoriting a recipe moves it into the FAVORITES pseudo-category, which can
+        -- empty out (and remove) its old category entirely on this rebuild.
+        local categorySkills = main.skillInfoDict[main.selectedSkill.category]
+        local movedSelected = categorySkills and categorySkills[main.selectedSkill.position]
         if movedSelected == nil then return end
         if movedSelected.name == main.selectedSkill.name then
             main.selectedSkill = movedSelected
@@ -1525,6 +1528,10 @@ end
 
 main.CRAFT_TRADE_CLOSE = function()
     if main.windowType == nil then return end
+
+    -- Entering combat fires TRADE_SKILL_CLOSE/CRAFT_CLOSE (the underlying interaction session
+    -- ends), but keep our own window visually open through combat instead of auto-hiding it.
+    if InCombatLockdown() then return end
 
     HideUIPanel(CraftTradeSkillFrame)
 end

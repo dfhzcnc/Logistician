@@ -14,6 +14,7 @@ local SLASH_COMMAND_DESCRIPTIONS = {
   {commands = "lt [count], ledgertrim [count]", message = "Keep only the newest [count] Ledger entries, discarding the rest."},
   {commands = "lc, ledgerclear", message = "Delete all Ledger entries."},
   {commands = "ltest [count], ledgertest [count]", message = "Add [count] (default 40) dummy Ledger entries for UI testing."},
+  {commands = "lo, ledgeropen", message = "Open the Ledger tab directly, without needing to visit an auctioneer."},
 }
 
 function Auctionator.SlashCmd.Post()
@@ -96,6 +97,22 @@ end
 function Auctionator.SlashCmd.LedgerClear()
   Auctionator.Ledger:Clear()
   Auctionator.Utilities.Message("Ledger cleared.")
+end
+
+function Auctionator.SlashCmd.LedgerOpen()
+  if not AuctionFrame then
+    Auctionator.Utilities.Message("Auction House frame isn't available yet.")
+    return
+  end
+
+  ShowUIPanel(AuctionFrame)
+
+  local ledgerTab = _G["AuctionatorTabs_Ledger"]
+  if ledgerTab then
+    ledgerTab:Click()
+  else
+    Auctionator.Utilities.Message("Ledger tab isn't available yet.")
+  end
 end
 
 function Auctionator.SlashCmd.LedgerTestData(countArg)

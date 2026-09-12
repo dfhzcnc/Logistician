@@ -1,6 +1,6 @@
 -- Watches for completed auction sales and records them into Auctionator.Ledger.
 --
--- Two things are tracked:
+-- Three things are tracked:
 -- 1. On CHAT_MSG_SYSTEM matching ERR_AUCTION_SOLD_S (same technique as the AuctionHouseNotifications
 --    addon), capture the real sale timestamp the moment it happens - this fires immediately even
 --    if the player isn't at the auction house, unlike the owner-list poll below. It only gives an
@@ -12,11 +12,21 @@
 --    and only has data while an AH session is actually open. The "Market" column is looked up
 --    fresh at this same moment (the current Market (10% depth) value, same as the item tooltip),
 --    representing the market price at the time of the sale, not at posting time.
+-- 3. On MAIL_INBOX_UPDATE, scan for "seller" auction invoice mail (the gold you're actually
+--    paid). This is a fallback for sales that #2 can never see - if the player was offline the
+--    whole time from posting to selling to mail delivery, the auction never appeared as "active"
+--    in any owner-list poll, so the diff in #2 has nothing to compare against and silently
+--    misses it. Mail is the one source guaranteed to eventually be seen (you have to open it to
+--    collect the gold), at the cost of no market price (mail carries an item NAME only, not a
+--    link - Auctionator.Ledger:AddSale resolves a real itemLink from the item cache when
+--    possible, so icon/quality/tooltip still work; GET_ITEM_INFO_RECEIVED below backfills it
+--    later for the rare case the item wasn't cached yet).
 --
 -- Caveats (inherent to the AH API, not fixable): original quantity is only known if this addon
 -- was loaded and the auction was seen at least once before it sold. If the player never revisits
 -- the AH after a sale, the CHAT_MSG_SYSTEM signal alone can't fill in price/quantity - those
--- fields simply won't be recorded until the next AH visit resolves them.
+-- fields simply won't be recorded until the next AH visit resolves them (or the mail fallback
+-- above catches it instead).
 
 local AuctionItemInfo = Auctionator.Constants.AuctionItemInfo
 
@@ -30,6 +40,14 @@ end
 -- that are truly identical in all four of these fields are still treated as interchangeable.
 local function MakeIdentityKey(cleanLink, buyoutTotal, minBid, quantity)
   return cleanLink .. "\031" .. tostring(buyoutTotal) .. "\031" .. tostring(minBid) .. "\031" .. tostring(quantity)
+end
+
+-- Shared between the owner-scan (below) and the mail-scan (further down) so the same sale never
+-- gets logged twice - once when the owner-scan notices it sold, and again later when the payout
+-- mail is collected. itemName+quantity+grossTotal is the only data both sources agree on (mail
+-- has no buyout/minBid/link, only a plain name and the gross gold amount).
+local function MakeSaleIdentityKey(itemName, quantity, grossTotal)
+  return tostring(itemName) .. "\031" .. tostring(quantity) .. "\031" .. tostring(grossTotal)
 end
 
 -- FIFO queue of real sale timestamps per item NAME, learned from the "sold" system message the
@@ -60,6 +78,7 @@ local function ScanOwnedAuctions()
   local scanState = Auctionator.Ledger:GetScanState()
   local previousSoldCounts = scanState.previousSoldCounts
   local knownActiveQuantity = scanState.knownActiveQuantity
+  local knownItemLinksByName = scanState.knownItemLinksByName
   local currentSoldCounts = {}
   local soldEntriesThisPoll = {}
   local currentActiveQuantity = {}
@@ -75,6 +94,13 @@ local function ScanOwnedAuctions()
       local minBid = info[AuctionItemInfo.MinBid] or 0
       local isSold = saleStatus == 1 or quantity <= 0
       local cleanLink = GetCleanLink(itemLink)
+
+      -- Remembered so the mail-scan below can resolve an icon/quality/tooltip for this item by
+      -- name later, even if it's never independently seen in the local item cache.
+      local itemName = itemLink:match("%[(.-)%]")
+      if itemName then
+        knownItemLinksByName[itemName] = itemLink
+      end
 
       if not isSold then
         local key = MakeIdentityKey(cleanLink, buyoutTotal, minBid, quantity)
@@ -115,27 +141,39 @@ local function ScanOwnedAuctions()
               break
             end
           end
-          originalQuantity = originalQuantity or 1
 
-          local saleType = (entry.buyoutTotal > 0 and entry.bidAmount == entry.buyoutTotal) and "buyout" or "bid"
-          local itemName = entry.itemLink:match("%[(.-)%]")
-          local saleTime = itemName and PopSoldTimestamp(itemName)
+          -- If this auction was never seen active (e.g. it sold while the AH was closed, or
+          -- fully sold between two polls), the real stack size is unknowable here - guessing 1
+          -- would wrongly record the WHOLE stack's proceeds as a size-1 unit price. Skip logging
+          -- it and let the mail fallback below catch it instead, since invoice mail always
+          -- carries the correct item count.
+          if originalQuantity then
+            local itemName = entry.itemLink:match("%[(.-)%]")
+            local saleKey = MakeSaleIdentityKey(itemName, originalQuantity, proceeds)
 
-          -- Market price is looked up fresh right now (the moment the sale is noticed), not
-          -- correlated back to posting time - DBKeyFromLink is async so AddSale is called from
-          -- its callback.
-          Auctionator.Utilities.DBKeyFromLink(entry.itemLink, function(dbKeys)
-            local marketSnapshot = dbKeys[1] and Auctionator.Database and Auctionator.Database:GetMarketSnapshot(dbKeys[1])
+            if not scanState.processedSaleKeys[saleKey] then
+              scanState.processedSaleKeys[saleKey] = true
 
-            Auctionator.Ledger:AddSale({
-              itemLink = entry.itemLink,
-              quantity = originalQuantity,
-              unitPrice = math.floor(proceeds / originalQuantity + 0.5),
-              saleType = saleType,
-              marketPrice = marketSnapshot and marketSnapshot.marketPrice or nil,
-              time = saleTime,
-            })
-          end)
+              local saleType = (entry.buyoutTotal > 0 and entry.bidAmount == entry.buyoutTotal) and "buyout" or "bid"
+              local saleTime = itemName and PopSoldTimestamp(itemName)
+
+              -- Market price is looked up fresh right now (the moment the sale is noticed), not
+              -- correlated back to posting time - DBKeyFromLink is async so AddSale is called from
+              -- its callback.
+              Auctionator.Utilities.DBKeyFromLink(entry.itemLink, function(dbKeys)
+                local marketSnapshot = dbKeys[1] and Auctionator.Database and Auctionator.Database:GetMarketSnapshot(dbKeys[1])
+
+                Auctionator.Ledger:AddSale({
+                  itemLink = entry.itemLink,
+                  quantity = originalQuantity,
+                  unitPrice = math.floor(proceeds / originalQuantity + 0.5),
+                  saleType = saleType,
+                  marketPrice = marketSnapshot and marketSnapshot.marketPrice or nil,
+                  time = saleTime,
+                })
+              end)
+            end
+          end
         end
       end
     end
@@ -164,5 +202,89 @@ ledgerScanFrame:SetScript("OnEvent", function(_, event, message)
     end
   else
     ScanOwnedAuctions()
+  end
+end)
+
+-- Fallback path: scan the mailbox for auction "seller" invoice mail (the gold you're paid),
+-- so a sale is still captured even if the player was offline for the whole posting-to-selling
+-- window and the owner-list poll above never saw the auction while it was still active.
+local function MakeMailIdentityKey(itemName, playerName, bid, buyout, count)
+  return table.concat({ itemName or "", playerName or "", tostring(bid), tostring(buyout), tostring(count) }, "\031")
+end
+
+local function ScanMailForSoldAuctions()
+  local scanState = Auctionator.Ledger:GetScanState()
+  local processedMailKeys = scanState.processedMailKeys
+
+  for index = 1, GetInboxNumItems() do
+    local _, _, _, _, money = GetInboxHeaderInfo(index)
+    local invoiceType, itemName, playerName, bid, buyout, deposit, consignment, _, _, _, count =
+      GetInboxInvoiceInfo(index)
+
+    -- A "seller" invoice with money attached is the actual sale payment (as opposed to the
+    -- zero-money "Sale Pending" notice sent before the payment delay finishes).
+    if invoiceType == "seller" and money and money > 0 and itemName then
+      count = (count and count > 0) and count or 1
+      local key = MakeMailIdentityKey(itemName, playerName, bid, buyout, count)
+
+      if not processedMailKeys[key] then
+        processedMailKeys[key] = true
+
+        -- Payment includes the refunded deposit and excludes the AH cut. Reverse both
+        -- adjustments to match the gross winning price recorded by the owner-list scan.
+        local gross = money + (consignment or 0) - (deposit or 0)
+        local saleKey = MakeSaleIdentityKey(itemName, count, gross)
+
+        -- Skip if the owner-scan above already logged this exact sale - mail is only meant to
+        -- catch sales the owner-scan could never see (see file header), not to double-log ones
+        -- it already recorded correctly.
+        if not scanState.processedSaleKeys[saleKey] then
+          scanState.processedSaleKeys[saleKey] = true
+          local saleType = (buyout and buyout > 0 and gross == buyout) and "buyout" or "bid"
+          local resolvedLink = Auctionator.Ledger:ResolveItemLink(itemName)
+
+          local function LogSale(marketPrice)
+            Auctionator.Ledger:AddSale({
+              -- AddSale falls back to resolving a link from the name itself if this is nil.
+              itemLink = resolvedLink,
+              itemName = itemName,
+              quantity = count,
+              unitPrice = math.floor(gross / count + 0.5),
+              saleType = saleType,
+              -- Mail can arrive well after the sale, so this is the CURRENT market snapshot,
+              -- not one taken at the actual moment of sale (unlike the owner-scan above).
+              marketPrice = marketPrice,
+              time = time(),
+            })
+          end
+
+          if resolvedLink then
+            Auctionator.Utilities.DBKeyFromLink(resolvedLink, function(dbKeys)
+              local marketSnapshot = dbKeys[1] and Auctionator.Database and Auctionator.Database:GetMarketSnapshot(dbKeys[1])
+              LogSale(marketSnapshot and marketSnapshot.marketPrice or nil)
+            end)
+          else
+            LogSale(nil)
+          end
+        end
+      end
+    end
+  end
+end
+
+local ledgerIconBackfillFrame = CreateFrame("Frame")
+ledgerIconBackfillFrame:RegisterEvent("GET_ITEM_INFO_RECEIVED")
+ledgerIconBackfillFrame:SetScript("OnEvent", function()
+  Auctionator.Ledger:ResolveMissingIcons()
+end)
+
+local mailScanFrame = CreateFrame("Frame")
+mailScanFrame:RegisterEvent("MAIL_SHOW")
+mailScanFrame:RegisterEvent("MAIL_INBOX_UPDATE")
+mailScanFrame:SetScript("OnEvent", function(_, event)
+  if event == "MAIL_SHOW" then
+    CheckInbox()
+  else
+    ScanMailForSoldAuctions()
   end
 end)
